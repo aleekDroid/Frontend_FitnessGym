@@ -74,7 +74,7 @@ src/
    ```ts
    export const environment = {
      production: false,
-     apiUrl: 'http://localhost:3000/api'  // Tu URL NestJS
+     apiUrl: 'http://localhost:3000/api' 
    };
    ```
 
@@ -82,7 +82,6 @@ src/
    ```ts
    // REAL:
    return this.http.get<UserWithMembership[]>(`${environment.apiUrl}/users`, { headers: this.getHeaders() });
-   // MOCK (eliminar):
    // return of([...this.mockUsers]).pipe(delay(300));
    ```
 
@@ -105,24 +104,5 @@ public/
         └── slide-4.jpg         ← Carrusel: membresía anual
 ```
 
-Mientras no tengas las imágenes, el carrusel mostrará el gradiente de fondo `#2a1010` como fallback.
+Mientras se registran las demás imágenes, el carrusel mostrará el gradiente de fondo `#2a1010` como fallback.
 
----
-
-## Mejoras propuestas vs mockup original
-
-| Feature | Estado |
-|---------|--------|
-| Carrusel con fade + zoom | ✅ |
-| Navbar fija con blur | ✅ |
-| Hamburger menu responsive | ✅ |
-| Login con show/hide password | ✅ |
-| Formularios reactivos con validación | ✅ |
-| Confirmación antes de eliminar | ✅ |
-| Chips de estado en home (vencida/por vencer/activa) | ✅ |
-| Tabla de inventario con indicador de stock bajo | ✅ |
-| Precios como cards en lugar de tabla plana | ✅ |
-| Dashboard con KPIs + gráfica de barras + donut | ✅ |
-| Filtro de fechas en dashboard | ✅ |
-| Animaciones de entrada y micro-interacciones | ✅ |
-| Responsive en todas las pantallas | ✅ |
