@@ -1,0 +1,162 @@
+<!-- src/app/pages/admin/home/home.component.html -->
+<div class="page-container">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="section-title">Asistencias de Hoy</h1>
+      <p class="page-date">{{ todayDate }}</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip stat-chip--total">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        {{ allAttendances().length }} asistencias
+      </div>
+      @if (expiredUsers.length > 0) {
+        <div class="stat-chip stat-chip--danger">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          {{ expiredUsers.length }} vencidas
+        </div>
+      }
+      @if (expiringUsers.length > 0) {
+        <div class="stat-chip stat-chip--warning">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          {{ expiringUsers.length }} por vencer
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- Search bar -->
+  <div class="search-wrapper home-search">
+    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input
+      type="text"
+      class="search-input"
+      placeholder="Buscar por nombre, apellido o teléfono..."
+      [value]="searchQuery()"
+      (input)="onSearchChange($any($event.target).value)"
+    />
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner-lg"></div>
+      <p>Cargando asistencias...</p>
+    </div>
+  } @else {
+
+    <!-- ── VENCIDAS (red border) ── -->
+    @if (expiredUsers.length > 0) {
+      <section class="attendance-section">
+        <div class="section-label section-label--danger">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Membresía vencida ({{ expiredUsers.length }})
+        </div>
+        <div class="table-container attendance-table attendance-table--danger">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Venció el</th>
+                <th>Días vencido</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of expiredUsers; track user.id) {
+                <tr>
+                  <td class="user-name-cell">
+                    <div class="user-avatar-sm">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
+                    {{ user.name }} {{ user.last_name }}
+                  </td>
+                  <td>{{ user.number }}</td>
+                  <td>{{ formatDate(user.membership_end) }}</td>
+                  <td><span class="badge badge-danger">Vencida</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- ── POR VENCER (yellow border) ── -->
+    @if (expiringUsers.length > 0) {
+      <section class="attendance-section">
+        <div class="section-label section-label--warning">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+          Membresía próxima a vencer ({{ expiringUsers.length }}) — menos de 3 días
+        </div>
+        <div class="table-container attendance-table attendance-table--warning">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Vence el</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of expiringUsers; track user.id) {
+                <tr>
+                  <td class="user-name-cell">
+                    <div class="user-avatar-sm user-avatar-sm--warning">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
+                    {{ user.name }} {{ user.last_name }}
+                  </td>
+                  <td>{{ user.number }}</td>
+                  <td>{{ formatDate(user.membership_end) }}</td>
+                  <td><span class="badge badge-warning">Por vencer</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- ── ACTIVOS (gray border) ── -->
+    @if (activeUsers.length > 0) {
+      <section class="attendance-section">
+        <div class="section-label section-label--normal">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+          Membresía activa ({{ activeUsers.length }})
+        </div>
+        <div class="table-container attendance-table attendance-table--normal">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Teléfono</th>
+                <th>Vence el</th>
+                <th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (user of activeUsers; track user.id) {
+                <tr>
+                  <td class="user-name-cell">
+                    <div class="user-avatar-sm user-avatar-sm--active">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
+                    {{ user.name }} {{ user.last_name }}
+                  </td>
+                  <td>{{ user.number }}</td>
+                  <td>{{ formatDate(user.membership_end) }}</td>
+                  <td><span class="badge badge-success">Activa</span></td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
+
+    <!-- Empty state -->
+    @if (filteredAttendances.length === 0) {
+      <div class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+        <p>No se encontraron asistencias{{ searchQuery() ? ' para "' + searchQuery() + '"' : ' hoy' }}</p>
+      </div>
+    }
+  }
+</div>

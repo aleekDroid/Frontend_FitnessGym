@@ -1,0 +1,132 @@
+<!-- src/app/pages/admin/prices/prices.component.html -->
+<div class="page-container">
+  <div class="toolbar">
+    <h1 class="section-title" style="margin-bottom:0">Membresías y Precios</h1>
+    <button class="btn btn-primary" style="margin-left:auto" (click)="openCreate()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nueva membresía
+    </button>
+  </div>
+
+  <p class="page-subtitle">Estos precios se mostrarán en la landing page y estarán disponibles al registrar usuarios.</p>
+
+  @if (loading()) {
+    <div class="loading-state"><div class="spinner-lg"></div><p>Cargando precios...</p></div>
+  } @else {
+    <div class="prices-grid">
+      @for (type of types(); track type.id) {
+        <div class="price-card" [class.price-card--inactive]="type.status !== 'active'">
+          <div class="price-card-header">
+            <div class="price-card-name">{{ type.name }}</div>
+            @if (type.person_per_suscription > 1) {
+              <div class="persons-chip">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                {{ type.person_per_suscription }} personas
+              </div>
+            }
+          </div>
+
+          <div class="price-card-price">${{ type.price | number }}</div>
+
+          <div class="price-card-meta">
+            <span class="meta-chip">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              {{ durationLabel(type.duration) }}
+            </span>
+            <span class="meta-chip" [class.meta-chip--inactive]="type.status !== 'active'">
+              {{ type.status === 'active' ? 'Activa' : 'Inactiva' }}
+            </span>
+          </div>
+
+          @if (type.description) {
+            <p class="price-card-desc">{{ type.description }}</p>
+          }
+
+          <div class="price-card-actions">
+            <button class="btn btn-secondary btn-sm" (click)="openEdit(type)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              Editar
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="confirmDelete(type)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+              Eliminar
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+<!-- ══ MODAL ══ -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">{{ editType() ? 'Editar membresía' : 'Nueva membresía' }}</h2>
+        <button class="modal-close" (click)="closeModal()">✕</button>
+      </div>
+      <form [formGroup]="priceForm" (ngSubmit)="onSubmit()" novalidate>
+        <div class="form-group">
+          <label>Nombre de la membresía</label>
+          <input type="text" formControlName="name" class="form-control" placeholder="Ej. Mensual Básico" [class.is-invalid]="f['name'].touched && f['name'].errors" />
+          @if (f['name'].touched && f['name'].errors?.['required']) { <span class="field-error">Obligatorio</span> }
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Precio ($)</label>
+            <input type="number" formControlName="price" class="form-control" placeholder="0" min="1" />
+          </div>
+          <div class="form-group">
+            <label>Duración (días)</label>
+            <select formControlName="duration" class="form-control">
+              <option value="30">30 días (1 mes)</option>
+              <option value="90">90 días (3 meses)</option>
+              <option value="180">180 días (6 meses)</option>
+              <option value="365">365 días (1 año)</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Personas incluidas</label>
+            <select formControlName="person_per_suscription" class="form-control">
+              <option value="1">1 persona</option>
+              <option value="2">2 personas</option>
+              <option value="3">3 personas</option>
+              <option value="4">4 personas</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Descripción (opcional)</label>
+          <input type="text" formControlName="description" class="form-control" placeholder="Descripción breve para la landing" />
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-success" [disabled]="saving()">
+            @if (saving()) { <span class="spinner-sm"></span> Guardando... }
+            @else { {{ editType() ? 'Guardar cambios' : 'Crear membresía' }} }
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}
+
+<!-- ══ Delete confirm ══ -->
+@if (showDeleteConfirm()) {
+  <div class="modal-overlay" (click)="cancelDelete()">
+    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+      <div class="delete-confirm">
+        <div class="delete-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <h3>¿Eliminar membresía?</h3>
+        <p>Se eliminará <strong>{{ deleteTarget()?.name }}</strong>. Los usuarios activos no serán afectados.</p>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" (click)="cancelDelete()">Cancelar</button>
+          <button class="btn btn-danger" (click)="doDelete()">Sí, eliminar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+}

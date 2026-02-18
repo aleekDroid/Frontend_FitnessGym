@@ -1,0 +1,167 @@
+<!-- src/app/pages/admin/dashboard/dashboard.component.html -->
+<div class="page-container">
+
+  <div class="dash-header">
+    <h1 class="section-title">Dashboard</h1>
+    <!-- Date filter -->
+    <div class="date-filter">
+      <div class="date-input-group">
+        <label>Desde</label>
+        <input type="date" class="form-control date-input" [value]="dateFrom()" (change)="dateFrom.set($any($event.target).value)" />
+      </div>
+      <div class="date-input-group">
+        <label>Hasta</label>
+        <input type="date" class="form-control date-input" [value]="dateTo()" (change)="dateTo.set($any($event.target).value)" />
+      </div>
+      <button class="btn btn-primary btn-sm" (click)="applyFilter()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Filtrar
+      </button>
+      <button class="btn btn-secondary btn-sm" (click)="resetFilter()">Este mes</button>
+    </div>
+  </div>
+
+  @if (loading()) {
+    <div class="loading-state"><div class="spinner-lg"></div><p>Cargando estadísticas...</p></div>
+  }
+
+  @if (!loading() && stats()) {
+    <!-- ── KPI Cards ── -->
+    <div class="kpi-grid">
+      <div class="kpi-card kpi-card--revenue">
+        <div class="kpi-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Ingresos totales</div>
+          <div class="kpi-value">${{ stats()!.total_revenue_month | number }}</div>
+          <div class="kpi-sub">Mes actual</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--members">
+        <div class="kpi-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Miembros activos</div>
+          <div class="kpi-value">{{ stats()!.active_members }}</div>
+          <div class="kpi-sub">Con membresía vigente</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--subs">
+        <div class="kpi-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Suscripciones vendidas</div>
+          <div class="kpi-value">{{ stats()!.total_subscriptions_month }}</div>
+          <div class="kpi-sub">Este período</div>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-card--products">
+        <div class="kpi-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        </div>
+        <div class="kpi-info">
+          <div class="kpi-label">Productos vendidos</div>
+          <div class="kpi-value">{{ stats()!.total_products_sold_month }}</div>
+          <div class="kpi-sub">Este período</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Bar Chart ── -->
+    <div class="chart-card card">
+      <div class="chart-header">
+        <h3 class="chart-title">Ingresos mensuales</h3>
+        <div class="chart-legend">
+          <div class="legend-item">
+            <span class="legend-dot legend-dot--subs"></span> Suscripciones
+          </div>
+          <div class="legend-item">
+            <span class="legend-dot legend-dot--products"></span> Productos
+          </div>
+        </div>
+      </div>
+      <div class="bar-chart">
+        @for (month of stats()!.monthly_revenue; track month.month) {
+          <div class="bar-group">
+            <div class="bar-stack">
+              <div class="bar-tooltip">
+                <strong>${{ month.total | number }}</strong>
+                <span>Subs: ${{ month.subscriptions | number }}</span>
+                <span>Prod: ${{ month.products | number }}</span>
+              </div>
+              <!-- Products on top -->
+              <div class="bar bar--products" [style.height.%]="barHeight(month.products)"></div>
+              <div class="bar bar--subs" [style.height.%]="barHeight(month.subscriptions)"></div>
+            </div>
+            <div class="bar-label">{{ month.month }}</div>
+          </div>
+        }
+      </div>
+      <!-- Y axis labels -->
+      <div class="y-axis-labels">
+        <span>${{ maxRevenue | number }}</span>
+        <span>${{ maxRevenue / 2 | number:'1.0-0' }}</span>
+        <span>$0</span>
+      </div>
+    </div>
+
+    <!-- ── Revenue breakdown ── -->
+    <div class="breakdown-grid">
+      <div class="breakdown-card card">
+        <h3 class="breakdown-title">Distribución de ingresos</h3>
+        <div class="donut-wrapper">
+          <div class="donut">
+            <svg viewBox="0 0 100 100" class="donut-svg">
+              <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#D84040" stroke-width="16"
+                [attr.stroke-dasharray]="(stats()!.total_subscriptions_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239) + ' 239'"
+                stroke-dashoffset="60"
+                stroke-linecap="round"/>
+              <circle cx="50" cy="50" r="38" fill="none" stroke="#8E1616" stroke-width="16"
+                [attr.stroke-dasharray]="(stats()!.total_products_sold_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239) + ' 239'"
+                [attr.stroke-dashoffset]="60 - (stats()!.total_subscriptions_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239)"
+                stroke-linecap="round"/>
+            </svg>
+            <div class="donut-center">
+              <span class="donut-total">${{ stats()!.total_revenue_month | number }}</span>
+              <span class="donut-label">Total</span>
+            </div>
+          </div>
+        </div>
+        <div class="donut-legend">
+          <div class="donut-legend-item">
+            <span class="legend-dot legend-dot--subs"></span>
+            <span>Suscripciones</span>
+            <strong>{{ stats()!.total_subscriptions_month }}</strong>
+          </div>
+          <div class="donut-legend-item">
+            <span class="legend-dot legend-dot--products"></span>
+            <span>Productos</span>
+            <strong>{{ stats()!.total_products_sold_month }}</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="breakdown-card card">
+        <h3 class="breakdown-title">Últimos 8 meses — Resumen</h3>
+        <div class="month-table">
+          @for (m of stats()!.monthly_revenue; track m.month) {
+            <div class="month-row">
+              <span class="month-name">{{ m.month }}</span>
+              <div class="month-bar-wrapper">
+                <div class="month-bar" [style.width.%]="barHeight(m.total)"></div>
+              </div>
+              <span class="month-total">${{ m.total | number }}</span>
+            </div>
+          }
+        </div>
+      </div>
+    </div>
+  }
+</div>

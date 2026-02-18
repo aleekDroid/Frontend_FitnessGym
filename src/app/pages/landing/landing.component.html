@@ -1,0 +1,202 @@
+<!-- src/app/pages/landing/landing.component.html -->
+
+<!-- ══════════════════════════════════════════
+     HEADER
+══════════════════════════════════════════ -->
+<header class="header" [class.scrolled]="true">
+  <div class="header-inner">
+    <div class="logo" (click)="scrollTo('top')">
+      <img src="assets/FitnessGym.PNG" alt="Fitness Gym" class="logo-img" />
+    </div>
+
+    <!-- Desktop nav -->
+    <nav class="nav-links">
+      <button class="nav-link" (click)="scrollTo('horarios')">Horarios</button>
+      <button class="nav-link" (click)="scrollTo('precios')">Precios</button>
+      <button class="nav-link" (click)="scrollTo('contacto')">Contacto</button>
+    </nav>
+
+    <div class="header-actions">
+      <button class="btn btn-primary btn-login" (click)="goToLogin()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        Iniciar sesión
+      </button>
+    </div>
+
+    <!-- Hamburger (mobile) -->
+    <button class="hamburger" (click)="toggleMenu()" [class.open]="menuOpen()">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile menu -->
+  @if (menuOpen()) {
+    <nav class="mobile-nav">
+      <button class="mobile-nav-link" (click)="scrollTo('horarios')">Horarios</button>
+      <button class="mobile-nav-link" (click)="scrollTo('precios')">Precios</button>
+      <button class="mobile-nav-link" (click)="scrollTo('contacto')">Contacto</button>
+      <button class="btn btn-primary btn-full mt-8" (click)="goToLogin()">Iniciar sesión</button>
+    </nav>
+  }
+</header>
+
+<!-- ══════════════════════════════════════════
+     HERO CAROUSEL
+══════════════════════════════════════════ -->
+<section id="top" class="hero">
+  <div class="carousel">
+    @for (slide of slides; track slide.id; let i = $index) {
+      <div class="carousel-slide" [class.active]="currentSlide() === i">
+        <!-- Background image; fallback to gradient if image not found -->
+        <div class="slide-bg" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
+        <div class="slide-overlay"></div>
+
+        <div class="slide-content" [class.visible]="currentSlide() === i">
+          @if (slide.badge) {
+            <div class="slide-badge">{{ slide.badge }}</div>
+          }
+          <h1 class="slide-title">{{ slide.title }}</h1>
+          <p class="slide-subtitle">{{ slide.subtitle }}</p>
+          @if (slide.cta) {
+            <button class="btn btn-primary slide-cta" (click)="scrollTo('precios')">{{ slide.cta }}</button>
+          }
+        </div>
+      </div>
+    }
+
+    <!-- Arrows -->
+    <button class="carousel-arrow carousel-arrow--prev" (click)="prevSlide()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <button class="carousel-arrow carousel-arrow--next" (click)="nextSlide()">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <!-- Dots -->
+    <div class="carousel-dots">
+      @for (slide of slides; track slide.id; let i = $index) {
+        <button class="dot" [class.active]="currentSlide() === i" (click)="goToSlide(i)"></button>
+      }
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     HORARIOS & PRECIOS
+══════════════════════════════════════════ -->
+<section id="horarios" class="info-section">
+  <div class="info-grid">
+    <!-- Horarios -->
+    <div class="info-card">
+      <div class="info-card-header">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <h2>Horarios</h2>
+      </div>
+      <div class="schedule-list">
+        @for (item of schedule; track item.day) {
+          <div class="schedule-row">
+            <span class="schedule-day">{{ item.day }}</span>
+            <span class="schedule-hours">{{ item.hours }}</span>
+          </div>
+        }
+      </div>
+      <div class="info-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Días festivos con horario especial
+      </div>
+    </div>
+
+    <!-- Precios -->
+    <div class="info-card" id="precios">
+      <div class="info-card-header">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <h2>Precios</h2>
+      </div>
+      <div class="prices-list">
+        @for (type of subscriptionTypes; track type.id) {
+          <div class="price-row">
+            <div class="price-info">
+              <span class="price-name">{{ type.name }}</span>
+              @if (type.person_per_suscription > 1) {
+                <span class="price-persons">{{ type.person_per_suscription }} personas</span>
+              }
+            </div>
+            <span class="price-amount">${{ type.price | number }}</span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FEATURES / WHY US
+══════════════════════════════════════════ -->
+<section class="features-section">
+  <div class="features-inner">
+    <h2 class="features-title">¿Por qué <span class="text-accent">Fitness Gym?</span></h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">💪</div>
+        <h3>Equipo Profesional</h3>
+        <p>Maquinaria de alta gama actualizada constantemente para tu progreso.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏆</div>
+        <h3>Entrenadores Certificados</h3>
+        <p>Staff con certificación internacional listo para guiarte.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📱</div>
+        <h3>Rutinas Personalizadas</h3>
+        <p>Recibe tu plan de entrenamiento directamente por WhatsApp.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔥</div>
+        <h3>Comunidad Activa</h3>
+        <p>Forma parte de un grupo motivado que se supera cada día.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     CONTACT / LOCATION
+══════════════════════════════════════════ -->
+<section id="contacto" class="contact-section">
+  <div class="contact-inner">
+    <div class="contact-info">
+      <h2>Encuéntranos</h2>
+      <div class="contact-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <span>De La Patria 515, Lomas de San Pedrito</span>
+      </div>
+      <div class="contact-item">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.6 5C1.6 3.92 2.48 3 3.56 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <span>WhatsApp: próximamente</span>
+      </div>
+      <button class="btn btn-primary" (click)="goToLogin()">
+        Soy miembro — Iniciar sesión
+      </button>
+    </div>
+    <div class="contact-map-placeholder">
+      <div class="map-inner">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <p>Frente a la UTEQ</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════════════════════
+     FOOTER
+══════════════════════════════════════════ -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-logo">
+      <img src="assets/FitnessGym.PNG" alt="Fitness Gym" />
+    </div>
+    <p class="footer-copy">© {{ 2025 }} Fitness Gym · Todos los derechos reservados</p>
+    <p class="footer-tagline">No text. Just reps.</p>
+  </div>
+</footer>
