@@ -2,7 +2,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, of, throwError } from 'rxjs';
+import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -15,63 +15,70 @@ export interface AuthUser {
 }
 
 export interface LoginResponse {
-  token: string;
+  accessToken: string;
+  firstLogin?: boolean;
   user: AuthUser;
 }
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly TOKEN_KEY = 'fg_token';
   private readonly USER_KEY  = 'fg_user';
 
-  // Reactive signal for current user
+  private currentToken = signal<string | null>(null);
+  
   currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
 
   constructor(private http: HttpClient, private router: Router) {}
 
-  // ── Real API call (comment out mock below to use) ──
   login(number: string, password: string): Observable<LoginResponse> {
-    /* REAL BACKEND:
-    return this.http.post<LoginResponse>(`${environment.apiUrl}/auth/login`, { number, password }).pipe(
+    return this.http.post<LoginResponse>(
+      `${environment.apiUrl}/auth/login`, 
+      { number, password },
+      { withCredentials: true } 
+    ).pipe(
       tap(res => this.saveSession(res)),
-      catchError(err => throwError(() => err))
+      catchError(err => throwError(() => new Error(err.error?.message || 'Error al conectar con el servidor')))
     );
-    */
+  }
 
-    // ── MOCK (remove when backend ready) ──
-    const mockAdmin: LoginResponse = {
-      token: 'mock-jwt-token-admin-xyz',
-      user: { id: 1, name: 'Admin', last_name: 'Fitness', number: '123456789', role: 'admin' }
-    };
-    const mockMember: LoginResponse = {
-      token: 'mock-jwt-token-member-xyz',
-      user: { id: 2, name: 'Carlos', last_name: 'Ramírez', number: '1234567890', role: 'member' }
-    };
-
-    if (number === '123456789' && password === 'admin123') {
-      this.saveSession(mockAdmin);
-      return of(mockAdmin);
-    } else if (number === '1234567890' && password === 'member123') {
-      this.saveSession(mockMember);
-      return of(mockMember);
-    } else {
-      return throwError(() => new Error('Número o contraseña incorrectos'));
-    }
+  refreshToken(): Observable<LoginResponse> {
+    return this.http.post<LoginResponse>(
+      `${environment.apiUrl}/auth/refresh-access-token`,
+      {},
+      { withCredentials: true } // Enviar la cookie del refresh token.
+    ).pipe(
+      tap(res => {
+        this.currentToken.set(res.accessToken);
+        
+        if (res.user) {
+          localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
+          this.currentUser.set(res.user);
+        }
+      })
+    );
   }
 
   logout(): void {
-    localStorage.removeItem(this.TOKEN_KEY);
+    // Consumimos el endpoint de logout para invalidar la cookie en el backend.
+    this.http.post(`${environment.apiUrl}/auth/logout`, {}, { withCredentials: true }).subscribe({
+      next: () => this.clearSession(),
+      error: () => this.clearSession() // Limpiamos el front incluso si la red falla.
+    });
+  }
+
+  private clearSession(): void {
     localStorage.removeItem(this.USER_KEY);
+    this.currentToken.set(null);
     this.currentUser.set(null);
     this.router.navigate(['/login']);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.currentToken();
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    return !!this.currentToken();
   }
 
   isAdmin(): boolean {
@@ -79,7 +86,7 @@ export class AuthService {
   }
 
   private saveSession(res: LoginResponse): void {
-    localStorage.setItem(this.TOKEN_KEY, res.token);
+    this.currentToken.set(res.accessToken); 
     localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
     this.currentUser.set(res.user);
   }
