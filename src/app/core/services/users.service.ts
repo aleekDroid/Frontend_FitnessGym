@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { map, delay } from 'rxjs/operators';
 import { User, UserWithMembership, CreateUserDto, UpdateUserDto } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
@@ -24,18 +24,30 @@ export class UsersService {
     { id: 10, number: '4421010010', name: 'Fernanda', last_name: 'Romero',     role: 'member', status: 'active', membership_end: this.daysFromNow(60),  membership_status: 'active',   attended_today: false },
     { id: 11, number: '4421011011', name: 'Jorge',    last_name: 'Vázquez',    role: 'member', status: 'active', membership_end: this.daysFromNow(8),   membership_status: 'active',   attended_today: false },
     { id: 12, number: '4421012012', name: 'Mariana',  last_name: 'Flores',     role: 'member', status: 'active', membership_end: this.daysFromNow(2),   membership_status: 'expiring', attended_today: true  },
-  ];
+  ]; 
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${this.authService.getToken()}` });
   }
-
-  // ── GET all users ──
+  
+// ── GET all users ──
   getAll(): Observable<UserWithMembership[]> {
-    /* REAL: return this.http.get<UserWithMembership[]>(`${environment.apiUrl}/users`, { headers: this.getHeaders() }); */
-    return of([...this.mockUsers]).pipe(delay(300));
+    return this.http.get<any>(`${environment.apiUrl}/user?role=member&limit=1000`).pipe(
+      map(response => {
+        const usuarios = response.data || [];
+        
+        return usuarios.map((user: any) => {
+          return {
+            ...user, 
+            membership_end: user.activeSubscription ? user.activeSubscription.end_date : undefined,
+            membership_status: user.activeSubscription ? user.activeSubscription.status : 'expired',
+            attended_today: false 
+          };
+        });
+      })
+    );
   }
 
   // ── GET today's attendances ──
@@ -51,22 +63,15 @@ export class UsersService {
     return of(user).pipe(delay(200));
   }
 
-  // ── POST create user ──
-  create(dto: CreateUserDto): Observable<UserWithMembership> {
-    /* REAL: return this.http.post<UserWithMembership>(`${environment.apiUrl}/users`, dto, { headers: this.getHeaders() }); */
-    const newUser: UserWithMembership = {
-      id: Date.now(),
+// ── POST create user ──
+  create(dto: any): Observable<any> {
+    const payload = {
       number: dto.number,
       name: dto.name,
-      last_name: dto.last_name,
-      role: 'member',
-      status: 'active',
-      membership_end: this.daysFromNow(30),
-      membership_status: 'active',
-      attended_today: false,
+      lastName: dto.last_name 
     };
-    this.mockUsers.push(newUser);
-    return of(newUser).pipe(delay(400));
+
+    return this.http.post<any>(`${environment.apiUrl}/user/create`, payload);
   }
 
   // ── PATCH update user ──
@@ -79,9 +84,7 @@ export class UsersService {
 
   // ── DELETE user ──
   delete(id: number): Observable<void> {
-    /* REAL: return this.http.delete<void>(`${environment.apiUrl}/users/${id}`, { headers: this.getHeaders() }); */
-    this.mockUsers = this.mockUsers.filter(u => u.id !== id);
-    return of(undefined).pipe(delay(300));
+    return this.http.delete<void>(`${environment.apiUrl}/user/${id}`);
   }
 
   private daysFromNow(days: number): string {

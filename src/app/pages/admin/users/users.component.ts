@@ -35,11 +35,11 @@ export class UsersComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.userForm = this.fb.group({
-      name:                 ['', [Validators.required]],
-      last_name:            ['', [Validators.required]],
-      number:               ['', [Validators.required]],
-      suscription_type_id:  ['', [Validators.required]],
-      payment_method:       ['efectivo', [Validators.required]],
+      name: ['', [Validators.required]],
+      last_name: ['', [Validators.required]],
+      number: ['', [Validators.required]],
+      suscription_type_id: ['', [Validators.required]],
+      payment_method: ['efectivo', [Validators.required]],
     });
   }
 
@@ -105,10 +105,32 @@ export class UsersComponent implements OnInit {
         this.loadData();
       });
     } else {
-      this.usersService.create(val as CreateUserDto).subscribe(() => {
-        this.saving.set(false);
-        this.closeModal();
-        this.loadData();
+
+      this.usersService.create(val).subscribe({
+        next: (nuevoUsuario) => {
+          const userId = nuevoUsuario.id || nuevoUsuario.data?.id;
+
+          this.subscriptionsService.assignSubscription(val.suscription_type_id, [userId], val.payment_method).subscribe({
+            next: () => {
+              alert('Usuario y membresía registrados con éxito'); 
+              this.saving.set(false);
+              this.closeModal();
+              this.loadData();
+            },
+            error: (err) => {
+              alert('Usuario creado, pero hubo un error al asignar el pago.'); 
+              console.error('Error al asignar suscripción:', err);
+              this.saving.set(false);
+              this.closeModal();
+              this.loadData();
+            }
+          });
+        },
+        error: (err) => {
+          alert('Hubo un error al registrar el usuario. Revisa los datos.'); 
+          console.error('Error al crear usuario:', err);
+          this.saving.set(false);
+        }
       });
     }
   }
@@ -140,9 +162,9 @@ export class UsersComponent implements OnInit {
 
   getMembershipBadge(u: UserWithMembership): { label: string; cls: string } {
     switch (u.membership_status) {
-      case 'expired':  return { label: 'Vencida',     cls: 'badge-danger'  };
-      case 'expiring': return { label: 'Por vencer',  cls: 'badge-warning' };
-      default:         return { label: 'Activa',      cls: 'badge-success' };
+      case 'expired': return { label: 'Vencida', cls: 'badge-danger' };
+      case 'expiring': return { label: 'Por vencer', cls: 'badge-warning' };
+      default: return { label: 'Activa', cls: 'badge-success' };
     }
   }
 }

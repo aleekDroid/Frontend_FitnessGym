@@ -29,7 +29,7 @@ export class PricesComponent implements OnInit {
       price:                 ['', [Validators.required, Validators.min(1)]],
       duration:              ['30', Validators.required],
       person_per_suscription:['1', Validators.required],
-      description:           [''],
+      description:           ['', Validators.required],
     });
   }
 
