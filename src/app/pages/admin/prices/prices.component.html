@@ -1,4 +1,5 @@
 <!-- src/app/pages/admin/prices/prices.component.html -->
+
 <div class="page-container">
   <div class="toolbar">
     <h1 class="section-title" style="margin-bottom:0">Membresías y Precios</h1>
@@ -110,7 +111,6 @@
             <label>Duración (días)</label>
             <select formControlName="duration" class="form-control" [class.is-invalid]="f['duration'].touched && f['duration'].errors">
               <option value="30">30 días (1 mes)</option>
-              <option value="90">90 días (3 meses)</option>
               <option value="180">180 días (6 meses)</option>
               <option value="365">365 días (1 año)</option>
             </select>
@@ -120,8 +120,7 @@
             <select formControlName="person_per_suscription" class="form-control" [class.is-invalid]="f['person_per_suscription'].touched && f['person_per_suscription'].errors">
               <option value="1">1 persona</option>
               <option value="2">2 personas</option>
-              <option value="3">3 personas</option>
-              <option value="4">4 personas</option>
+
             </select>
           </div>
         </div>
