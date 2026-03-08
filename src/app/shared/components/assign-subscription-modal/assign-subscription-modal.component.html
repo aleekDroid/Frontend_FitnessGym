@@ -1,0 +1,134 @@
+<div class="modal-overlay" (click)="closeModal()" (keydown.enter)="closeModal()" tabindex="0">
+  <div class="modal-box" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0">
+    <div class="modal-header">
+      <h2 class="modal-title">Asignar Suscripción</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <form [formGroup]="assignForm" (ngSubmit)="submitAssign()">
+      <!-- PLAN SELECTION -->
+      <div class="form-group">
+        <label>Plan / Membresía</label>
+        <select formControlName="subscription_id" class="form-control"
+          [class.is-invalid]="af['subscription_id'].touched && af['subscription_id'].errors"
+          (change)="onAssignPlanChange($event)">
+          <option value="" disabled selected>Selecciona un plan...</option>
+          @for (plan of subscriptionTypes(); track plan.id) {
+          <option [value]="plan.id">
+            {{ plan.name }} - ${{ plan.price }}
+          </option>
+          }
+        </select>
+        @if (af["subscription_id"].touched && af["subscription_id"].errors?.["required"]) {
+        <div class="field-error">Debes seleccionar un plan.</div>
+        }
+        @if (af["subscription_id"].value) {
+        <p style="font-size: 0.8rem; color: #4ade80; margin-top: 6px">
+          Este plan cubre hasta
+          <strong>{{ assignPlanLimit() }}</strong> usuario(s).
+        </p>
+        }
+      </div>
+
+      <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
+
+      <!-- USER SEARCH AUTOCOMPLETE -->
+      <div class="form-group" style="position: relative">
+        <label>Buscar Usuarios a Inscribir (<span
+            [style.color]="selectedAssignUsers().length === assignPlanLimit() ? '#ef9a9a' : 'inherit'"
+          >{{ selectedAssignUsers().length }} / {{ assignPlanLimit() }}</span>)</label>
+        <input id="assignUserSearchComponent" type="text" class="form-control"
+          placeholder="Buscar por nombre, apellido o teléfono..." [value]="assignSearchQuery()"
+          (input)="onAssignSearchInput($any($event.target).value)" autocomplete="off"
+          [disabled]="selectedAssignUsers().length >= assignPlanLimit() || !af['subscription_id'].value" />
+
+        <!-- Dropdown Results -->
+        @if (assignSearchQuery() && assignSearchResults().length > 0) {
+        <ul class="autocomplete-dropdown">
+          @for (resUser of assignSearchResults(); track resUser.id) {
+          <li (click)="selectUserForAssign(resUser)" (keydown.enter)="selectUserForAssign(resUser)" tabindex="0">
+            <div class="autocomplete-item">
+              <span class="user-avatar-xxs">{{ resUser.name.charAt(0) }}{{ resUser.last_name.charAt(0) }}</span>
+              <div>
+                <strong>{{ resUser.name }} {{ resUser.last_name }}</strong>
+                <small style="display: block"> {{ resUser.number }}</small>
+              </div>
+            </div>
+          </li>
+          }
+        </ul>
+        } @else if (assignSearchQuery() && assignSearchResults().length === 0 && assignSearching()) {
+        <ul class="autocomplete-dropdown">
+          <li class="empty-result">Buscando...</li>
+        </ul>
+        } @else if (assignSearchQuery() && assignSearchResults().length === 0 && !assignSearching()) {
+        <ul class="autocomplete-dropdown">
+          <li class="empty-result">No se encontraron usuarios libres</li>
+        </ul>
+        }
+      </div>
+
+      <!-- SELECTED USERS CHIPS -->
+      @if (selectedAssignUsers().length > 0) {
+      <div class="selected-users-chips">
+        @for (sUser of selectedAssignUsers(); track sUser.id) {
+        <div class="chip">
+          {{ sUser.name }} {{ sUser.last_name }}
+          <button type="button" class="chip-remove" (click)="removeAssignUser(sUser)">✕</button>
+        </div>
+        }
+      </div>
+
+      <!-- SUB ACTIVE WARNING -->
+      @if (usersWithActiveSub().length > 0) {
+      <div class="active-sub-warning">
+        <span class="warning-icon">⚠️</span>
+        <div class="warning-content">
+          <p>Las nuevas suscripciones reemplazarán a los días actuales:</p>
+          <ul>
+            @for (uw of usersWithActiveSub(); track uw.name) {
+            <li>
+              <strong>{{ uw.name }}</strong> tiene
+              <strong>{{ uw.days }}</strong> días restantes.
+            </li>
+            }
+          </ul>
+        </div>
+      </div>
+      } }
+
+      <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
+
+      <!-- PAYMENT METHOD -->
+      <div class="form-group">
+        <label>Método de pago recibido</label>
+        <div class="payment-options">
+          <label class="payment-option" [class.selected]="af['payment_method'].value === 'efectivo'">
+            <input type="radio" formControlName="payment_method" value="efectivo" />
+            Efectivo
+          </label>
+          <label class="payment-option" [class.selected]="af['payment_method'].value === 'tarjeta'">
+            <input type="radio" formControlName="payment_method" value="tarjeta" />
+            Tarjeta
+          </label>
+          <label class="payment-option" [class.selected]="af['payment_method'].value === 'transferencia'">
+            <input type="radio" formControlName="payment_method" value="transferencia" />
+            Transfer.
+          </label>
+        </div>
+      </div>
+
+      <!-- SUBMIT -->
+      <div class="modal-actions">
+        <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancelar</button>
+        <button type="submit" class="btn btn-primary" [disabled]="saving() || selectedAssignUsers().length === 0">
+          @if (saving()) {
+          <span class="spinner-sm"></span> Procesando...
+          } @else {
+          Finalizar Venta
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

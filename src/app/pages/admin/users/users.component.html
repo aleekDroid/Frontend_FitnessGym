@@ -1,19 +1,109 @@
 <!-- src/app/pages/admin/users/users.component.html -->
 <div class="page-container">
-
   <div class="toolbar">
     <div class="search-wrapper">
-      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input class="search-input" placeholder="Buscar usuario..." [value]="searchQuery()" (input)="onSearch($any($event.target).value)" />
+      <svg
+        class="search-icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        class="search-input"
+        placeholder="Buscar usuario..."
+        [value]="searchQuery()"
+        (input)="onSearch($any($event.target).value)"
+      />
     </div>
+
+    <div
+      class="filters-group"
+      style="
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+        flex: 1;
+      "
+    >
+      <select
+        class="limit-select"
+        [ngModel]="filterRole()"
+        (ngModelChange)="filterRole.set($event); onFilterChange()"
+      >
+        <option value="">Todos los roles</option>
+        <option value="member">Miembros</option>
+        <option value="admin">Administradores</option>
+      </select>
+
+      <select
+        class="limit-select"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="filterStatus.set($event); onFilterChange()"
+      >
+        <option value="">Todos los estados</option>
+        <option value="active">Activos</option>
+        <option value="inactive">Inactivos</option>
+      </select>
+
+      <select
+        class="limit-select"
+        [ngModel]="filterSubscription()"
+        (ngModelChange)="filterSubscription.set($event); onFilterChange()"
+      >
+        <option value="all">Suscripción: Todas</option>
+        <option value="true">Al corriente</option>
+        <option value="false">Deudores</option>
+      </select>
+    </div>
+
+    <button
+      class="btn btn-secondary"
+      (click)="openAssignModal()"
+      style="margin-right: 12px"
+    >
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <path
+          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+        ></path>
+        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+        <line x1="12" y1="22.08" x2="12" y2="12"></line>
+      </svg>
+      Asignar Plan
+    </button>
+
     <button class="btn btn-primary" (click)="openCreate()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <line x1="12" y1="5" x2="12" y2="19" />
+        <line x1="5" y1="12" x2="19" y2="12" />
+      </svg>
       Registrar usuario
     </button>
   </div>
 
-  <h2 class="section-title">Todos los usuarios
-    <span class="count-badge">{{ filteredUsers.length }}</span>
+  <h2 class="section-title">
+    Todos los usuarios
+    <span class="count-badge">{{ totalItems() }}</span>
   </h2>
 
   @if (loading()) {
@@ -28,42 +118,168 @@
           <tr>
             <th>Nombre</th>
             <th>Teléfono</th>
+            <th>Rol</th>
             <th>Membresía hasta</th>
-            <th>Estado</th>
-            <th style="text-align:right">Acciones</th>
+            <th>Estado Cta.</th>
+            <th>Estado Memb.</th>
+            <th style="text-align: right">Acciones</th>
           </tr>
         </thead>
         <tbody>
-          @for (user of filteredUsers; track user.id) {
+          @for (user of users(); track user.id) {
             <tr>
               <td class="user-name-cell">
-                <div class="user-avatar-sm">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
+                <div class="user-avatar-sm">
+                  {{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}
+                </div>
                 <div>
-                  <div class="user-full-name">{{ user.name }} {{ user.last_name }}</div>
+                  <div class="user-full-name">
+                    {{ user.name }} {{ user.last_name }}
+                  </div>
                 </div>
               </td>
               <td>{{ user.number }}</td>
+              <td>
+                <span class="user-role-text">
+                  {{ user.role === "admin" ? "Administrador" : "Miembro" }}
+                </span>
+              </td>
               <td>{{ formatDate(user.membership_end) }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="
+                    user.status === 'active' ? 'badge-success' : 'badge-danger'
+                  "
+                >
+                  {{ user.status === "active" ? "Activo" : "Inactivo" }}
+                </span>
+              </td>
               <td>
                 <span class="badge" [ngClass]="getMembershipBadge(user).cls">
                   {{ getMembershipBadge(user).label }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--edit" (click)="openEdit(user)" title="Editar">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <button
+                  class="action-btn action-btn--info"
+                  (click)="openDetails(user)"
+                  title="Ver Detalles"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
                 </button>
-                <button class="action-btn action-btn--delete" (click)="confirmDelete(user)" title="Eliminar">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                <button
+                  class="action-btn"
+                  [ngClass]="
+                    user.status === 'active'
+                      ? 'action-btn--delete'
+                      : 'action-btn--activate'
+                  "
+                  (click)="confirmToggleStatus(user)"
+                  [title]="user.status === 'active' ? 'Desactivar' : 'Activar'"
+                >
+                  @if (user.status === "active") {
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                    </svg>
+                  } @else {
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                  }
                 </button>
               </td>
             </tr>
-          }
-          @empty {
-            <tr><td colspan="5" class="empty-row">No se encontraron usuarios</td></tr>
+          } @empty {
+            <tr>
+              <td colspan="7" class="empty-row">No se encontraron usuarios</td>
+            </tr>
           }
         </tbody>
       </table>
+    </div>
+
+    <!-- UI Paginación -->
+    <div class="pagination-footer">
+      <div class="pagination-info">
+        Mostrando página <strong>{{ currentPage() }}</strong> de
+        <strong>{{ totalPages() || 1 }}</strong>
+        <span class="text-muted">({{ totalItems() }} usuarios totales)</span>
+      </div>
+
+      <div class="pagination-controls">
+        <button
+          class="btn btn-outline"
+          [disabled]="currentPage() === 1"
+          (click)="goToPage(currentPage() - 1)"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <select
+          class="limit-select"
+          [ngModel]="limit()"
+          (change)="onLimitChange(+$any($event.target).value)"
+        >
+          <option [value]="10">10 / pág</option>
+          <option [value]="25">25 / pág</option>
+          <option [value]="50">50 / pág</option>
+          <option [value]="100">100 / pág</option>
+        </select>
+
+        <button
+          class="btn btn-outline"
+          [disabled]="currentPage() >= totalPages() || totalPages() === 0"
+          (click)="goToPage(currentPage() + 1)"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
     </div>
   }
 </div>
@@ -73,7 +289,9 @@
   <div class="modal-overlay" (click)="closeModal()">
     <div class="modal-box" (click)="$event.stopPropagation()">
       <div class="modal-header">
-        <h2 class="modal-title">{{ editUser() ? 'Editar usuario' : 'Registrar nuevo usuario' }}</h2>
+        <h2 class="modal-title">
+          {{ editUser() ? "Editar usuario" : "Registrar nuevo usuario" }}
+        </h2>
         <button class="modal-close" (click)="closeModal()">✕</button>
       </div>
 
@@ -81,53 +299,55 @@
         <div class="form-row">
           <div class="form-group">
             <label>Nombre</label>
-            <input type="text" formControlName="name" class="form-control" placeholder="Nombre" [class.is-invalid]="f['name'].touched && f['name'].errors" />
-            @if (f['name'].touched && f['name'].errors?.['required']) {
+            <input
+              type="text"
+              formControlName="name"
+              class="form-control"
+              placeholder="Nombre"
+              [class.is-invalid]="f['name'].touched && f['name'].errors"
+            />
+            @if (f["name"].touched && f["name"].errors?.["required"]) {
               <span class="field-error">Obligatorio</span>
             }
           </div>
           <div class="form-group">
             <label>Apellido</label>
-            <input type="text" formControlName="last_name" class="form-control" placeholder="Apellido" [class.is-invalid]="f['last_name'].touched && f['last_name'].errors" />
+            <input
+              type="text"
+              formControlName="last_name"
+              class="form-control"
+              placeholder="Apellido"
+              [class.is-invalid]="
+                f['last_name'].touched && f['last_name'].errors
+              "
+            />
           </div>
         </div>
 
         <div class="form-group">
           <label>Número de teléfono (WhatsApp)</label>
-          <input type="text" formControlName="number" class="form-control" placeholder="Ej. 4421234567" [class.is-invalid]="f['number'].touched && f['number'].errors" />
+          <input
+            type="text"
+            formControlName="number"
+            class="form-control"
+            placeholder="Ej. 4421234567"
+            [class.is-invalid]="f['number'].touched && f['number'].errors"
+          />
         </div>
 
-        @if (!editUser()) {
-          <div class="form-group">
-            <label>Tipo de membresía</label>
-            <select formControlName="suscription_type_id" class="form-control" [class.is-invalid]="f['suscription_type_id'].touched && f['suscription_type_id'].errors">
-              <option value="">Selecciona una membresía</option>
-              @for (type of subscriptionTypes(); track type.id) {
-                <option [value]="type.id">{{ type.name }} — ${{ type.price }}</option>
-              }
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Método de pago</label>
-            <div class="payment-options">
-              @for (method of ['efectivo','transferencia','tarjeta']; track method) {
-                <label class="payment-option" [class.selected]="f['payment_method'].value === method">
-                  <input type="radio" formControlName="payment_method" [value]="method" />
-                  {{ method | titlecase }}
-                </label>
-              }
-            </div>
-          </div>
-        }
-
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="closeModal()"
+          >
+            Cancelar
+          </button>
           <button type="submit" class="btn btn-success" [disabled]="saving()">
             @if (saving()) {
               <span class="spinner-sm"></span> Guardando...
             } @else {
-              {{ editUser() ? 'Guardar cambios' : 'Registrar' }}
+              {{ editUser() ? "Guardar cambios" : "Registrar" }}
             }
           </button>
         </div>
@@ -136,21 +356,19 @@
   </div>
 }
 
-<!-- ══ MODAL: Delete confirm ══ -->
-@if (showDeleteConfirm()) {
-  <div class="modal-overlay" (click)="cancelDelete()">
-    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
-      <div class="delete-confirm">
-        <div class="delete-icon">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-        </div>
-        <h3>¿Eliminar usuario?</h3>
-        <p>Se eliminará a <strong>{{ deleteTarget()?.name }} {{ deleteTarget()?.last_name }}</strong> de forma permanente.</p>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="cancelDelete()">Cancelar</button>
-          <button class="btn btn-danger" (click)="doDelete()">Sí, eliminar</button>
-        </div>
-      </div>
-    </div>
-  </div>
+<!-- ══ MODAL: Status confirm ══ -->
+@if (showStatusConfirm()) {
+  <app-confirm-status-modal 
+    [user]="statusTarget()" 
+    (closeEvent)="cancelToggleStatus()" 
+    (confirmEvent)="onStatusConfirm($event)">
+  </app-confirm-status-modal>
+}
+
+<!-- ══ MODAL: Assign Subscription ══ -->
+@if (showAssignModal()) {
+  <app-assign-subscription-modal
+    (closeEvent)="closeAssignModal()"
+    (successEvent)="onAssignSuccess()">
+  </app-assign-subscription-modal>
 }

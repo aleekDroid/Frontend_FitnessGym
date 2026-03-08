@@ -1,30 +1,63 @@
 // src/app/core/services/users.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
-import { User, UserWithMembership, CreateUserDto, UpdateUserDto } from '../models/user.model';
+import { map } from 'rxjs/operators';
+import { UserWithMembership, UpdateUserDto, PaginatedUsersResponse } from '../models/user.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
+
+export interface HistoryMeta {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+}
+
+export interface SubscriptionHistoryItem {
+  id: number;
+  start_date: string;
+  end_date: string;
+  status: string;
+  created_at: string;
+  suscriptions_types: {
+    id: number;
+    name: string;
+    description: string;
+    price: number;
+    duration: number;
+  };
+  subscription_sales: {
+    id: number;
+    quantity: number;
+    subtotal: number;
+    transactions: {
+      id: number;
+      transaction_type: string;
+      payment_method: string;
+      total: number;
+    } | null;
+  } | null;
+}
+
+export interface UserDetailsResponse {
+  user: {
+    id: number;
+    number: string;
+    name: string;
+    last_name: string;
+    role: string;
+    status: string;
+    created_at: string;
+  };
+  subscriptionHistory: SubscriptionHistoryItem[];
+  historyMeta: HistoryMeta;
+}
 
 @Injectable({ providedIn: 'root' })
 export class UsersService {
 
-  // ── Mock Data (remove when backend ready) ──
-  private mockUsers: UserWithMembership[] = [
-    { id: 1,  number: '4421001001', name: 'Carlos',   last_name: 'Ramírez',    role: 'member', status: 'active', membership_end: this.daysFromNow(15),  membership_status: 'active',   attended_today: true  },
-    { id: 2,  number: '4421002002', name: 'Sofía',    last_name: 'Hernández',  role: 'member', status: 'active', membership_end: this.daysFromNow(-3),  membership_status: 'expired',  attended_today: true  },
-    { id: 3,  number: '4421003003', name: 'Miguel',   last_name: 'Torres',     role: 'member', status: 'active', membership_end: this.daysFromNow(2),   membership_status: 'expiring', attended_today: true  },
-    { id: 4,  number: '4421004004', name: 'Valeria',  last_name: 'López',      role: 'member', status: 'active', membership_end: this.daysFromNow(22),  membership_status: 'active',   attended_today: true  },
-    { id: 5,  number: '4421005005', name: 'Diego',    last_name: 'Morales',    role: 'member', status: 'active', membership_end: this.daysFromNow(-10), membership_status: 'expired',  attended_today: false },
-    { id: 6,  number: '4421006006', name: 'Andrea',   last_name: 'Gutiérrez',  role: 'member', status: 'active', membership_end: this.daysFromNow(1),   membership_status: 'expiring', attended_today: false },
-    { id: 7,  number: '4421007007', name: 'Roberto',  last_name: 'Sánchez',    role: 'member', status: 'active', membership_end: this.daysFromNow(45),  membership_status: 'active',   attended_today: false },
-    { id: 8,  number: '4421008008', name: 'Paola',    last_name: 'Medina',     role: 'member', status: 'active', membership_end: this.daysFromNow(3),   membership_status: 'expiring', attended_today: true  },
-    { id: 9,  number: '4421009009', name: 'Luis',     last_name: 'Castro',     role: 'member', status: 'active', membership_end: this.daysFromNow(-1),  membership_status: 'expired',  attended_today: true  },
-    { id: 10, number: '4421010010', name: 'Fernanda', last_name: 'Romero',     role: 'member', status: 'active', membership_end: this.daysFromNow(60),  membership_status: 'active',   attended_today: false },
-    { id: 11, number: '4421011011', name: 'Jorge',    last_name: 'Vázquez',    role: 'member', status: 'active', membership_end: this.daysFromNow(8),   membership_status: 'active',   attended_today: false },
-    { id: 12, number: '4421012012', name: 'Mariana',  last_name: 'Flores',     role: 'member', status: 'active', membership_end: this.daysFromNow(2),   membership_status: 'expiring', attended_today: true  },
-  ]; 
+  // Removed mock data
 
   constructor(private http: HttpClient, private authService: AuthService) {}
 
@@ -32,35 +65,64 @@ export class UsersService {
     return new HttpHeaders({ Authorization: `Bearer ${this.authService.getToken()}` });
   }
   
-// ── GET all users ──
-  getAll(): Observable<UserWithMembership[]> {
-    return this.http.get<any>(`${environment.apiUrl}/user?role=member&limit=1000`).pipe(
+// ── GET all users (Paginated) ──
+  getUsers(
+    page: number = 1, 
+    limit: number = 10, 
+    search: string = '',
+    status?: 'active' | 'inactive',
+    role?: 'admin' | 'member',
+    hasActiveSubscription?: 'true' | 'false' | 'all'
+  ): Observable<PaginatedUsersResponse> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+      
+    if (role) {
+      params = params.set('role', role);
+    } else {
+      params = params.set('role', 'member');
+    }
+      
+    if (search.trim()) {
+      params = params.set('search', search.trim());
+    }
+
+    if (status) {
+      params = params.set('status', status);
+    }
+
+    if (hasActiveSubscription && hasActiveSubscription !== 'all') {
+      params = params.set('hasActiveSubscription', hasActiveSubscription);
+    }
+
+    return this.http.get<PaginatedUsersResponse>(`${environment.apiUrl}/user`, { params }).pipe(
       map(response => {
-        const usuarios = response.data || [];
-        
-        return usuarios.map((user: any) => {
-          return {
-            ...user, 
-            membership_end: user.activeSubscription ? user.activeSubscription.end_date : undefined,
-            membership_status: user.activeSubscription ? user.activeSubscription.status : 'expired',
-            attended_today: false 
-          };
-        });
+        // Map backend activeSubscription to frontend format
+        const items = response.data.map((user: any) => ({
+          ...user,
+          membership_end: user.activeSubscription?.end_date,
+          membership_status: user.activeSubscription?.status || 'none',
+          attended_today: false 
+        }));
+        return { data: items, meta: response.meta };
       })
     );
   }
 
   // ── GET today's attendances ──
   getTodayAttendances(): Observable<UserWithMembership[]> {
-    /* REAL: return this.http.get<UserWithMembership[]>(`${environment.apiUrl}/attendances/today`, { headers: this.getHeaders() }); */
-    return of(this.mockUsers.filter(u => u.attended_today)).pipe(delay(300));
+    // REAL: return this.http.get<UserWithMembership[]>(`${environment.apiUrl}/attendances/today`, { headers: this.getHeaders() });
+    return of([]);
   }
 
-  // ── GET single user ──
-  getById(id: number): Observable<UserWithMembership> {
-    /* REAL: return this.http.get<UserWithMembership>(`${environment.apiUrl}/users/${id}`, { headers: this.getHeaders() }); */
-    const user = this.mockUsers.find(u => u.id === id)!;
-    return of(user).pipe(delay(200));
+  // ── GET single user (with payment history) ──
+  getById(id: number, historyPage: number = 1, historyLimit: number = 10): Observable<UserDetailsResponse> {
+    let params = new HttpParams()
+      .set('historyPage', historyPage.toString())
+      .set('historyLimit', historyLimit.toString());
+
+    return this.http.get<UserDetailsResponse>(`${environment.apiUrl}/user/${id}`, { headers: this.getHeaders(), params });
   }
 
 // ── POST create user ──
@@ -74,22 +136,18 @@ export class UsersService {
     return this.http.post<any>(`${environment.apiUrl}/user/create`, payload);
   }
 
+  // ── PUT update user profile (Full Details API) ──
+  updateProfile(data: { id: number, name: string, lastName: string, number: string }): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/user/profile`, data, { headers: this.getHeaders() });
+  }
+
   // ── PATCH update user ──
   update(id: number, dto: UpdateUserDto): Observable<UserWithMembership> {
-    /* REAL: return this.http.patch<UserWithMembership>(`${environment.apiUrl}/users/${id}`, dto, { headers: this.getHeaders() }); */
-    const idx = this.mockUsers.findIndex(u => u.id === id);
-    if (idx !== -1) Object.assign(this.mockUsers[idx], dto);
-    return of(this.mockUsers[idx]).pipe(delay(300));
+    return this.http.patch<UserWithMembership>(`${environment.apiUrl}/user/${id}`, dto, { headers: this.getHeaders() });
   }
 
-  // ── DELETE user ──
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${environment.apiUrl}/user/${id}`);
-  }
-
-  private daysFromNow(days: number): string {
-    const d = new Date();
-    d.setDate(d.getDate() + days);
-    return d.toISOString().split('T')[0];
+  // ── PATCH toggle user status (logical delete) ──
+  toggleUserStatus(id: number, status: 'active' | 'inactive'): Observable<any> {
+    return this.http.patch<any>(`${environment.apiUrl}/user/status`, { id, status }, { headers: this.getHeaders() });
   }
 }

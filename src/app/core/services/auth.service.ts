@@ -24,11 +24,11 @@ export interface LoginResponse {
 export class AuthService {
   private readonly USER_KEY  = 'fg_user';
 
-  private currentToken = signal<string | null>(null);
+  private readonly currentToken = signal<string | null>(null);
   
   currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
 
-  constructor(private http: HttpClient, private router: Router) {}
+  constructor(private readonly http: HttpClient, private readonly router: Router) {}
 
   login(number: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(

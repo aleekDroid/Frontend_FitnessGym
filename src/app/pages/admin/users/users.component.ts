@@ -1,49 +1,80 @@
-// src/app/pages/admin/users/users.component.ts
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UsersService } from '../../../core/services/users.service';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
-import { UserWithMembership, CreateUserDto } from '../../../core/models/user.model';
+import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
+import { AssignSubscriptionModalComponent } from '../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
+import { ConfirmStatusModalComponent } from '../../../shared/components/confirm-status-modal/confirm-status-modal.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssignSubscriptionModalComponent, ConfirmStatusModalComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
 export class UsersComponent implements OnInit {
-  allUsers = signal<UserWithMembership[]>([]);
+  users = signal<UserWithMembership[]>([]);
   subscriptionTypes = signal<SubscriptionType[]>([]);
-  searchQuery = signal('');
   loading = signal(true);
   saving = signal(false);
 
+  // Pagination & Search
+  searchQuery = signal('');
+  filterStatus = signal<'active' | 'inactive' | ''>('');
+  filterRole = signal<'admin' | 'member' | ''>('member');
+  filterSubscription = signal<'true' | 'false' | 'all'>('all');
+  currentPage = signal(1);
+  limit = signal(10);
+  totalItems = signal(0);
+  totalPages = signal(0);
+  private searchSubject = new Subject<string>();
+
   // Modal
+  // Modals
   showModal = signal(false);
   editUser = signal<UserWithMembership | null>(null);
-  deleteTarget = signal<UserWithMembership | null>(null);
-  showDeleteConfirm = signal(false);
+  statusTarget = signal<UserWithMembership | null>(null);
+  showStatusConfirm = signal(false);
+
+  // Modal Assign Subscription State
+  showAssignModal = signal(false);
+
+  // TOAST STATE
+  toastMessage = signal<string | null>(null);
+  toastType = signal<'success' | 'error'>('success');
 
   userForm: FormGroup;
 
   constructor(
-    private usersService: UsersService,
-    private subscriptionsService: SubscriptionsService,
-    private fb: FormBuilder
+    private readonly usersService: UsersService,
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly fb: FormBuilder,
+    private readonly router: Router
   ) {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required]],
-      suscription_type_id: ['', [Validators.required]],
-      payment_method: ['efectivo', [Validators.required]],
+      number: ['', [Validators.required]]
     });
   }
 
   ngOnInit(): void {
+    // Setup debounced search targeting backend
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      this.searchQuery.set(query);
+      this.currentPage.set(1);
+      this.loadData();
+    });
+
     this.loadData();
     this.subscriptionsService.getAll().subscribe(types => {
       this.subscriptionTypes.set(types.filter(t => t.status === 'active'));
@@ -52,27 +83,63 @@ export class UsersComponent implements OnInit {
 
   loadData(): void {
     this.loading.set(true);
-    this.usersService.getAll().subscribe(users => {
-      this.allUsers.set(users.filter(u => u.role === 'member'));
-      this.loading.set(false);
+
+    const status = this.filterStatus() || undefined;
+    const role = this.filterRole() || undefined;
+    const hasSub = this.filterSubscription();
+
+    this.usersService.getUsers(
+      this.currentPage(), 
+      this.limit(), 
+      this.searchQuery(),
+      status,
+      role,
+      hasSub
+    ).subscribe({
+      next: res => {
+        this.users.set(res.data);
+        this.totalItems.set(res.meta.totalItems);
+        this.totalPages.set(res.meta.totalPages);
+        this.currentPage.set(res.meta.currentPage);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
   }
 
-  get filteredUsers(): UserWithMembership[] {
-    const q = this.searchQuery().toLowerCase().trim();
-    if (!q) return this.allUsers();
-    return this.allUsers().filter(u =>
-      u.name.toLowerCase().includes(q) ||
-      u.last_name.toLowerCase().includes(q) ||
-      u.number.includes(q)
-    );
+  showToast(msg: string, type: 'success' | 'error' = 'success'): void {
+    this.toastMessage.set(msg);
+    this.toastType.set(type);
+    setTimeout(() => {
+      this.toastMessage.set(null);
+    }, 3500);
   }
 
-  onSearch(val: string): void { this.searchQuery.set(val); }
+  onSearch(val: string): void {
+    this.searchSubject.next(val);
+  }
+
+  onFilterChange(): void {
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  onLimitChange(newLimit: number): void {
+    this.limit.set(newLimit);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadData();
+    }
+  }
 
   openCreate(): void {
     this.editUser.set(null);
-    this.userForm.reset({ payment_method: 'efectivo' });
+    this.userForm.reset();
     this.showModal.set(true);
   }
 
@@ -81,11 +148,13 @@ export class UsersComponent implements OnInit {
     this.userForm.patchValue({
       name: user.name,
       last_name: user.last_name,
-      number: user.number,
-      suscription_type_id: '',
-      payment_method: 'efectivo',
+      number: user.number
     });
     this.showModal.set(true);
+  }
+
+  openDetails(user: UserWithMembership): void {
+    this.router.navigate(['/admin/users', user.id]);
   }
 
   closeModal(): void {
@@ -105,29 +174,15 @@ export class UsersComponent implements OnInit {
         this.loadData();
       });
     } else {
-
       this.usersService.create(val).subscribe({
-        next: (nuevoUsuario) => {
-          const userId = nuevoUsuario.id || nuevoUsuario.data?.id;
-
-          this.subscriptionsService.assignSubscription(val.suscription_type_id, [userId], val.payment_method).subscribe({
-            next: () => {
-              alert('Usuario y membresía registrados con éxito'); 
-              this.saving.set(false);
-              this.closeModal();
-              this.loadData();
-            },
-            error: (err) => {
-              alert('Usuario creado, pero hubo un error al asignar el pago.'); 
-              console.error('Error al asignar suscripción:', err);
-              this.saving.set(false);
-              this.closeModal();
-              this.loadData();
-            }
-          });
+        next: () => {
+          this.showToast('Usuario registrado con éxito', 'success'); 
+          this.saving.set(false);
+          this.closeModal();
+          this.loadData();
         },
         error: (err) => {
-          alert('Hubo un error al registrar el usuario. Revisa los datos.'); 
+          this.showToast('Hubo un error al registrar el usuario. Revisa los datos.', 'error'); 
           console.error('Error al crear usuario:', err);
           this.saving.set(false);
         }
@@ -135,22 +190,22 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  confirmDelete(user: UserWithMembership): void {
-    this.deleteTarget.set(user);
-    this.showDeleteConfirm.set(true);
+  confirmToggleStatus(user: UserWithMembership): void {
+    this.statusTarget.set(user);
+    this.showStatusConfirm.set(true);
   }
 
-  cancelDelete(): void {
-    this.showDeleteConfirm.set(false);
-    this.deleteTarget.set(null);
+  cancelToggleStatus(): void {
+    this.showStatusConfirm.set(false);
+    this.statusTarget.set(null);
   }
 
-  doDelete(): void {
-    if (!this.deleteTarget()) return;
-    this.usersService.delete(this.deleteTarget()!.id).subscribe(() => {
-      this.cancelDelete();
-      this.loadData();
-    });
+  onStatusConfirm(updatedUser: UserWithMembership): void {
+    this.users.update(users => users.map(u => 
+      u.id === updatedUser.id ? updatedUser : u
+    ));
+    this.cancelToggleStatus();
+    this.showToast('Estado actualizado correctamente', 'success');
   }
 
   get f() { return this.userForm.controls; }
@@ -162,9 +217,27 @@ export class UsersComponent implements OnInit {
 
   getMembershipBadge(u: UserWithMembership): { label: string; cls: string } {
     switch (u.membership_status) {
-      case 'expired': return { label: 'Vencida', cls: 'badge-danger' };
+      case 'expired':  return { label: 'Vencida', cls: 'badge-danger' };
       case 'expiring': return { label: 'Por vencer', cls: 'badge-warning' };
-      default: return { label: 'Activa', cls: 'badge-success' };
+      case 'active':   return { label: 'Activa', cls: 'badge-success' };
+      case 'none':     return { label: 'Sin suscripción', cls: 'badge-muted' };
+      default:         return { label: 'Sin suscripción', cls: 'badge-muted' };
     }
+  }
+
+  // ── ASSIGN SUBSCRIPTION LOGIC ──
+
+  openAssignModal(): void {
+    this.showAssignModal.set(true);
+  }
+
+  closeAssignModal(): void {
+    this.showAssignModal.set(false);
+  }
+
+  onAssignSuccess(): void {
+    this.showAssignModal.set(false);
+    this.showToast('Suscripción asignada exitosamente a los usuarios seleccionados.', 'success');
+    this.loadData();
   }
 }
