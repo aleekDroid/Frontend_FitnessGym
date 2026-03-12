@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { Product, CreateProductDto, PaginatedProductsResponse } from '../models/product.model';
+import { Product, CreateProductDto, PaginatedProductsResponse, RegisterSaleDto } from '../models/product.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
@@ -82,5 +82,9 @@ export class ProductsService {
 
   getProductHistory(id: number): Observable<{ movements: any[], sales: any[] }> {
     return this.http.get<{ movements: any[], sales: any[] }>(`${environment.apiUrl}/products/${id}/history`, { headers: this.getHeaders() });
+  }
+
+  registerSale(dto: RegisterSaleDto): Observable<any> {
+    return this.http.post(`${environment.apiUrl}/products/sales`, dto, { headers: this.getHeaders() });
   }
 }

@@ -7,7 +7,7 @@
       <input class="search-input" placeholder="Buscar nombre, código..." [value]="searchQuery()" (input)="onSearch($any($event.target).value)" />
     </div>
 
-    <div class="filters-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; flex: 1; justify-content: flex-end;">
+    <div class="filters-group" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
       <select class="limit-select" [ngModel]="filterStatus()" (ngModelChange)="filterStatus.set($event); onFilterChange()">
         <option value="">Todos los estados</option>
         <option value="active">Activos</option>
@@ -20,7 +20,7 @@
         <span style="color: rgba(255,255,255,0.2);">|</span>
         <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 60px; background: transparent; padding: 0 4px;" placeholder="Máx" [ngModel]="filterMaxStock()" (ngModelChange)="filterMaxStock.set($event); onFilterChange()" />
       </div>
-      
+
       <div class="filter-range" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; height: 36px;">
         <span style="font-size: 0.8rem; color: rgba(238,238,238,0.5); padding: 0 8px; font-weight: 600;">Precio</span>
         <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 65px; background: transparent; padding: 0 4px;" placeholder="Mín" [ngModel]="filterMinPrice()" (ngModelChange)="filterMinPrice.set($event); onFilterChange()" />
@@ -29,10 +29,20 @@
       </div>
     </div>
 
-    <button class="btn btn-primary" (click)="openCreate()">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      Agregar producto
-    </button>
+    <div class="toolbar-actions">
+      <button class="btn btn-sale" (click)="openSalesModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        Registrar Venta
+      </button>
+
+      <button class="btn btn-primary" (click)="openCreate()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Agregar producto
+      </button>
+    </div>
   </div>
 
   <h2 class="section-title">Inventario <span class="count-badge">{{ totalItems() }}</span></h2>
@@ -151,4 +161,13 @@
     (closeEvent)="cancelToggleStatus()"
     (confirmEvent)="doToggleStatus()">
   </app-status-confirm-modal>
+}
+
+<!-- ══ Sales Modal ══ -->
+@if (showSalesModal()) {
+  <app-sales-modal
+    [isLoading]="processingSale()"
+    (closeEvent)="closeSalesModal()"
+    (saleEvent)="handleSaleSubmit($event)">
+  </app-sales-modal>
 }

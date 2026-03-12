@@ -33,3 +33,13 @@ export interface PaginatedProductsResponse {
     limit: number;
   };
 }
+
+export interface SaleItemDto {
+  id: number;
+  quantity: number;
+}
+
+export interface RegisterSaleDto {
+  products: SaleItemDto[];
+  payment_method: string;
+}

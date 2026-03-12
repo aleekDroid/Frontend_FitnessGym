@@ -5,14 +5,16 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProductsService } from '../../../core/services/products.service';
-import { Product, CreateProductDto } from '../../../core/models/product.model';
+import { Product, CreateProductDto, RegisterSaleDto } from '../../../core/models/product.model';
 import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { ProductFormModalComponent } from '../../../shared/components/product-form-modal/product-form-modal.component';
+import { SalesModalComponent } from '../../../shared/components/sales-modal/sales-modal.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-inventory',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, StatusConfirmModalComponent, ProductFormModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, StatusConfirmModalComponent, ProductFormModalComponent, SalesModalComponent],
   templateUrl: './inventory.component.html',
   styleUrls: ['./inventory.component.scss'],
 })
@@ -40,13 +42,16 @@ export class InventoryComponent implements OnInit {
   editProduct = signal<Product | null>(null);
   statusTarget = signal<Product | null>(null);
   showStatusConfirm = signal(false);
+  showSalesModal = signal(false);
+  processingSale = signal(false);
 
   productForm: FormGroup;
 
   constructor(
     private productsService: ProductsService, 
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private notificationService: NotificationService
   ) {
     this.productForm = this.fb.group({
       name:          ['', Validators.required],
@@ -176,5 +181,27 @@ export class InventoryComponent implements OnInit {
     if (stock === 0) return 'sin-stock';
     if (stock <= 3) return 'bajo';
     return 'ok';
+  }
+
+  // ── Sales Modal ──
+  openSalesModal(): void { this.showSalesModal.set(true); }
+  closeSalesModal(): void { this.showSalesModal.set(false); this.processingSale.set(false); }
+
+  handleSaleSubmit(payload: { products: { id: number; quantity: number }[]; payment_method: string }): void {
+    this.processingSale.set(true);
+    const dto: RegisterSaleDto = payload;
+    this.productsService.registerSale(dto).subscribe({
+      next: () => {
+        this.processingSale.set(false);
+        this.closeSalesModal();
+        this.loadData();
+        this.notificationService.show('Venta registrada exitosamente', 'success');
+      },
+      error: (err) => {
+        this.processingSale.set(false);
+        const msg = err.error?.message || 'Error al procesar la venta';
+        this.notificationService.show(msg, 'error');
+      }
+    });
   }
 }

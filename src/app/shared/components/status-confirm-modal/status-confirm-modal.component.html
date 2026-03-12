@@ -2,8 +2,9 @@
   <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
     <div class="delete-confirm status-confirm">
       <div 
-        class="status-icon" 
-        [style]="isActive ? 'background: rgba(216,64,64,0.15); border: 2px solid rgba(216,64,64,0.3); color: var(--accent)' : 'background: rgba(74,222,128,0.15); border: 2px solid rgba(74,222,128,0.3); color: #4ade80'">
+        class="status-icon"
+        [class.status-icon--active]="isActive"
+        [class.status-icon--inactive]="!isActive">
         
         @if (isActive) {
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

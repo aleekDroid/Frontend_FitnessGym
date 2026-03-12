@@ -20,6 +20,7 @@ export class ProductDetails implements OnInit {
   product = signal<Product | null>(null);
   loading = signal(true);
   saving = signal(false);
+  Math = Math;
   
   movements = signal<any[]>([]);
 
@@ -89,7 +90,7 @@ export class ProductDetails implements OnInit {
       next: (res) => {
         const combined: any[] = [];
         
-        // Add movements
+        // Add manual or administrative movements
         if (res.movements) {
           res.movements.forEach(m => {
             combined.push({
@@ -103,23 +104,20 @@ export class ProductDetails implements OnInit {
           });
         }
         
-        // Add sales
+        // Add actual sales
         if (res.sales) {
           res.sales.forEach(s => {
-            // Check if this sale is already represented in movements
-            const existingSale = combined.find(m => m.type === 'sale' && m.description.includes(`Transacción #${s.id}`));
-            if (!existingSale) {
-              combined.push({
-                id: `s-${s.id}`,
-                type: 'sale',
-                quantity: -s.quantity, // Sales reduce stock
-                date: s.createdAt,
-                description: `Venta #${s.id} (${s.paymentMethod})`,
-                raw: s
-              });
-            }
+            combined.push({
+              id: `s-${s.id}`,
+              type: 'sale',
+              quantity: -s.quantity, // Sales always reduce stock
+              date: s.createdAt,
+              description: `Venta #${s.id} (${this.translatePaymentMethod(s.paymentMethod)})`,
+              raw: s
+            });
           });
         }
+
         
         // Sort descending by date
         combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -236,4 +234,29 @@ export class ProductDetails implements OnInit {
       minute: '2-digit'
     });
   }
+
+  translatePaymentMethod(method: string): string {
+    const map: Record<string, string> = {
+      cash: 'Efectivo',
+      card: 'Tarjeta',
+      transfer: 'Transferencia',
+      efectivo: 'Efectivo',
+      tarjeta: 'Tarjeta',
+      transferencia: 'Transferencia'
+    };
+    return map[method?.toLowerCase()] || method;
+  }
+
+  translateType(type: string): string {
+    const map: Record<string, string> = {
+      sale: 'Venta',
+      restock: 'Reabastecimiento',
+      adjustment: 'Ajuste',
+      return: 'Devolución',
+      damage: 'Daño/Pérdida'
+    };
+    return map[type?.toLowerCase()] || type;
+  }
 }
+
+

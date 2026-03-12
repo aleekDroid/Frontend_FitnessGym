@@ -32,9 +32,20 @@
     align-items: center;
     justify-content: center;
     margin: 0 auto 24px;
-    background: rgba(216, 64, 64, 0.1);
-    border: 1px solid rgba(216, 64, 64, 0.2);
-    color: #d84040;
+    flex-shrink: 0;
+    transition: all 0.2s ease;
+
+    &--active {
+      background: rgba(216, 64, 64, 0.15);
+      border: 2px solid rgba(216, 64, 64, 0.3);
+      color: var(--accent);
+    }
+
+    &--inactive {
+      background: rgba(74, 222, 128, 0.15);
+      border: 2px solid rgba(74, 222, 128, 0.3);
+      color: #4ade80;
+    }
   }
 
   h3 {

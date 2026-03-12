@@ -96,8 +96,7 @@
           </button>
 
           <button
-            class="btn btn-secondary"
-            style="justify-content: center"
+            class="btn btn-primary"
             (click)="openStockModal()"
             title="Ajustar stock"
           >
@@ -117,7 +116,7 @@
 
           <button
             class="btn btn-outline"
-            [ngClass]="p.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'"
+            [ngClass]="p.status === 'active' ? 'btn-danger-outline' : 'btn-success-outline'"
             (click)="openStatusModal()"
             [title]="p.status === 'active' ? 'Desactivar producto' : 'Activar producto'"
           >
@@ -384,59 +383,82 @@
   <div class="modal-box" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h2>Detalle del Movimiento</h2>
-      <button class="btn-close" (click)="closeMovementModal()">✕</button>
+      <button class="btn-close" (click)="closeMovementModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
 
     <div class="movement-detail-content">
-      <div class="detail-row">
-        <span class="d-label">Tipo</span>
-        <span
-          class="badge"
-          style="
-            text-transform: capitalize;
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--light);
-          "
-        >
-          {{ m.type }}
+
+      <!-- Header visual -->
+      <div class="md-hero" [ngClass]="{
+        'md-hero--sale': m.type === 'sale',
+        'md-hero--restock': m.type === 'restock',
+        'md-hero--adjustment': m.type !== 'sale' && m.type !== 'restock'
+      }">
+        <div class="md-hero__icon">
+          @if (m.type === 'sale') {
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+          } @else if (m.type === 'restock') {
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          } @else {
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          }
+        </div>
+        <div class="md-hero__info">
+          <span class="md-hero__type">{{ translateType(m.type) }}</span>
+          <span class="md-hero__date">{{ formatDate(m.date) }}</span>
+        </div>
+        <span class="md-hero__qty" [ngClass]="{
+          'qty-negative': m.quantity < 0,
+          'qty-positive': m.quantity > 0
+        }">
+          {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
         </span>
-      </div>
-      <div class="detail-row">
-        <span class="d-label">Cantidad</span>
-        <span
-          class="d-value"
-          [class.text-danger]="m.quantity < 0"
-          [class.text-success]="m.quantity > 0"
-          style="font-size: 1.15rem"
-        >
-          {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }} unidades
-        </span>
-      </div>
-      <div class="detail-row">
-        <span class="d-label">Fecha</span>
-        <span class="d-value">{{ formatDate(m.date) }}</span>
-      </div>
-      <div class="detail-row full-width">
-        <span class="d-label">Descripción / Motivo</span>
-        <p class="d-value-box">{{ m.description }}</p>
       </div>
 
-      @if (m.type === 'sale' && m.raw) {
-      <div class="detail-row">
-        <span class="d-label">Método de Pago</span>
-        <span class="d-value" style="text-transform: capitalize"
-          >{{ m.raw.paymentMethod }}</span
-        >
+      <!-- Info rows -->
+      <div class="md-rows">
+        <div class="md-row">
+          <span class="md-row__label">Motivo</span>
+          <span class="md-row__value">{{ m.description }}</span>
+        </div>
+
+        @if (m.type === 'sale' && m.raw) {
+          <div class="md-divider"></div>
+
+          <div class="md-row">
+            <span class="md-row__label">Método de pago</span>
+            <span class="md-row__value md-row__badge">
+              @if (m.raw.paymentMethod === 'cash' || m.raw.paymentMethod === 'efectivo') {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              } @else if (m.raw.paymentMethod === 'card' || m.raw.paymentMethod === 'tarjeta') {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              } @else {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+              }
+              {{ translatePaymentMethod(m.raw.paymentMethod) }}
+            </span>
+          </div>
+
+          <div class="md-row">
+            <span class="md-row__label">Precio unitario</span>
+            <span class="md-row__value">${{ m.raw.price | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="md-row">
+            <span class="md-row__label">Cantidad</span>
+            <span class="md-row__value">{{ Math.abs(m.quantity) }} unidades</span>
+          </div>
+
+          <div class="md-divider"></div>
+
+          <div class="md-row md-row--total">
+            <span class="md-row__label">Total de la venta</span>
+            <span class="md-row__total">${{ m.raw.subtotal | number:'1.2-2' }}</span>
+          </div>
+        }
       </div>
-      <div class="detail-row">
-        <span class="d-label">Precio Unitario</span>
-        <span class="d-value">${{ m.raw.price | number:'1.2-2' }}</span>
-      </div>
-      <div class="sale-total-row">
-        <span class="d-label">Subtotal de Venta</span>
-        <span class="price-total">${{ m.raw.subtotal | number:'1.2-2' }}</span>
-      </div>
-      }
     </div>
 
     <div class="modal-footer">
@@ -446,12 +468,13 @@
         style="width: 100%; justify-content: center"
         (click)="closeMovementModal()"
       >
-        Entendido
+        Cerrar
       </button>
     </div>
   </div>
 </div>
 }
+
 
 <!-- ══ MODAL: Activar / Desactivar -->
 @if (showStatusModal()) {
