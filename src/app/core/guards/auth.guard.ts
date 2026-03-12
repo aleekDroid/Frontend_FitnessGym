@@ -19,11 +19,25 @@ export const adminGuard: CanActivateFn = () => {
   return false;
 };
 
+export const memberGuard: CanActivateFn = () => {
+  const auth   = inject(AuthService);
+  const router = inject(Router);
+  if (auth.isLoggedIn() && auth.currentUser()?.role === 'member') return true;
+  router.navigate(['/login']);
+  return false;
+};
+
 export const publicGuard: CanActivateFn = () => {
   const auth   = inject(AuthService);
   const router = inject(Router);
   if (!auth.isLoggedIn()) return true;
-  if (auth.isAdmin()) router.navigate(['/admin/home']);
-  else router.navigate(['/']);
+  
+  if (auth.isAdmin()) {
+    router.navigate(['/admin/home']);
+  } else if (auth.currentUser()?.role === 'member') {
+    router.navigate(['/member/dashboard']);
+  } else {
+    router.navigate(['/login']);
+  }
   return false;
 };

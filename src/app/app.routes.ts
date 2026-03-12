@@ -1,6 +1,6 @@
 // src/app/app.routes.ts
 import { Routes } from '@angular/router';
-import { authGuard, adminGuard, publicGuard } from './core/guards/auth.guard';
+import { authGuard, adminGuard, publicGuard, memberGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
@@ -26,6 +26,19 @@ export const routes: Routes = [
       { path: 'prices',    loadComponent: () => import('./pages/admin/prices/prices.component').then(m => m.PricesComponent) },
       { path: 'dashboard', loadComponent: () => import('./pages/admin/dashboard/dashboard.component').then(m => m.DashboardComponent) },
     ]
+  },
+  {
+    path: 'member',
+    canActivate: [authGuard, memberGuard],
+    children: [
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/member/dashboard/dashboard.component')
+            .then(m => m.MemberDashboardComponent),
+      },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
   },
   { path: '**', redirectTo: '' }
 ];

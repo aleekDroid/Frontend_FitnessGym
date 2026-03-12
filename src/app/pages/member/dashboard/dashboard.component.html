@@ -1,0 +1,311 @@
+<div class="member-wrap">
+  @if (loading()) {
+  <div class="loading-state">
+    <div class="spinner-lg"></div>
+    <p>Cargando tu perfil...</p>
+  </div>
+  } @else if (data()) {
+
+  <!-- ══ BANNER SUPERIOR ══ -->
+  <header class="top-banner">
+    <div class="banner-glow"></div>
+    <div class="banner-top">
+      <div>
+        <p class="greeting-label">Bienvenido de regreso</p>
+        <h1 class="greeting-name">{{ user()?.name }} {{ user()?.last_name }}</h1>
+      </div>
+      <div class="banner-right">
+        <span class="member-badge">Miembro activo</span>
+        <button class="logout-icon-btn" (click)="logout()" title="Cerrar sesión">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <p class="quote-bar">{{ quote }}</p>
+  </header>
+
+  <!-- ══ BARRA DE ESTADO DE MEMBRESÍA ══ -->
+  <div class="status-bar">
+    <div class="status-item">
+      <span class="status-label">Plan</span>
+      <span class="status-value"
+        >{{ subscription()?.suscriptions_types?.name ?? '—' }}</span
+      >
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Estado</span>
+      <span
+        class="status-value"
+        [class.active]="subscription()?.status === 'active'"
+        [class.expiring]="subscription()?.status === 'expiring'"
+        [class.expired]="!subscription() || subscription()?.status === 'expired'"
+      >
+        {{ subscription()?.status === 'active' ? '● Activa' :
+        subscription()?.status === 'expiring' ? '● Por vencer' : '● Inactiva' }}
+      </span>
+    </div>
+    <div class="status-divider"></div>
+    <div class="status-item">
+      <span class="status-label">Vence</span>
+      <span class="status-value"
+        >{{ subscription()?.end_date | date:'dd MMM yyyy':'':'es-MX' }}</span
+      >
+    </div>
+    <div class="status-divider"></div>
+    <div class="progress-wrap">
+      <div class="progress-header">
+        <span class="status-label">Progreso del ciclo</span>
+        <span class="status-label days-left"
+          >{{ daysLeft() }} días restantes</span
+        >
+      </div>
+      <div class="progress-track">
+        <div
+          class="progress-fill"
+          [class]="progressClass()"
+          [style.width.%]="membershipProgress()"
+        ></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ GRID PRINCIPAL ══ -->
+  <div class="main-grid">
+    <!-- RACHA -->
+    <section class="panel panel-streak">
+      <p class="panel-label">Racha de asistencia</p>
+      <div class="streak-hero">
+        <div class="streak-number">{{ streak() }}</div>
+        <p class="streak-unit">días consecutivos</p>
+        @if (isStreakActive()) {
+        <span class="streak-badge active">
+          <span class="streak-dot"></span>Racha activa
+        </span>
+        } @else {
+        <span class="streak-badge inactive">Racha inactiva</span>
+        }
+      </div>
+      <div class="streak-meta">
+        <div class="streak-meta-item">
+          <span class="streak-meta-val">{{ jokers() }}</span>
+          <span class="streak-meta-lbl">comodines</span>
+        </div>
+        <div class="streak-meta-item">
+          <span class="streak-meta-val">
+            {{ lastAttendance() ? (lastAttendance()! | date:'dd MMM':'':'es-MX')
+            : '—' }}
+          </span>
+          <span class="streak-meta-lbl">última visita</span>
+        </div>
+        <div class="streak-meta-item">
+          <span class="streak-meta-val">{{ attendances().length }}</span>
+          <span class="streak-meta-lbl">este ciclo</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- RUTINA SEMANAL -->
+    <section class="panel panel-routine">
+      <div class="panel-header">
+        <p class="panel-label">Mi rutina semanal</p>
+        @if (savingRoutine()) {
+        <span class="saving-indicator">Guardando...</span>
+        }
+      </div>
+      <div class="week-row">
+        @for (day of days(); track day.day; let i = $index) {
+        <button
+          class="day-card"
+          [class.training]="!day.isRestDay && !isAttendedThisWeek(day.day)"
+          [class.rest]="day.isRestDay"
+          [class.attended]="isAttendedThisWeek(day.day)"
+          [class.today]="day.day === todayName"
+          [class.active]="!day.isRestDay"
+          (click)="toggleDay(i)"
+          [title]="day.isRestDay ? 'Cambiar a entrenamiento' : 'Marcar como descanso'"
+        >
+          <div class="day-name">{{ getDayLabel(day.day) }}</div>
+          <div class="status-indicator"></div>
+          @if (!day.isRestDay) {
+          <div class="exercises">
+            <span class="ex-tag">Entrenamiento</span>
+          </div>
+          } @else {
+          <div class="rest-badge">Descanso</div>
+          }
+        </button>
+        }
+      </div>
+      <div class="legend">
+        <span class="legend-item">
+          <span class="legend-dot training"></span>Entrenamiento
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot rest"></span>Descanso
+        </span>
+        <span class="legend-item">
+          <span class="legend-dot attended"></span>Asistido
+        </span>
+      </div>
+      <p class="routine-hint">
+        Toca un día para alternar entre entrenamiento y descanso.
+      </p>
+    </section>
+  </div>
+
+  <!-- ══ SECCIÓN: MEMBRESÍA & COMODINES ══ -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-label">Membresía &amp; Comodines</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <div class="main-grid">
+    <!-- TARJETA DE PLAN -->
+    <section class="panel panel-wide">
+      <p class="panel-label">Plan activo</p>
+      @if (subscription(); as sub) {
+      <div class="mem-card">
+        <div class="mem-card-glow"></div>
+        <h2 class="mem-plan-name">{{ sub.suscriptions_types.name }}</h2>
+        <p class="mem-plan-desc">{{ sub.suscriptions_types.description }}</p>
+        <p class="mem-price">
+          {{ formatMoney(sub.suscriptions_types.price) }}
+          <span class="mem-price-period">MXN / ciclo</span>
+        </p>
+        <div class="mem-dates">
+          <div>
+            <span class="mem-date-label">Inicio</span>
+            <span class="mem-date-val"
+              >{{ sub.start_date | date:'dd MMM yyyy':'':'es-MX' }}</span
+            >
+          </div>
+          <div style="text-align: right">
+            <span class="mem-date-label">Vencimiento</span>
+            <span class="mem-date-val"
+              >{{ sub.end_date | date:'dd MMM yyyy':'':'es-MX' }}</span
+            >
+          </div>
+        </div>
+      </div>
+      <p class="days-left-text">● {{ daysLeft() }} días restantes</p>
+      } @else {
+      <div class="no-subscription">
+        <p>No tienes una membresía activa.</p>
+        <p class="no-sub-hint">
+          Contacta al administrador para renovar tu plan.
+        </p>
+      </div>
+      }
+    </section>
+
+    <!-- COMODINES -->
+    <section class="panel panel-jokers">
+      <p class="panel-label">Comodines disponibles</p>
+      <div class="joker-row">
+        @for (j of getJokersArray(); track $index) {
+        <div class="joker" [class.used]="j.used">★</div>
+        }
+      </div>
+      <p class="joker-info">
+        Los comodines protegen tu racha cuando no puedes asistir en un día de
+        entrenamiento.
+      </p>
+      <p class="joker-used-text">{{ jokers() }} de 5 usados este ciclo.</p>
+    </section>
+  </div>
+
+  <!-- ══ SECCIÓN: ASISTENCIAS ══ -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-label">Asistencias Recientes</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <section class="panel panel-full">
+    <p class="panel-label">Últimas visitas al gimnasio</p>
+    <div class="attendance-list">
+      @for (att of attendances(); track att.id) {
+      <div class="att-item">
+        <div class="att-icon">
+          <!-- Ícono check SVG -->
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+        </div>
+        <span class="att-date">{{ formatDate(att.created_at) }}</span>
+        <span class="att-time">{{ formatTime(att.created_at) }}</span>
+      </div>
+      } @empty {
+      <p class="empty-row">No hay asistencias registradas aún.</p>
+      }
+    </div>
+  </section>
+
+  <!-- ══ SECCIÓN: HISTORIAL DE PAGOS ══ -->
+  <div class="section-divider">
+    <div class="divider-line"></div>
+    <span class="divider-label">Historial de Pagos</span>
+    <div class="divider-line"></div>
+  </div>
+
+  <section class="panel panel-full panel-payments">
+    <p class="panel-label">Transacciones recientes</p>
+    <div class="table-container">
+      <table class="pay-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Plan</th>
+            <th>Fecha</th>
+            <th>Método</th>
+            <th class="text-right">Monto</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of payments(); track p.transaction_id) {
+          <tr>
+            <td class="muted">#{{ p.transaction_id }}</td>
+            <td>{{ p.plan_name }}</td>
+            <td class="muted">
+              {{ p.created_at | date:'dd MMM yyyy':'':'es-MX' }}
+            </td>
+            <td>
+              <span class="pay-method">{{ p.payment_method | titlecase }}</span>
+            </td>
+            <td class="text-right pay-amount">{{ formatMoney(p.total) }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="empty-row">
+              Sin transacciones registradas.
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  } @else {
+  <div class="error-state">
+    <div class="error-icon">⚠️</div>
+    <h2>No se pudo cargar tu información</h2>
+    <p>Ocurrió un error al contactar al servidor o tu perfil está incompleto.</p>
+    <button class="retry-btn" onclick="window.location.reload()">Reintentar</button>
+  </div>
+  }
+</div>
