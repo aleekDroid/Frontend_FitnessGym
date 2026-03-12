@@ -358,11 +358,15 @@
 
 <!-- ══ MODAL: Status confirm ══ -->
 @if (showStatusConfirm()) {
-  <app-confirm-status-modal 
-    [user]="statusTarget()" 
-    (closeEvent)="cancelToggleStatus()" 
-    (confirmEvent)="onStatusConfirm($event)">
-  </app-confirm-status-modal>
+  <app-status-confirm-modal
+    [entityType]="'usuario'"
+    [entityName]="statusTarget() ? (statusTarget()!.name + ' ' + (statusTarget()!.last_name || '')) : ''"
+    [isActive]="statusTarget()?.status === 'active'"
+    [isLoading]="togglingStatus()"
+    [warningMessage]="'El usuario pasará a estar inactivo y no podrá realizar acciones.'"
+    (closeEvent)="cancelToggleStatus()"
+    (confirmEvent)="doStatusToggle()">
+  </app-status-confirm-modal>
 }
 
 <!-- ══ MODAL: Assign Subscription ══ -->

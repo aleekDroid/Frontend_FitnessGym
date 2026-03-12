@@ -1,0 +1,114 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-box {
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  width: 90%;
+  max-width: 400px;
+  padding: 32px 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.status-confirm {
+  text-align: center;
+
+  .status-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 24px;
+    background: rgba(216, 64, 64, 0.1);
+    border: 1px solid rgba(216, 64, 64, 0.2);
+    color: #d84040;
+  }
+
+  h3 {
+    font-size: 1.5rem;
+    color: #fff;
+    margin-bottom: 12px;
+    font-weight: 700;
+  }
+
+  p {
+    color: rgba(255, 255, 255, 0.6);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    
+    strong { color: #fff; }
+  }
+}
+
+.modal-footer {
+  display: flex;
+  gap: 12px;
+  margin-top: 32px;
+  justify-content: center;
+
+  .btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.95rem;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  .btn-secondary {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); }
+  }
+
+  .btn-success {
+    background: #4ade80;
+    color: #064e3b;
+    &:hover:not(:disabled) { background: #22c55e; }
+  }
+
+  .btn-danger {
+    background: #d84040;
+    color: #fff;
+    &:hover:not(:disabled) { background: #c03636; }
+  }
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+.spinner-sm {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }

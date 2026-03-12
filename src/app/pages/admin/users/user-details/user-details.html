@@ -405,14 +405,17 @@
 </div>
 }
 
-<!-- ══ MODAL: Status confirm ══ -->
+<!-- ══ Status toggle confirm ══ -->
 @if (showStatusConfirm()) {
-<app-confirm-status-modal
-  [user]="$any(user())"
-  (closeEvent)="cancelToggleStatus()"
-  (confirmEvent)="onStatusConfirm($event)"
->
-</app-confirm-status-modal>
+  <app-status-confirm-modal
+    [entityType]="'usuario'"
+    [entityName]="user() ? (user()!.name + ' ' + (user()!.last_name || '')) : ''"
+    [isActive]="user()?.status === 'active'"
+    [isLoading]="togglingStatus()"
+    [warningMessage]="'El usuario pasará a estar inactivo y no podrá realizar acciones.'"
+    (closeEvent)="cancelToggleStatus()"
+    (confirmEvent)="doStatusToggle()">
+  </app-status-confirm-modal>
 }
 
 <!-- ══ MODAL: Assign Subscription ══ -->

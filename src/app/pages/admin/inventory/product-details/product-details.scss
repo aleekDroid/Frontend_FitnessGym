@@ -1,0 +1,405 @@
+/* product-details.scss — en sinergía con user-details.css */
+
+/* ── Layout ── */
+.page-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 24px;
+}
+
+.details-grid {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 992px) {
+  .details-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Loading ── */
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 120px 20px;
+  gap: 16px;
+  color: rgba(238,238,238,0.4);
+}
+.spinner-lg {
+  width: 36px; height: 36px;
+  border: 3px solid rgba(216,64,64,0.2);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+.spinner-sm {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Sidebar / Profile Card (mismo estilo que user-details) ── */
+.product-card {
+  padding: 32px 24px;
+  text-align: center;
+  border-radius: 16px;
+  background: rgba(30,30,30,0.4);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Ícono del producto — equivalente al profile-avatar */
+.product-visual {
+  margin-bottom: 32px;
+}
+
+.visual-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  background: rgba(216,64,64,0.12);
+  border: 2px solid rgba(216,64,64,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--accent);
+  box-shadow: 0 8px 24px rgba(216,64,64,0.15);
+}
+
+.p-name {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--light);
+  margin: 0 0 8px 0;
+}
+
+.p-serial {
+  display: inline-block;
+  font-size: 0.82rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 3px 12px;
+  border-radius: 20px;
+  color: rgba(255,255,255,0.45);
+  font-family: monospace;
+}
+
+/* Info list — mismo estilo que profile-details / detail-row */
+.p-info-list {
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-top: 1px solid rgba(255,255,255,0.05);
+  padding-top: 24px;
+  margin-bottom: 4px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  margin-bottom: 0;
+
+  &:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .label {
+    color: rgba(238,238,238,0.5);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .value {
+    color: var(--light);
+    font-weight: 600;
+    font-size: 0.9rem;
+  }
+
+  .price {
+    color: var(--accent);
+    font-size: 1rem;
+    font-weight: 700;
+  }
+}
+
+/* ── Botones del sidebar — igual que profile-actions ── */
+.card-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+
+  .btn {
+    justify-content: center;
+    padding: 10px;
+    width: 100%;
+  }
+}
+
+/* Botones específicos — mismos colores que user-details */
+.btn-outline-danger {
+  border: 1px solid rgba(216,64,64,0.3);
+  color: #f87171;
+  background: transparent;
+  &:hover {
+    background: rgba(216,64,64,0.15);
+    border-color: #f87171;
+  }
+}
+
+.btn-outline-success {
+  border: 1px solid rgba(74,222,128,0.3);
+  color: #4ade80;
+  background: transparent;
+  &:hover {
+    background: rgba(74,222,128,0.15);
+    border-color: #4ade80;
+  }
+}
+
+/* ── Badges ── */
+.badge {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.badge-success { background: rgba(74,222,128,0.15); color: #4ade80; }
+.badge-danger  { background: rgba(248,113,113,0.15); color: #f87171; }
+
+/* ── Main content ── */
+.details-main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.mb-4 { margin-bottom: 0; }
+
+/* Tarjeta descripción */
+.desc-card {
+  padding: 20px 24px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(30,30,30,0.4);
+
+  h3 {
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(238,238,238,0.35);
+    font-weight: 700;
+    margin: 0 0 10px 0;
+  }
+
+  p {
+    line-height: 1.6;
+    color: rgba(255,255,255,0.75);
+    margin: 0;
+    font-size: 0.95rem;
+  }
+}
+
+/* ── Movimientos ── */
+.movements-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+
+  h3 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    letter-spacing: 0.03em;
+    margin: 0;
+    color: var(--light);
+  }
+
+  .count-pill {
+    background: rgba(216,64,64,0.15);
+    border: 1px solid rgba(216,64,64,0.25);
+    color: var(--accent);
+    padding: 3px 12px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+}
+
+.movements-list {
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgba(30,30,30,0.4);
+  overflow: hidden;
+  padding: 0;
+}
+
+.movement-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 20px;
+  gap: 14px;
+  transition: background 0.2s;
+
+  &:hover { background: rgba(255,255,255,0.03); }
+  &:not(:last-child) { border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+  .m-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    &.negative-move { background: rgba(59, 130, 246, 0.12); color: #3b82f6; } // Ventas en azul -> más positivas!
+    &.warning-move  { background: rgba(250,204,21,0.12);  color: #facc15; }
+    &.positive-move { background: rgba(74,222,128,0.12);  color: #4ade80; }
+  }
+
+  .m-info {
+    flex: 1;
+    min-width: 0;
+
+    .m-title {
+      color: var(--light);
+      font-weight: 500;
+      font-size: 0.92rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .m-date {
+      color: rgba(255,255,255,0.3);
+      font-size: 0.78rem;
+      margin-top: 2px;
+    }
+  }
+
+  .m-amount {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: #4ade80;
+    flex-shrink: 0;
+
+    &.negative { color: #3b82f6; }
+    &.warning  { color: #facc15; }
+  }
+
+  .m-actions {
+    flex-shrink: 0;
+  }
+}
+
+.empty-movements {
+  text-align: center;
+  color: rgba(238,238,238,0.3);
+  padding: 48px;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
+/* btn-icon — igual que btn-icon-only de user-details */
+.btn-icon {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 7px;
+  border: 1px solid rgba(255,255,255,0.15);
+  background: transparent;
+  color: rgba(238,238,238,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(216,64,64,0.1);
+  }
+}
+
+/* ── Botones globales ── */
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--light);
+  border: 1px solid rgba(255,255,255,0.15);
+  &:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+  &:disabled { opacity: 0.3; cursor: not-allowed; }
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  &:hover { filter: brightness(1.1); }
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: var(--light);
+  &:hover { background: rgba(255,255,255,0.15); }
+}
+
+.btn-success {
+  background: #4ade80;
+  color: #000;
+  &:hover { background: #22c55e; }
+}
+
+.btn-danger {
+  background: var(--accent);
+  color: #fff;
+  &:hover { filter: brightness(1.1); }
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Modal override styles are now handled by shared components */

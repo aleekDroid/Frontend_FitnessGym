@@ -1,0 +1,52 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+    <div class="delete-confirm status-confirm">
+      <div 
+        class="status-icon" 
+        [style]="isActive ? 'background: rgba(216,64,64,0.15); border: 2px solid rgba(216,64,64,0.3); color: var(--accent)' : 'background: rgba(74,222,128,0.15); border: 2px solid rgba(74,222,128,0.3); color: #4ade80'">
+        
+        @if (isActive) {
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+        } @else {
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        }
+      </div>
+      
+      <h3>{{ isActive ? 'Desactivar' : 'Activar' }} {{ entityType }}</h3>
+      
+      <p>
+        ¿Estás seguro que deseas 
+        <strong>{{ isActive ? 'desactivar' : 'activar' }}</strong> a 
+        <span style="color: var(--accent);">{{ entityName }}</span>?
+      </p>
+
+      @if (warningMessage && isActive) {
+        <p style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.4); margin-top: 6px;">
+          {{ warningMessage }}
+        </p>
+      }
+      
+      <div class="modal-footer" style="justify-content: center; margin-top: 24px;">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button 
+          class="btn" 
+          [ngClass]="isActive ? 'btn-danger' : 'btn-success'" 
+          (click)="confirm()" 
+          [disabled]="isLoading">
+          
+          @if (isLoading) {
+            <span class="spinner-sm"></span> Guardando... 
+          } @else {
+            Sí, {{ isActive ? 'desactivar' : 'activar' }}
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

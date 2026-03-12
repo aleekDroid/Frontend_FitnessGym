@@ -21,7 +21,8 @@ export const routes: Routes = [
       { path: 'home',      loadComponent: () => import('./pages/admin/home/home.component').then(m => m.HomeComponent) },
       { path: 'users',     loadComponent: () => import('./pages/admin/users/users.component').then(m => m.UsersComponent) },
       { path: 'users/:id', loadComponent: () => import('./pages/admin/users/user-details/user-details').then(m => m.UserDetails) },
-      { path: 'inventory', loadComponent: () => import('./pages/admin/inventory/inventory.component').then(m => m.InventoryComponent) },
+      { path: 'inventory',     loadComponent: () => import('./pages/admin/inventory/inventory.component').then(m => m.InventoryComponent) },
+      { path: 'inventory/:id', loadComponent: () => import('./pages/admin/inventory/product-details/product-details').then(m => m.ProductDetails) },
       { path: 'prices',    loadComponent: () => import('./pages/admin/prices/prices.component').then(m => m.PricesComponent) },
       { path: 'dashboard', loadComponent: () => import('./pages/admin/dashboard/dashboard.component').then(m => m.DashboardComponent) },
     ]

@@ -1,0 +1,467 @@
+<div class="page-container">
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <button class="btn btn-outline" (click)="goBack()">
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
+      Inventario
+    </button>
+  </div>
+
+  @if (loading()) {
+  <div class="loading-state">
+    <div class="spinner-lg"></div>
+    <p>Cargando producto...</p>
+  </div>
+  } @else if (product()) { @let p = product()!;
+  <div class="details-grid">
+    <!-- ── Sidebar ── -->
+    <aside class="sidebar">
+      <div class="product-card card">
+        <!-- Ícono + nombre (equivalente al profile-avatar) -->
+        <div class="product-visual">
+          <div class="visual-icon">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path
+                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+              ></path>
+              <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+              <line x1="12" y1="22.08" x2="12" y2="12"></line>
+            </svg>
+          </div>
+          <h2 class="p-name">{{ p.name }}</h2>
+          <code class="p-serial">{{ p.serialNumber }}</code>
+        </div>
+
+        <!-- Info rows — igual que profile-details -->
+        <div class="p-info-list">
+          <div class="info-item">
+            <span class="label">Precio Unitario</span>
+            <span class="value price">${{ p.price | number:'1.2-2' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="label">Estado</span>
+            <span
+              class="badge"
+              [class]="p.status === 'active' ? 'badge-success' : 'badge-danger'"
+            >
+              {{ p.status === 'active' ? 'Activo' : 'Inactivo' }}
+            </span>
+          </div>
+          <div class="info-item">
+            <span class="label">Stock Actual</span>
+            <span class="value">{{ p.stock }} unidades</span>
+          </div>
+        </div>
+
+        <!-- Botones de acción — igual que profile-actions -->
+        <div class="card-actions">
+          <button
+            class="btn btn-outline edit-btn"
+            (click)="openEdit()"
+            title="Editar producto"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
+              ></path>
+              <path
+                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
+              ></path>
+            </svg>
+            Editar
+          </button>
+
+          <button
+            class="btn btn-secondary"
+            style="justify-content: center"
+            (click)="openStockModal()"
+            title="Ajustar stock"
+          >
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Ajustar Stock
+          </button>
+
+          <button
+            class="btn btn-outline"
+            [ngClass]="p.status === 'active' ? 'btn-outline-danger' : 'btn-outline-success'"
+            (click)="openStatusModal()"
+            [title]="p.status === 'active' ? 'Desactivar producto' : 'Activar producto'"
+          >
+            @if (p.status === 'active') {
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+            </svg>
+            Desactivar Producto } @else {
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            Activar Producto }
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ── Main Content ── -->
+    <main class="details-main">
+      <!-- Descripción -->
+      <section class="desc-card card">
+        <h3>Descripción</h3>
+        <p>{{ p.description || 'Sin descripción disponible.' }}</p>
+      </section>
+
+      <!-- Movimientos -->
+      <section class="movements-section">
+        <div class="section-header">
+          <h3>Movimientos Recientes</h3>
+          <span class="count-pill">{{ movements().length }} registros</span>
+        </div>
+
+        <div class="movements-list card">
+          @for (m of movements(); track m.id) {
+          <div class="movement-item">
+            <div
+              class="m-icon"
+              [class]="m.type === 'sale' ? 'negative-move' : m.quantity < 0 ? 'warning-move' : 'positive-move'"
+            >
+              @switch (m.type) { @case ('sale') {
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="9" cy="21" r="1"></circle>
+                <circle cx="20" cy="21" r="1"></circle>
+                <path
+                  d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"
+                ></path>
+              </svg>
+              } @case ('restock') {
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="16.5" y1="9.4" x2="7.5" y2="4.21"></line>
+                <path
+                  d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+                ></path>
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                <line x1="12" y1="22.08" x2="12" y2="12"></line>
+              </svg>
+              } @case ('damage') {
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
+                ></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              } @case ('return') {
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+              </svg>
+              } @default {
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+              } }
+            </div>
+
+            <div class="m-info">
+              <div class="m-title">{{ m.description }}</div>
+              <div class="m-date">{{ formatDate(m.date) }}</div>
+            </div>
+
+            <div
+              class="m-amount"
+              [class.negative]="m.type === 'sale'"
+              [class.warning]="m.quantity < 0 && m.type !== 'sale'"
+            >
+              {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }}
+            </div>
+
+            <div class="m-actions">
+              <button
+                class="btn-icon btn-sm"
+                (click)="openMovementDetails(m)"
+                title="Ver detalles"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+              </button>
+            </div>
+          </div>
+          } @empty {
+          <div class="empty-movements">
+            No hay movimientos registrados para este producto.
+          </div>
+          }
+        </div>
+      </section>
+    </main>
+  </div>
+  }
+</div>
+
+<!-- ══ MODAL: Editar Información General ══ -->
+@if (showEditModal()) {
+  <app-product-form-modal
+    [product]="product()"
+    [isLoading]="saving()"
+    (closeEvent)="closeEditModal()"
+    (saveEvent)="handleSave($event)">
+  </app-product-form-modal>
+}
+
+<!-- ══ MODAL: Ajustar Stock ══ -->
+@if (showStockModal()) {
+<div class="modal-overlay" (click)="closeStockModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajustar Inventario</h2>
+      <button class="btn-close" (click)="closeStockModal()">✕</button>
+    </div>
+
+    <form [formGroup]="stockForm" (ngSubmit)="onSubmitStock()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cantidad</label>
+          <input
+            type="number"
+            formControlName="quantity"
+            class="form-control"
+            placeholder="Ej. 10 o -5"
+          />
+          @if (stockForm.controls['quantity'].invalid &&
+          stockForm.controls['quantity'].touched) {
+          <small class="field-error">Cantidad requerida</small>
+          }
+        </div>
+        <div class="form-group">
+          <label>Tipo de Movimiento</label>
+          <select formControlName="type" class="form-control">
+            <option value="restock">Reabastecimiento (+)</option>
+            <option value="damage">Merma / Daño (-)</option>
+            <option value="return">Devolución (+)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Motivo del ajuste</label>
+        <textarea
+          formControlName="reason"
+          class="form-control"
+          rows="2"
+          placeholder="Ej. Llegó el pedido del proveedor..."
+        ></textarea>
+        @if (stockForm.controls['reason'].invalid &&
+        stockForm.controls['reason'].touched) {
+        <small class="field-error">El motivo es obligatorio.</small>
+        }
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeStockModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-success"
+          [disabled]="savingStock()"
+        >
+          @if (savingStock()) { <span class="spinner-sm"></span> Guardando... }
+          @else { Registrar Movimiento }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+
+<!-- ══ MODAL: Detalle de Movimiento ══ -->
+@if (showMovementModal() && selectedMovement()) { @let m = selectedMovement()!;
+<div class="modal-overlay" (click)="closeMovementModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Detalle del Movimiento</h2>
+      <button class="btn-close" (click)="closeMovementModal()">✕</button>
+    </div>
+
+    <div class="movement-detail-content">
+      <div class="detail-row">
+        <span class="d-label">Tipo</span>
+        <span
+          class="badge"
+          style="
+            text-transform: capitalize;
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--light);
+          "
+        >
+          {{ m.type }}
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="d-label">Cantidad</span>
+        <span
+          class="d-value"
+          [class.text-danger]="m.quantity < 0"
+          [class.text-success]="m.quantity > 0"
+          style="font-size: 1.15rem"
+        >
+          {{ m.quantity > 0 ? '+' : '' }}{{ m.quantity }} unidades
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="d-label">Fecha</span>
+        <span class="d-value">{{ formatDate(m.date) }}</span>
+      </div>
+      <div class="detail-row full-width">
+        <span class="d-label">Descripción / Motivo</span>
+        <p class="d-value-box">{{ m.description }}</p>
+      </div>
+
+      @if (m.type === 'sale' && m.raw) {
+      <div class="detail-row">
+        <span class="d-label">Método de Pago</span>
+        <span class="d-value" style="text-transform: capitalize"
+          >{{ m.raw.paymentMethod }}</span
+        >
+      </div>
+      <div class="detail-row">
+        <span class="d-label">Precio Unitario</span>
+        <span class="d-value">${{ m.raw.price | number:'1.2-2' }}</span>
+      </div>
+      <div class="sale-total-row">
+        <span class="d-label">Subtotal de Venta</span>
+        <span class="price-total">${{ m.raw.subtotal | number:'1.2-2' }}</span>
+      </div>
+      }
+    </div>
+
+    <div class="modal-footer">
+      <button
+        type="button"
+        class="btn btn-secondary"
+        style="width: 100%; justify-content: center"
+        (click)="closeMovementModal()"
+      >
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ══ MODAL: Activar / Desactivar -->
+@if (showStatusModal()) {
+  <app-status-confirm-modal
+    [entityType]="'producto'"
+    [entityName]="product()?.name || ''"
+    [isActive]="product()?.status === 'active'"
+    [isLoading]="togglingStatus()"
+    [warningMessage]="'Ya no estará disponible para nuevas ventas.'"
+    (closeEvent)="closeStatusModal()"
+    (confirmEvent)="confirmToggleStatus()">
+  </app-status-confirm-modal>
+}
