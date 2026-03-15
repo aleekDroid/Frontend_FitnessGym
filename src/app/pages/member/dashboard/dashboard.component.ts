@@ -7,6 +7,7 @@ import {
   MemberDashboardResponse,
   RoutineDay,
 } from "../../../core/models/member-dashboard.model";
+import { RoutineEditModalComponent } from "../../../shared/components/routine-edit-modal/routine-edit-modal.component";
 
 const QUOTES = [
   "El dolor que sientes hoy será la fuerza que sientes mañana.",
@@ -16,6 +17,7 @@ const QUOTES = [
 ];
 
 const DAY_LABELS: Record<string, string> = {
+  // English keys (real API)
   Monday: "Lun",
   Tuesday: "Mar",
   Wednesday: "Mié",
@@ -23,12 +25,26 @@ const DAY_LABELS: Record<string, string> = {
   Friday: "Vie",
   Saturday: "Sáb",
   Sunday: "Dom",
+  // Spanish keys (simulated API fallback)
+  Lunes: "Lun",
+  Martes: "Mar",
+  Miércoles: "Mié",
+  Jueves: "Jue",
+  Viernes: "Vie",
+  Sábado: "Sáb",
+  Domingo: "Dom",
+};
+
+// Maps English weekday names to Spanish, to unify comparisons
+const ENG_TO_SPA: Record<string, string> = {
+  Monday: "Lunes", Tuesday: "Martes", Wednesday: "Miércoles",
+  Thursday: "Jueves", Friday: "Viernes", Saturday: "Sábado", Sunday: "Domingo",
 };
 
 @Component({
   selector: "app-member-dashboard",
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RoutineEditModalComponent],
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
 })
@@ -41,6 +57,11 @@ export class MemberDashboardComponent implements OnInit {
   error = signal<boolean>(false);
   data = signal<MemberDashboardResponse | null>(null);
   savingRoutine = signal(false);
+
+  // Modal state
+  showRoutineModal = signal(false);
+  modalLoading = signal(false);
+  fullRoutine = signal<RoutineDay[]>([]);
 
   quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
@@ -63,10 +84,40 @@ export class MemberDashboardComponent implements OnInit {
   routine = computed(() => this.user()?.routine ?? null);
   streak = computed(() => this.routine()?.streak ?? 0);
   isStreakActive = computed(() => this.routine()?.isStreakActive ?? false);
+  attendedToday = computed(() => this.routine()?.attendedToday ?? false);
   jokers = computed(() => this.routine()?.comodines_usados ?? 0);
   lastAttendance = computed(() => this.routine()?.lastAttendance ?? null);
 
   days = computed<RoutineDay[]>(() => this.routine()?.days ?? []);
+
+  nextJokerIn = computed(() => {
+    const s = this.streak();
+    if (s === 0) return 10;
+    return 10 - (s % 10);
+  });
+
+  jokerWarning = computed(() => this.jokers() === 0 && this.isStreakActive());
+
+  /** Determinamos el estado visual de la racha */
+  streakStatus = computed(() => {
+    const s = this.streak();
+    const attended = this.attendedToday();
+
+    if (s === 0) return 'NONE';
+    if (attended) return 'COMPLETED';
+    return 'PENDING';
+  });
+
+  /** Warning de riesgo si no hay comodines y falta ir hoy */
+  isStreakAtRisk = computed(() => {
+    return this.jokers() === 0 && this.streakStatus() === 'PENDING';
+  });
+
+  hasRoutine = computed(() => this.routine() !== null && (this.routine()?.days?.length ?? 0) > 0);
+
+  /** true = usuario no ha guardado su primera rutina — la racha está en modo protegido */
+  isSetupPending = computed(() => this.user()?.isSetupPending ?? false);
+
 
   daysLeft = computed(() => {
     const sub = this.subscription();
@@ -93,12 +144,17 @@ export class MemberDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.loadDashboardData();
+  }
+
+  /** Carga (o refresca) todos los datos del dashboard desde el servidor */
+  private loadDashboardData(): void {
     this.memberService.getDashboard().subscribe({
       next: (res) => {
         this.data.set(res);
         this.loading.set(false);
       },
-      error: (err) => { // Modified error handling
+      error: (err) => {
         console.error('Error fetching dashboard data', err);
         this.error.set(true);
         this.loading.set(false);
@@ -118,18 +174,27 @@ export class MemberDashboardComponent implements OnInit {
   isAttendedThisWeek(dayName: string): boolean {
     const now = new Date();
     const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - now.getDay() + 1); 
+    weekStart.setDate(now.getDate() - now.getDay() + 1);
     return this.attendances().some((a) => {
       const d = new Date(a.created_at);
+      const engName = d.toLocaleDateString("en-US", { weekday: "long" }); // e.g. 'Monday'
+      const spaName = ENG_TO_SPA[engName] ?? engName; // e.g. 'Lunes'
       return (
         d >= weekStart &&
-        d.toLocaleDateString("en-US", { weekday: "long" }) === dayName
+        (engName === dayName || spaName === dayName)
       );
     });
   }
 
   get todayName(): string {
-    return new Date().toLocaleDateString("en-US", { weekday: "long" });
+    const engName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    // Return both so matching works whether API uses English or Spanish day names
+    return engName;
+  }
+
+  isTodayCard(dayName: string): boolean {
+    const engName = new Date().toLocaleDateString("en-US", { weekday: "long" });
+    return dayName === engName || dayName === (ENG_TO_SPA[engName] ?? engName);
   }
 
   formatDate(dateStr: string): string {
@@ -157,16 +222,17 @@ export class MemberDashboardComponent implements OnInit {
     }).format(amount);
   }
 
-  getJokersArray(total = 5): { used: boolean }[] {
+  getJokersArray(total = 3): { used: boolean }[] {
     const used = this.jokers();
     return Array.from({ length: total }, (_, i) => ({
-      used: i >= total - used,
+      used: i >= used,
     }));
   }
 
   toggleDay(index: number): void {
     const current = this.days();
-    if (!current.length) return;
+    const routine = this.routine();
+    if (!current.length || !routine) return;
 
     const updated = current.map((d, i) =>
       i === index ? { ...d, isRestDay: !d.isRestDay } : d,
@@ -178,7 +244,7 @@ export class MemberDashboardComponent implements OnInit {
         ...d,
         user: {
           ...d.user,
-          routine: { ...d.user.routine, days: updated },
+          routine: { ...routine, days: updated },
         },
       };
     });
@@ -193,12 +259,43 @@ export class MemberDashboardComponent implements OnInit {
             ...d,
             user: {
               ...d.user,
-              routine: { ...d.user.routine, days: current },
+              routine: { ...routine, days: current },
             },
           };
         });
         this.savingRoutine.set(false);
       },
     });
+  }
+
+  // ─── Modal methods ───
+
+  openRoutineModal(): void {
+    this.showRoutineModal.set(true);
+    this.modalLoading.set(true);
+    this.memberService.getFullRoutine().subscribe({
+      next: (res) => {
+        this.fullRoutine.set(res.days);
+        this.modalLoading.set(false);
+      },
+      error: () => this.modalLoading.set(false),
+    });
+  }
+
+  onRoutineSaved(days: RoutineDay[]): void {
+    this.memberService.saveRoutine(days).subscribe({
+      next: () => {
+        this.showRoutineModal.set(false);
+        // Refrescar todos los datos para asegurar que flags (isSetupPending) y racha estén al día
+        this.loadDashboardData();
+      },
+      error: () => {
+        this.showRoutineModal.set(false);
+      },
+    });
+  }
+
+  onRoutineModalClosed(): void {
+    this.showRoutineModal.set(false);
   }
 }

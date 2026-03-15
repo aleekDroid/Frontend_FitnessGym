@@ -1,29 +1,38 @@
+export interface Exercise {
+  name: string;
+  sets: number;
+  reps: number;
+  machine: string;
+  note?: string;
+}
+
 export interface RoutineDay {
-  day:
-    | "Monday"
-    | "Tuesday"
-    | "Wednesday"
-    | "Thursday"
-    | "Friday"
-    | "Saturday"
-    | "Sunday";
+  day: string; // flexible: 'Monday' | 'Lunes' etc. depending on API
   isRestDay: boolean;
+  description?: string;
+  exercises: Exercise[];
+}
+
+export interface FullRoutine {
+  days: RoutineDay[];
 }
 
 export interface Routine {
   streak: number;
   comodines_usados: number;
   isStreakActive: boolean;
+  attendedToday: boolean;
   lastAttendance: string | null;
   days: RoutineDay[];
 }
 
 export interface MemberUser {
-  id: number;
+  id?: number;
   name: string;
   last_name: string;
   number: string;
-  routine: Routine;
+  isSetupPending: boolean;
+  routine: Routine | null;
 }
 
 export interface ActiveSubscription {
@@ -48,7 +57,7 @@ export interface PaymentRecord {
   transaction_id: number;
   plan_name: string;
   created_at: string;
-  payment_method: "efectivo" | "transferencia" | "tarjeta" | string;
+  payment_method: string;
   total: number;
 }
 
