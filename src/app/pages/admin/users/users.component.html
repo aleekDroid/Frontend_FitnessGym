@@ -81,20 +81,35 @@
         <div class="form-row">
           <div class="form-group">
             <label>Nombre</label>
-            <input type="text" formControlName="name" class="form-control" placeholder="Nombre" [class.is-invalid]="f['name'].touched && f['name'].errors" />
+            <input type="text" formControlName="name" class="form-control" placeholder="Ej. Juan" [class.is-invalid]="f['name'].touched && f['name'].errors" />
             @if (f['name'].touched && f['name'].errors?.['required']) {
               <span class="field-error">Obligatorio</span>
+            }
+            @if (f['name'].touched && f['name'].errors?.['pattern']) {
+              <span class="field-error">Solo letras.</span>
             }
           </div>
           <div class="form-group">
             <label>Apellido</label>
-            <input type="text" formControlName="last_name" class="form-control" placeholder="Apellido" [class.is-invalid]="f['last_name'].touched && f['last_name'].errors" />
+            <input type="text" formControlName="last_name" class="form-control" placeholder="Ej. Pérez" [class.is-invalid]="f['last_name'].touched && f['last_name'].errors" />
+            @if (f['last_name'].touched && f['last_name'].errors?.['required']) {
+              <span class="field-error">Obligatorio</span>
+            }
+            @if (f['last_name'].touched && f['last_name'].errors?.['pattern']) {
+              <span class="field-error">Solo se permiten letras</span>
+            }
           </div>
         </div>
 
         <div class="form-group">
           <label>Número de teléfono (WhatsApp)</label>
           <input type="text" formControlName="number" class="form-control" placeholder="Ej. 4421234567" [class.is-invalid]="f['number'].touched && f['number'].errors" />
+          @if (f['number'].touched && f['number'].errors?.['required']) {
+            <span class="field-error">Obligatorio</span>
+          }
+          @if (f['number'].touched && f['number'].errors?.['pattern']) {
+            <span class="field-error">Debe contener exactamente 10 números, sin espacios ni letras</span>
+          }
         </div>
 
         @if (!editUser()) {

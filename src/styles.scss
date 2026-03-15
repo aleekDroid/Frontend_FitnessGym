@@ -328,6 +328,41 @@ input, select, textarea { font-family: var(--font-body); }
   margin-top: 28px;
 }
 
+.swal2-popup {
+  background-color: #1a1a1a !important; 
+  color: #eeeeee !important; /* Texto claro */
+  border: 1px solid rgba(216, 64, 64, 0.3) !important; 
+  border-radius: 14px !important;
+}
+
+.swal2-title {
+  color: #ffffff !important;
+  letter-spacing: 0.05em;
+}
+
+.swal2-html-container {
+  color: rgba(238, 238, 238, 0.7) !important;
+}
+
+/* Botón de aceptar (Rojo/Accent) */
+.swal2-confirm {
+  background-color: #d84040 !important; 
+  color: #ffffff !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  padding: 10px 24px !important;
+}
+
+/* Íconos de éxito y error adaptados */
+.swal2-icon.swal2-success {
+  border-color: #4caf50 !important;
+  color: #4caf50 !important;
+}
+.swal2-icon.swal2-error {
+  border-color: #ef9a9a !important;
+  color: #ef9a9a !important;
+}
+
 /* ── Animations ── */
 @keyframes fadeIn {
   from { opacity: 0; }

@@ -6,6 +6,7 @@ import { UsersService } from '../../../core/services/users.service';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
 import { UserWithMembership, CreateUserDto } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-users',
@@ -35,9 +36,9 @@ export class UsersComponent implements OnInit {
     private fb: FormBuilder
   ) {
     this.userForm = this.fb.group({
-      name: ['', [Validators.required]],
-      last_name: ['', [Validators.required]],
-      number: ['', [Validators.required]],
+      name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)]],
+      last_name: ['', [Validators.required, Validators.pattern(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/)]],
+      number: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
       suscription_type_id: ['', [Validators.required]],
       payment_method: ['efectivo', [Validators.required]],
     });
@@ -107,27 +108,44 @@ export class UsersComponent implements OnInit {
     } else {
 
       this.usersService.create(val).subscribe({
-        next: (nuevoUsuario) => {
-          const userId = nuevoUsuario.id || nuevoUsuario.data?.id;
+        next: () => {
 
-          this.subscriptionsService.assignSubscription(val.suscription_type_id, [userId], val.payment_method).subscribe({
-            next: () => {
-              alert('Usuario y membresía registrados con éxito'); 
+          // Se solicita la lista de usuario y se busca el num de teléfono del usuario recién 
+          // recién registrado, en lo que se cmabia la otra parte del back.
+          this.usersService.getAll().subscribe(users => {
+            const nuevoUsuario = users.find(u => u.number === val.number);
+
+            if (!nuevoUsuario || !nuevoUsuario.id) {
+              Swal.fire('Error', 'Usuario creado, pero no se pudo encontrar en la lista para asignarle el pago.', 'error');
               this.saving.set(false);
               this.closeModal();
               this.loadData();
-            },
-            error: (err) => {
-              alert('Usuario creado, pero hubo un error al asignar el pago.'); 
-              console.error('Error al asignar suscripción:', err);
-              this.saving.set(false);
-              this.closeModal();
-              this.loadData();
+              return;
             }
+
+            const userId = Number(nuevoUsuario.id);
+
+            this.subscriptionsService.assignSubscription(val.suscription_type_id, [userId], val.payment_method).subscribe({
+              next: () => {
+                Swal.fire('¡Éxito!', 'Usuario y membresía registrados correctamente', 'success');
+                
+                this.saving.set(false);
+                this.closeModal();
+                this.loadData();
+              },
+              error: (err) => {
+                Swal.fire('Error', 'Usuario creado, pero hubo un error al asignar el pago.', 'error');
+                console.error('Error al asignar suscripción:', err);
+                this.saving.set(false);
+                this.closeModal();
+                this.loadData();
+              }
+            });
           });
+
         },
         error: (err) => {
-          alert('Hubo un error al registrar el usuario. Revisa los datos.'); 
+          Swal.fire('Error', 'Hubo un error al registrar el usuario. Revisa los datos.', 'error');
           console.error('Error al crear usuario:', err);
           this.saving.set(false);
         }
