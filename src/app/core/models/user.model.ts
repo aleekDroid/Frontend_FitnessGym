@@ -25,7 +25,7 @@ export interface UserSubscription {
 
 export interface UserWithMembership extends User {
   membership_end?: string;
-  membership_status?: 'active' | 'expiring' | 'expired';
+  membership_status?: 'active' | 'expiring' | 'expired' | 'none';
   attended_today?: boolean;
 }
 
@@ -43,3 +43,16 @@ export interface UpdateUserDto {
   number?: string;
   status?: 'active' | 'inactive' | 'suspended';
 }
+
+export interface PaginationMeta {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+}
+
+export interface PaginatedUsersResponse {
+  data: UserWithMembership[];
+  meta: PaginationMeta;
+}
+

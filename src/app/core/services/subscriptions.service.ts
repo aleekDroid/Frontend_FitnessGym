@@ -3,22 +3,13 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, delay } from 'rxjs/operators';
-import { SubscriptionType, CreateSubscriptionTypeDto, DashboardStats, MonthlyRevenue } from '../models/subscription.model';
+import { SubscriptionType, CreateSubscriptionTypeDto, DashboardStats, MonthlyRevenue, TransactionDetail } from '../models/subscription.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionsService {
-
-  private mockTypes: SubscriptionType[] = [
-    { id: 1, name: 'Mensual Básico', price: 420, duration: 30, person_per_suscription: 1, status: 'active', description: 'Acceso ilimitado al gym por 30 días' },
-    { id: 2, name: 'Anual Premium', price: 3800, duration: 365, person_per_suscription: 1, status: 'active', description: 'Acceso completo + nutricionista' },
-    { id: 3, name: 'Mensual Pareja', price: 700, duration: 30, person_per_suscription: 2, status: 'active', description: 'Membresía para 2 personas' },
-    { id: 4, name: 'Anual Básico', price: 3200, duration: 365, person_per_suscription: 1, status: 'active', description: 'Acceso ilimitado al gym por 1 año' },
-    { id: 5, name: 'Anual 4 personas', price: 4500, duration: 365, person_per_suscription: 4, status: 'active', description: 'Membresía familiar 4 integrantes' },
-    { id: 6, name: 'Estudiante UTEQ', price: 350, duration: 30, person_per_suscription: 1, status: 'active', description: 'Tarifa especial estudiantes UTEQ' },
-  ];
-
+  
   constructor(private http: HttpClient, private authService: AuthService) { }
 
   private getHeaders(): HttpHeaders {
@@ -31,6 +22,11 @@ export class SubscriptionsService {
         return response.data || [];
       })
     );
+  }
+
+  // ── GET single subscription type ──
+  getSubscriptionTypeById(id: number): Observable<SubscriptionType> {
+    return this.http.get<SubscriptionType>(`${environment.apiUrl}/subscription/types/${id}`, { headers: this.getHeaders() });
   }
 
   create(dto: any): Observable<any> {
@@ -47,12 +43,8 @@ export class SubscriptionsService {
   }
 
   update(id: number, dto: Partial<CreateSubscriptionTypeDto>): Observable<SubscriptionType> {
-    /* REAL: return this.http.patch<SubscriptionType>(`${environment.apiUrl}/suscriptions-types/${id}`, dto, { headers: this.getHeaders() }); */
-    const idx = this.mockTypes.findIndex(t => t.id === id);
-    if (idx !== -1) Object.assign(this.mockTypes[idx], dto);
-    return of(this.mockTypes[idx]).pipe(delay(300));
+    return this.http.patch<SubscriptionType>(`${environment.apiUrl}/subscription/type/${id}`, dto, { headers: this.getHeaders() });
   }
-
   delete(id: number): Observable<void> {
     return this.http.patch<void>(`${environment.apiUrl}/subscription/type/status/${id}`, { status: 'inactive' });
   }
@@ -88,5 +80,10 @@ export class SubscriptionsService {
       active_members: 148,
       monthly_revenue: monthly,
     }).pipe(delay(500));
+  }
+
+  // ── GET transaction detail ──
+  getTransactionDetail(id: number): Observable<TransactionDetail> {
+    return this.http.get<TransactionDetail>(`${environment.apiUrl}/subscription/transaction/${id}`, { headers: this.getHeaders() });
   }
 }

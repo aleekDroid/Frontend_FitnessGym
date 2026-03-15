@@ -32,14 +32,14 @@ export class LandingComponent implements OnInit, OnDestroy {
   slides: CarouselSlide[] = [
     {
       id: 1,
-      image: 'assets/slides/slide-1.PNG',   
+      image: 'assets/slides/slide-1.png',   
       title: 'FORJA TU MEJOR VERSIÓN',
       subtitle: 'Equipos de última generación • Entrenadores certificados',
       cta: 'Conoce nuestros planes',
     },
     {
       id: 2,
-      image: 'assets/slides/slide-2.PNG',
+      image: 'assets/slides/slide-2.png',
       title: 'ESTUDIANTES UTEQ',
       subtitle: 'Membresía mensual con precio especial para ti',
       badge: '$350 / mes',

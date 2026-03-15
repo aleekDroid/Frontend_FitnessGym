@@ -34,3 +34,26 @@ export interface MonthlyRevenue {
   products: number;
   total: number;
 }
+export interface TransactionUser {
+  id: number;
+  name: string;
+  last_name: string;
+  number: string;
+  status: string;
+  subscription_id: number;
+  subscription_status: string;
+  start_date: string;
+  end_date: string;
+}
+
+export interface TransactionDetail {
+  transaction_id: number;
+  transaction_type: string;
+  payment_method: string;
+  total: number;
+  created_at: string;
+  subscription_type: SubscriptionType;
+  start_date: string;
+  end_date: string;
+  users: TransactionUser[];
+}

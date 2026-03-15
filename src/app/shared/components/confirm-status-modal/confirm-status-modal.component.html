@@ -1,0 +1,27 @@
+<div *ngIf="user" class="modal-overlay" (click)="closeModal()">
+  <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+    <div class="delete-confirm">
+      <div 
+        class="delete-icon" 
+        [style]="user.status === 'active' ? 'background: rgba(216,64,64,0.15); border-color: rgba(216,64,64,0.3); color: var(--accent)' : 'background: rgba(74,222,128,0.15); border-color: rgba(74,222,128,0.3); color: #4ade80'">
+        <svg *ngIf="user.status === 'active'" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg>
+        <svg *ngIf="user.status !== 'active'" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <h3>¿{{ user.status === "active" ? "Desactivar" : "Activar" }} usuario?</h3>
+      <p> El usuario <strong>{{ user.name }} {{ user.last_name }}</strong> pasará a estado {{ user.status === "active" ? "inactivo" : "activo" }}. </p>
+      
+      <div class="modal-footer" style="justify-content: center; margin-top: 24px;">
+        <button class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+        <button class="btn" [ngClass]="user.status === 'active' ? 'btn-danger' : 'btn-success'" (click)="doToggleStatus()">
+          Sí, {{ user.status === "active" ? "desactivar" : "activar" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

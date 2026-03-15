@@ -1,0 +1,97 @@
+<div class="modal-overlay" (click)="closeModal()" (keydown.escape)="closeModal()" tabindex="0">
+  <div class="modal-box modal-box--md" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Detalle de Transacción</h2>
+      <button class="modal-close" (click)="closeModal()">✕</button>
+    </div>
+
+    @if (loading()) {
+      <div class="modal-body-loading">
+        <span class="spinner"></span>
+        <p>Cargando detalles...</p>
+      </div>
+    } @else if (error()) {
+      <div class="modal-body-error">
+        <span class="error-icon">⚠️</span>
+        <p>{{ error() }}</p>
+        <button class="btn btn-primary" (click)="loadDetail()">Reintentar</button>
+      </div>
+    } @else if (detail(); as d) {
+      <div class="modal-body transaction-details">
+        <!-- Transaction Summary Header -->
+        <div class="transaction-summary">
+          <div class="summary-item">
+            <label>ID Transacción</label>
+            <span>#{{ d.transaction_id }}</span>
+          </div>
+          <div class="summary-item">
+            <label>Fecha y Hora</label>
+            <span>{{ formatDate(d.created_at) }}</span>
+          </div>
+          <div class="summary-item">
+            <label>Método de Pago</label>
+            <span class="badge badge-payment">{{ getPaymentMethodLabel(d.payment_method) }}</span>
+          </div>
+          <div class="summary-item">
+            <label>Total Pagado</label>
+            <span class="total-amount">{{ formatMoney(d.total) }}</span>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Subscription Type Info -->
+        <div class="section-title">Plan Adquirido</div>
+        <div class="plan-card">
+          <div class="plan-info">
+            <h3>{{ d.subscription_type.name }}</h3>
+            <p>{{ d.subscription_type.description }}</p>
+          </div>
+          <div class="plan-meta">
+            <span><strong>Duración:</strong> {{ d.subscription_type.duration }} días</span>
+            <span><strong>Precio Unitario:</strong> {{ formatMoney(d.subscription_type.price) }}</span>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Beneficiaries List -->
+        <div class="section-title">Beneficiarios ({{ d.users.length }})</div>
+        <div class="beneficiaries-list">
+          @for (u of d.users; track u.id) {
+            <div class="beneficiary-item">
+              <div class="user-info">
+                <span class="user-avatar-sm">{{ u.name.charAt(0) }}{{ u.last_name.charAt(0) }}</span>
+                <div class="user-details-text">
+                  <strong class="user-name">{{ u.name }} {{ u.last_name }}</strong>
+                  <span class="user-phone">{{ u.number }}</span>
+                </div>
+              </div>
+              <div class="membership-info">
+                <span class="status-badge" [ngClass]="'status-' + u.subscription_status">
+                  @if (u.subscription_status === 'active') { Vigente }
+                  @else if (u.subscription_status === 'expiring') { Por vencer }
+                  @else { Vencida }
+                </span>
+                <small class="expiry-date">Vence: {{ formatDate(u.end_date) }}</small>
+              </div>
+              
+              @if (u.id !== currentUserId) {
+                <button class="btn btn-outline btn-sm btn-icon-only tooltip" (click)="viewUserProfile(u.id)" title="Ver Perfil">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal()">Cerrar</button>
+    </div>
+  </div>
+</div>
