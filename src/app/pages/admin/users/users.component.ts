@@ -46,6 +46,9 @@ export class UsersComponent implements OnInit {
   // Modal Assign Subscription State
   showAssignModal = signal(false);
 
+  // Mobile Filters Toggle
+  showFilters = signal(false);
+
   // TOAST STATE
   toastMessage = signal<string | null>(null);
   toastType = signal<'success' | 'error'>('success');
@@ -240,5 +243,13 @@ export class UsersComponent implements OnInit {
     this.showAssignModal.set(false);
     this.showToast('Suscripción asignada exitosamente a los usuarios seleccionados.', 'success');
     this.loadData();
+  }
+
+  toggleFilters(): void {
+    this.showFilters.update(v => !v);
+  }
+
+  closeFilters(): void {
+    this.showFilters.set(false);
   }
 }

@@ -22,16 +22,21 @@
       />
     </div>
 
-    <div
-      class="filters-group"
-      style="
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        flex-wrap: wrap;
-        flex: 1;
-      "
+    <button 
+      class="btn-filters-toggle"
+      (click)="toggleFilters()"
+      [class.active]="showFilters()"
+      title="Mostrar/ocultar filtros"
     >
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="4" y1="6" x2="20" y2="6"></line>
+        <line x1="4" y1="12" x2="20" y2="12"></line>
+        <line x1="4" y1="18" x2="20" y2="18"></line>
+      </svg>
+      Filtros
+    </button>
+
+    <div class="filters-group filters-desktop">
       <select
         class="limit-select"
         [ngModel]="filterRole()"
@@ -62,6 +67,40 @@
         <option value="false">Deudores</option>
       </select>
     </div>
+
+    @if (showFilters()) {
+    <div class="filters-group filters-mobile">
+      <select
+        class="limit-select"
+        [ngModel]="filterRole()"
+        (ngModelChange)="filterRole.set($event); onFilterChange()"
+      >
+        <option value="">Todos los roles</option>
+        <option value="member">Miembros</option>
+        <option value="admin">Administradores</option>
+      </select>
+
+      <select
+        class="limit-select"
+        [ngModel]="filterStatus()"
+        (ngModelChange)="filterStatus.set($event); onFilterChange()"
+      >
+        <option value="">Todos los estados</option>
+        <option value="active">Activos</option>
+        <option value="inactive">Inactivos</option>
+      </select>
+
+      <select
+        class="limit-select"
+        [ngModel]="filterSubscription()"
+        (ngModelChange)="filterSubscription.set($event); onFilterChange()"
+      >
+        <option value="all">Suscripción: Todas</option>
+        <option value="true">Al corriente</option>
+        <option value="false">Deudores</option>
+      </select>
+    </div>
+    }
 
     <button
       class="btn btn-secondary"

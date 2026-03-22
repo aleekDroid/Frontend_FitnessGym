@@ -75,8 +75,14 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.startCarousel();
-    this.subscriptionsService.getAll().subscribe(types => {
-      this.subscriptionTypes = types.filter(t => t.status === 'active');
+    this.subscriptionsService.getAll().subscribe({
+      next: types => {
+        this.subscriptionTypes = types.filter(t => t.status === 'active');
+      },
+      error: err => {
+        console.warn('No se pudieron cargar los tipos de suscripción:', err.message);
+        this.subscriptionTypes = [];
+      }
     });
   }
 
