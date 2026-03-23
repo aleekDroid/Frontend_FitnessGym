@@ -407,12 +407,15 @@
 
 <!-- ══ MODAL: Status confirm ══ -->
 @if (showStatusConfirm()) {
-<app-confirm-status-modal
-  [user]="$any(user())"
+<app-status-confirm-modal
+  entityType="usuario"
+  [entityName]="user()!.name + ' ' + user()!.last_name"
+  [isActive]="user()!.status === 'active'"
+  [isLoading]="togglingStatus()"
   (closeEvent)="cancelToggleStatus()"
-  (confirmEvent)="onStatusConfirm($event)"
+  (confirmEvent)="doStatusToggle()"
 >
-</app-confirm-status-modal>
+</app-status-confirm-modal>
 }
 
 <!-- ══ MODAL: Assign Subscription ══ -->

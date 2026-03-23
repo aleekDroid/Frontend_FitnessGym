@@ -1,3 +1,4 @@
+// src/app/shared/components/status-confirm-modal/status-confirm-modal.component.ts
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 

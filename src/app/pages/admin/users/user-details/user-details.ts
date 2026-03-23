@@ -1,3 +1,4 @@
+// src/app/pages/admin/users/user-details/user-details.ts
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
