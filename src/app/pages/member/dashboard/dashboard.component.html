@@ -1,0 +1,441 @@
+<div class="member-wrap">
+  @if (loading()) {
+    <div class="loading-state">
+      <div class="spinner-lg"></div>
+      <p>Cargando tu perfil...</p>
+    </div>
+  } @else if (data()) {
+    <!-- ══ BANNER SUPERIOR ══ -->
+    <header class="top-banner">
+      <div class="banner-glow"></div>
+      <div class="banner-top">
+        <div>
+          <p class="greeting-label">Bienvenido de regreso</p>
+          <h1 class="greeting-name">
+            {{ user()?.name }} {{ user()?.last_name }}
+          </h1>
+        </div>
+        <div class="banner-right">
+          <span
+            class="member-badge"
+            [class.inactive]="
+              subscription()?.status === 'expired' || !subscription()
+            "
+            [class.expiring]="subscription()?.status === 'expiring'"
+          >
+            @if (!subscription() || subscription()?.status === "expired") {
+              Membresía Vencida
+            } @else if (subscription()?.status === "expiring") {
+              Por vencer
+            } @else {
+              Miembro activo
+            }
+          </span>
+          <button
+            class="logout-icon-btn"
+            (click)="logout()"
+            title="Cerrar sesión"
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            >
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+      <p class="quote-bar">{{ quote }}</p>
+    </header>
+
+    <!-- ══ BARRA DE ESTADO DE MEMBRESÍA ══ -->
+    <div class="status-bar">
+      <div class="status-item">
+        <span class="status-label">Plan</span>
+        <span class="status-value">{{
+          subscription()?.suscriptions_types?.name ?? "—"
+        }}</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <span class="status-label">Estado</span>
+        <span
+          class="status-value"
+          [class.active]="subscription()?.status === 'active'"
+          [class.expiring]="subscription()?.status === 'expiring'"
+          [class.expired]="
+            !subscription() || subscription()?.status === 'expired'
+          "
+        >
+          {{
+            subscription()?.status === "active"
+              ? "● Activa"
+              : subscription()?.status === "expiring"
+                ? "● Por vencer"
+                : "● Inactiva"
+          }}
+        </span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="status-item">
+        <span class="status-label">Vence</span>
+        <span class="status-value">{{
+          subscription()?.end_date | date: "dd MMM yyyy"
+        }}</span>
+      </div>
+      <div class="status-divider"></div>
+      <div class="progress-wrap">
+        <div class="progress-header">
+          <span class="status-label">Progreso del ciclo</span>
+          <span class="status-label days-left"
+            >{{ daysLeft() }} días restantes</span
+          >
+        </div>
+        <div class="progress-track">
+          <div
+            class="progress-fill"
+            [class]="progressClass()"
+            [style.width.%]="membershipProgress()"
+          ></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ GRID PRINCIPAL ══ -->
+    <div class="main-grid">
+      <!-- RACHA -->
+      <section class="panel panel-streak">
+        <p class="panel-label">Racha de asistencia</p>
+        <div class="streak-hero">
+          <div class="streak-number">{{ streak() }}</div>
+          <p class="streak-unit">días consecutivos</p>
+          <!-- ESTADO DE LA RACHA -->
+          <div class="streak-status-bar">
+            @switch (streakStatus()) {
+              @case ('NONE') {
+                <span class="streak-badge inactive">
+                  <span class="streak-dot"></span>¡Empieza tu racha hoy!
+                </span>
+              }
+              @case ('PENDING') {
+                <span class="streak-badge pending">
+                  <span class="streak-dot"></span>Aún puedes sumar hoy tu día {{ streak() + 1 }}
+                </span>
+                @if (isStreakAtRisk()) {
+                  <div class="risk-alert">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="12" height="12">
+                      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                    </svg>
+                    ¡Riesgo de pérdida de racha! Sin comodines.
+                  </div>
+                }
+              }
+              @case ('COMPLETED') {
+                <span class="streak-badge active pulse">
+                  <span class="streak-dot"></span>¡Día {{ streak() }} completado!
+                </span>
+              }
+            }
+          </div>
+        </div>
+        <div class="streak-meta" style="align-items: center">
+          <div class="streak-meta-item" style="text-align: left">
+            <span class="streak-meta-val">
+              {{
+                lastAttendance()
+                  ? (lastAttendance()! | date: "dd MMM" : "" : "es-MX")
+                  : "—"
+              }}
+            </span>
+            <span class="streak-meta-lbl">última visita</span>
+          </div>
+
+          <div
+            class="integrated-jokers streak-meta-item"
+            style="text-align: center"
+          >
+            <div
+              class="joker-row"
+              style="justify-content: center; margin-bottom: 6px; gap: 8px"
+            >
+              @for (j of getJokersArray(); track $index) {
+                <div
+                  class="joker"
+                  [class.used]="j.used"
+                  style="width: 28px; height: 28px;"
+                >
+                  <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                  </svg>
+                </div>
+              }
+            </div>
+            @if (jokerWarning()) {
+              <p
+                style="
+                  color: #ff7070;
+                  font-size: 10px;
+                  font-weight: 600;
+                  text-transform: uppercase;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 4px;
+                "
+              >
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                Sin comodines
+              </p>
+            } @else {
+              <p
+                style="
+                  color: rgba(238, 238, 232, 0.45);
+                  font-size: 10px;
+                  text-transform: uppercase;
+                "
+              >
+                Próximo premio en {{ nextJokerIn() }} d.
+              </p>
+            }
+          </div>
+
+          <div class="streak-meta-item" style="text-align: right">
+            <span class="streak-meta-val">{{ attendances().length }}</span>
+            <span class="streak-meta-lbl">este ciclo</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- TARJETA DE PLAN -->
+      <section class="panel panel-wide">
+        <p class="panel-label">Plan activo</p>
+        @if (subscription(); as sub) {
+          <div class="mem-card">
+            <div class="mem-card-glow"></div>
+            <h2 class="mem-plan-name">{{ sub.suscriptions_types.name }}</h2>
+            <p class="mem-plan-desc">
+              {{ sub.suscriptions_types.description }}
+            </p>
+            <p class="mem-price">
+              {{ formatMoney(sub.suscriptions_types.price) }}
+              <span class="mem-price-period">MXN / ciclo</span>
+            </p>
+            <div class="mem-dates">
+              <div>
+                <span class="mem-date-label">Inicio</span>
+                <span class="mem-date-val">{{
+                  sub.start_date | date: "dd MMM yyyy"
+                }}</span>
+              </div>
+              <div style="text-align: right">
+                <span class="mem-date-label">Vencimiento</span>
+                <span class="mem-date-val">{{
+                  sub.end_date | date: "dd MMM yyyy"
+                }}</span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="no-subscription">
+            <p>No tienes una membresía activa.</p>
+            <p class="no-sub-hint">
+              Contacta al administrador para renovar tu plan.
+            </p>
+          </div>
+        }
+      </section>
+    </div>
+
+    <!-- ══ BANNER ONBOARDING (visible si isSetupPending) ══ -->
+    @if (isSetupPending()) {
+      <div class="onboarding-banner">
+        <div class="onboarding-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2z"/>
+            <path d="M12 8v4"/>
+            <path d="M12 16h.01"/>
+          </svg>
+        </div>
+        <div class="onboarding-text">
+          <strong>¡Tu racha ha comenzado!</strong>
+          <span>Estás en modo protegido (Sáb–Dom como descanso). Configura tu rutina personalizada para elegir tus propios días.</span>
+        </div>
+        <button class="onboarding-cta" (click)="openRoutineModal()">
+          Configurar rutina →
+        </button>
+      </div>
+    }
+
+    <!-- ══ LÍNEA SEPARADORA ══ -->
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <span class="divider-label">MI RUTINA</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <!-- RUTINA SEMANAL -->
+    <section class="panel panel-routine">
+      <div class="panel-header">
+        <p class="panel-label">Mi rutina semanal</p>
+        <button class="btn-edit-routine" (click)="openRoutineModal()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+          </svg>
+          Editar
+        </button>
+      </div>
+      <div class="week-row">
+        @if (hasRoutine()) {
+          @for (day of days(); track day.day) {
+            <div
+              class="day-card"
+              [class.training]="!day.isRestDay && !isAttendedThisWeek(day.day)"
+              [class.rest]="day.isRestDay"
+              [class.attended]="isAttendedThisWeek(day.day)"
+              [class.today]="isTodayCard(day.day)"
+            >
+              <div class="day-name">{{ getDayLabel(day.day) }}</div>
+              <div class="status-indicator"></div>
+              @if (!day.isRestDay) {
+                <div class="exercises">
+                  <span class="ex-tag">{{ day.description || 'Entreno' }}</span>
+                </div>
+              } @else {
+                <div class="rest-badge">Descanso</div>
+              }
+            </div>
+          }
+        } @else {
+          <p class="routine-hint" style="width: 100%; text-align: center; padding: 24px 0">
+            No tienes rutina configurada.
+            <button class="btn-link" (click)="openRoutineModal()">Crear rutina →</button>
+          </p>
+        }
+      </div>
+      <div class="legend">
+        <span class="legend-item"><span class="legend-dot training"></span>Entrenamiento</span>
+        <span class="legend-item"><span class="legend-dot rest"></span>Descanso</span>
+        <span class="legend-item"><span class="legend-dot attended"></span>Asistido</span>
+      </div>
+    </section>
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <span class="divider-label">Asistencias Recientes</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <section class="panel panel-full">
+      <p class="panel-label">Últimas visitas al gimnasio</p>
+      <div class="attendance-list">
+        @for (att of attendances(); track att.id) {
+          <div class="att-item">
+            <div class="att-icon">
+              <!-- Ícono check SVG -->
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+              >
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+            </div>
+            <span class="att-date">{{ formatDate(att.created_at) }}</span>
+            <span class="att-time">{{ formatTime(att.created_at) }}</span>
+          </div>
+        } @empty {
+          <p class="empty-row">No hay asistencias registradas aún.</p>
+        }
+      </div>
+    </section>
+
+    <!-- ══ SECCIÓN: HISTORIAL DE PAGOS ══ -->
+    <div class="section-divider">
+      <div class="divider-line"></div>
+      <span class="divider-label">Historial de Pagos</span>
+      <div class="divider-line"></div>
+    </div>
+
+    <section class="panel panel-full panel-payments">
+      <p class="panel-label">Transacciones recientes</p>
+      <div class="table-container">
+        <table class="pay-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Plan</th>
+              <th>Fecha</th>
+              <th>Método</th>
+              <th class="text-right">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (p of payments(); track p.transaction_id) {
+              <tr>
+                <td class="muted">#{{ p.transaction_id }}</td>
+                <td>{{ p.plan_name }}</td>
+                <td class="muted">{{ p.created_at | date: "dd MMM yyyy" }}</td>
+                <td>
+                  <span class="pay-method">{{
+                    p.payment_method | titlecase
+                  }}</span>
+                </td>
+                <td class="text-right pay-amount">
+                  {{ formatMoney(p.total) }}
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="5" class="empty-row">
+                  Sin transacciones registradas.
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Modal de edición de rutina -->
+    <app-routine-edit-modal
+      [visible]="showRoutineModal()"
+      [streak]="streak()"
+      [initialRoutine]="fullRoutine()"
+      [loading]="modalLoading()"
+      [isSetupPending]="isSetupPending()"
+      (saved)="onRoutineSaved($event)"
+      (closed)="onRoutineModalClosed()">
+    </app-routine-edit-modal>
+
+  } @else {
+    <div class="error-state">
+      <div class="error-icon">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color: rgba(255,255,255,0.4)">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+      <h2>No se pudo cargar tu información</h2>
+      <p>
+        Ocurrió un error al contactar al servidor o tu perfil está incompleto.
+      </p>
+      <button class="retry-btn" onclick="window.location.reload()">
+        Reintentar
+      </button>
+    </div>
+  }
+</div>

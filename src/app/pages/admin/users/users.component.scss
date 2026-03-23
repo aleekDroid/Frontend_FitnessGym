@@ -392,23 +392,8 @@
 .field-error { color: #ef9a9a; font-size: 0.8rem; font-weight: 500; margin-top: 2px; }
 
 /* Modal sm */
-.modal-box--sm { max-width: 380px; }
-.delete-confirm {
-  text-align: center;
-  .delete-icon {
-    width: 64px; height: 64px;
-    border-radius: 50%;
-    background: rgba(216,64,64,0.15);
-    border: 2px solid rgba(216,64,64,0.3);
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 20px;
-    color: var(--accent);
-  }
-  h3 { font-family: var(--font-display); font-size: 1.5rem; letter-spacing: 0.05em; margin-bottom: 10px; }
-  p { color: rgba(238,238,238,0.65); font-size: 0.92rem; margin-bottom: 4px; }
-  strong { color: var(--light); }
-  .modal-footer { justify-content: center; margin-top: 24px; }
-}
+/* Old status modal styles removed — handled by shared component */
+
 
 /* Loading */
 .loading-state {

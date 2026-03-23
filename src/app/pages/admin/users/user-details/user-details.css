@@ -532,6 +532,34 @@
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
+/* Base Button Styles Move Up for specificity */
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-secondary { background: rgba(255,255,255,0.08); color: var(--light); }
+.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.btn-success { background: #4ade80; color: #000; }
+.btn-success:hover { background: #22c55e; }
+.btn-primary {
+  background: var(--accent);
+  color: white;
+}
+.btn-primary:hover {
+  background: #ff4d4d;
+  box-shadow: 0 0 20px rgba(216, 64, 64, 0.4);
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 .profile-actions .btn {
   justify-content: center;
   padding: 10px;
@@ -564,30 +592,36 @@
 }
 
 .edit-btn {
-  border-color: rgba(255,193,7,0.3);
+  border: 1px solid rgba(255,193,7,0.3) !important;
   color: #ffc107;
+  background: transparent !important;
 }
 .edit-btn:hover {
-  background: rgba(255,193,7,0.15);
-  border-color: #ffc107;
+  background: rgba(255,193,7,0.15) !important;
+  border-color: #ffc107 !important;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.1);
 }
 
 .btn-danger-outline {
-  border-color: rgba(216,64,64,0.3);
+  border: 1px solid rgba(248,113,113,0.3) !important;
   color: #f87171;
+  background: transparent !important;
 }
 .btn-danger-outline:hover {
-  background: rgba(216,64,64,0.15);
-  border-color: #f87171;
+  background: rgba(216,64,64,0.15) !important;
+  border-color: #f87171 !important;
+  box-shadow: 0 4px 12px rgba(216, 64, 64, 0.1);
 }
 
 .btn-success-outline {
-  border-color: rgba(74,222,128,0.3);
+  border: 1px solid rgba(74,222,128,0.3) !important;
   color: #4ade80;
+  background: transparent !important;
 }
 .btn-success-outline:hover {
-  background: rgba(74,222,128,0.15);
-  border-color: #4ade80;
+  background: rgba(74,222,128,0.15) !important;
+  border-color: #4ade80 !important;
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.1);
 }
 
 /* Modals */

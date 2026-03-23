@@ -3,7 +3,7 @@
 export interface Product {
   id: number;
   name: string;
-  serial_number: string;
+  serialNumber: string;
   price: number;
   stock: number;
   status: 'active' | 'inactive';
@@ -14,7 +14,7 @@ export interface Product {
 
 export interface CreateProductDto {
   name: string;
-  serial_number: string;
+  serialNumber: string;
   price: number;
   stock: number;
   description?: string;
@@ -22,4 +22,24 @@ export interface CreateProductDto {
 
 export interface UpdateProductDto extends Partial<CreateProductDto> {
   status?: 'active' | 'inactive';
+}
+
+export interface PaginatedProductsResponse {
+  data: Product[];
+  meta: {
+    totalItems: number;
+    totalPages: number;
+    currentPage: number;
+    limit: number;
+  };
+}
+
+export interface SaleItemDto {
+  id: number;
+  quantity: number;
+}
+
+export interface RegisterSaleDto {
+  products: SaleItemDto[];
+  payment_method: string;
 }

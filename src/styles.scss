@@ -195,16 +195,16 @@ input, select, textarea { font-family: var(--font-body); }
 
 .data-table td {
   padding: 14px 18px;
-  border-bottom: 1px solid rgba(255,255,255,0.05);
   font-size: 0.95rem;
   font-weight: 500;
+  vertical-align: middle;
 }
-
-.data-table tr:last-child td { border-bottom: none; }
 
 .data-table tbody tr {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
   transition: background var(--transition);
 }
+.data-table tbody tr:last-child { border-bottom: none; }
 .data-table tbody tr:hover { background: rgba(216,64,64,0.07); }
 
 /* ── Search Input ── */
@@ -270,6 +270,15 @@ input, select, textarea { font-family: var(--font-body); }
   align-items: center;
   gap: 16px;
   margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
 }
 
 /* ── Modal overlay ── */

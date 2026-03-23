@@ -1,6 +1,6 @@
 // src/app/pages/landing/landing.component.ts
 import { Component, OnInit, OnDestroy, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { SubscriptionsService } from '../../core/services/subscriptions.service';
 import { SubscriptionType } from '../../core/models/subscription.model';
@@ -17,7 +17,7 @@ interface CarouselSlide {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss'],
 })

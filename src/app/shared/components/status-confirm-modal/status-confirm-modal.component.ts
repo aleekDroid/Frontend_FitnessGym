@@ -1,0 +1,31 @@
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { CommonModule } from '@angular/common';
+
+@Component({
+  selector: 'app-status-confirm-modal',
+  standalone: true,
+  imports: [CommonModule],
+  templateUrl: './status-confirm-modal.component.html'
+})
+export class StatusConfirmModalComponent {
+  @Input() entityType: string = 'elemento'; 
+  @Input() entityName: string = '';
+  @Input() isActive: boolean = true;
+  @Input() isLoading: boolean = false;
+  @Input() warningMessage: string | null = null;
+  
+  @Output() closeEvent = new EventEmitter<void>();
+  @Output() confirmEvent = new EventEmitter<void>();
+
+  closeModal(): void {
+    if (!this.isLoading) {
+      this.closeEvent.emit();
+    }
+  }
+
+  confirm(): void {
+    if (!this.isLoading) {
+      this.confirmEvent.emit();
+    }
+  }
+}

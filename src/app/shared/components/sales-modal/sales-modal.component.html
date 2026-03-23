@@ -1,0 +1,160 @@
+<!-- Sales Modal -->
+<div class="modal-overlay" (click)="onOverlayClick($event)">
+  <div class="modal-box modal-box--lg">
+
+    <!-- Header -->
+    <div class="modal-header">
+      <h2>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+        </svg>
+        Registrar Venta
+      </h2>
+      <button class="btn-close" (click)="closeModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="search-section">
+      <div class="search-wrapper">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input
+          class="search-input"
+          placeholder="Buscar producto por nombre o código..."
+          [value]="searchTerm()"
+          (input)="onSearchInput($any($event.target).value)"
+          (blur)="onDropdownBlur()"
+          autocomplete="off"
+        />
+        @if (searching()) {
+          <div class="search-spinner"></div>
+        }
+      </div>
+
+      <!-- Search Dropdown -->
+      @if (showDropdown() && searchResults().length > 0) {
+        <div class="search-dropdown">
+          @for (product of searchResults(); track product.id) {
+            <div class="dropdown-item" (mousedown)="addToCart(product)">
+              <div class="dropdown-item__info">
+                <span class="dropdown-item__name">{{ product.name }}</span>
+                <code class="dropdown-item__serial">{{ product.serialNumber }}</code>
+              </div>
+              <div class="dropdown-item__meta">
+                <span class="dropdown-item__price">${{ product.price | number:'1.2-2' }}</span>
+                <span class="dropdown-item__stock">{{ product.stock }} pzs</span>
+              </div>
+            </div>
+          }
+        </div>
+      }
+      @if (showDropdown() && searchResults().length === 0 && !searching()) {
+        <div class="search-dropdown">
+          <div class="dropdown-empty">No se encontraron productos disponibles</div>
+        </div>
+      }
+    </div>
+
+    <!-- Cart -->
+    <div class="cart-section">
+      @if (cartEmpty()) {
+        <div class="cart-empty">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+          </svg>
+          <p>Busca y agrega productos para iniciar la venta</p>
+        </div>
+      } @else {
+        <!-- Cart Header -->
+        <div class="cart-header">
+          <span class="cart-col cart-col--product">Producto</span>
+          <span class="cart-col cart-col--price">Precio</span>
+          <span class="cart-col cart-col--qty">Cantidad</span>
+          <span class="cart-col cart-col--subtotal">Subtotal</span>
+          <span class="cart-col cart-col--actions"></span>
+        </div>
+
+        <!-- Cart Items -->
+        @for (item of cartItems(); track item.product.id) {
+          <div class="cart-item">
+            <div class="cart-col cart-col--product">
+              <span class="cart-item__name">{{ item.product.name }}</span>
+              <span class="cart-item__stock">Stock: {{ item.product.stock }} pzs</span>
+            </div>
+            <span class="cart-col cart-col--price">${{ item.product.price | number:'1.2-2' }}</span>
+            <div class="cart-col cart-col--qty">
+              <div class="qty-control">
+                <button class="qty-btn" (click)="updateQuantity(item.product.id, -1)" [disabled]="item.quantity <= 1">−</button>
+                <input
+                  class="qty-input"
+                  type="number"
+                  [value]="item.quantity"
+                  (change)="setQuantity(item.product.id, $any($event.target).value)"
+                  [min]="1"
+                  [max]="item.product.stock"
+                />
+                <button class="qty-btn" (click)="updateQuantity(item.product.id, 1)" [disabled]="item.quantity >= item.product.stock">+</button>
+              </div>
+              @if (item.quantity >= item.product.stock) {
+                <span class="qty-max">Máximo</span>
+              }
+            </div>
+            <span class="cart-col cart-col--subtotal cart-subtotal">${{ getSubtotal(item) | number:'1.2-2' }}</span>
+            <div class="cart-col cart-col--actions">
+              <button class="btn-remove" (click)="removeFromCart(item.product.id)" title="Quitar producto">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Error Message -->
+    @if (errorMessage()) {
+      <div class="sale-error">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        {{ errorMessage() }}
+      </div>
+    }
+
+    <!-- Footer -->
+    @if (!cartEmpty()) {
+      <div class="sale-footer">
+        <div class="payment-section">
+          <label class="payment-label">Método de Pago</label>
+          <select class="payment-select" [ngModel]="paymentMethod()" (ngModelChange)="paymentMethod.set($event)">
+            <option value="cash">Efectivo</option>
+            <option value="card">Tarjeta</option>
+            <option value="transfer">Transferencia</option>
+          </select>
+        </div>
+
+        <div class="total-section">
+          <span class="total-label">Total</span>
+          <span class="total-amount">${{ total() | number:'1.2-2' }}</span>
+        </div>
+
+        <div class="modal-actions">
+          <button class="btn btn-secondary" (click)="closeModal()" [disabled]="isLoading">Cancelar</button>
+          <button class="btn btn-primary" (click)="onSubmit()" [disabled]="isLoading || cartEmpty()">
+            @if (isLoading) {
+              <span class="spinner-sm"></span> Procesando...
+            } @else {
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Confirmar Venta
+            }
+          </button>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

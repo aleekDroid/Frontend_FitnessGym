@@ -9,13 +9,12 @@ import { SubscriptionsService } from '../../../core/services/subscriptions.servi
 import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
 import { AssignSubscriptionModalComponent } from '../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
-import { ConfirmStatusModalComponent } from '../../../shared/components/confirm-status-modal/confirm-status-modal.component';
-import Swal from 'sweetalert2';
+import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssignSubscriptionModalComponent, ConfirmStatusModalComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssignSubscriptionModalComponent, StatusConfirmModalComponent],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
@@ -194,22 +193,45 @@ export class UsersComponent implements OnInit {
     }
   }
 
+  togglingStatus = signal(false);
+
   confirmToggleStatus(user: UserWithMembership): void {
     this.statusTarget.set(user);
     this.showStatusConfirm.set(true);
   }
 
   cancelToggleStatus(): void {
+    if (this.togglingStatus()) return;
     this.showStatusConfirm.set(false);
     this.statusTarget.set(null);
   }
 
+  doStatusToggle(): void {
+    const user = this.statusTarget();
+    if (!user) return;
+
+    this.togglingStatus.set(true);
+    const newStatus = user.status === 'active' ? 'inactive' : 'active';
+    
+    this.usersService.toggleUserStatus(user.id, newStatus).subscribe({
+      next: () => {
+        this.users.update(users => users.map(u => 
+          u.id === user.id ? { ...u, status: newStatus } : u
+        ));
+        this.showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success');
+        this.togglingStatus.set(false);
+        this.cancelToggleStatus();
+      },
+      error: (err) => {
+        console.error('Error toggling status:', err);
+        this.showToast('No se pudo cambiar el estado del usuario', 'error');
+        this.togglingStatus.set(false);
+      }
+    });
+  }
+
   onStatusConfirm(updatedUser: UserWithMembership): void {
-    this.users.update(users => users.map(u => 
-      u.id === updatedUser.id ? updatedUser : u
-    ));
-    this.cancelToggleStatus();
-    this.showToast('Estado actualizado correctamente', 'success');
+    // This was used by the old modal, we might not need it if we use doStatusToggle
   }
 
   get f() { return this.userForm.controls; }

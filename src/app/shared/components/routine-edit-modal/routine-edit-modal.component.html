@@ -1,0 +1,244 @@
+@if (visible) {
+  <!-- Overlay -->
+  <div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+
+      <!-- ── Header ── -->
+      <div class="rm-header">
+        <div class="header-left">
+          <span class="modal-title">Editar rutina</span>
+          <div class="streak-pill">
+            <span class="streak-dot" [class.active]="streak > 0"></span>
+            {{ streak }} días de racha
+          </div>
+        </div>
+        <button class="btn-close" (click)="onClose()" [disabled]="saving()" aria-label="Cerrar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- ── Banner de racha ── -->
+      @if (shouldWarnStreakReset()) {
+        <div class="streak-warning">
+          <span class="warn-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+            </svg>
+          </span>
+          <span>
+            Modificaste los días de descanso. Guardar reiniciará tu racha de
+            <strong>{{ streak }} días</strong> a 0.
+          </span>
+        </div>
+      }
+
+      @if (loading) {
+        <div class="modal-loading">
+          <div class="spinner-sm"></div>
+          <span>Cargando rutina...</span>
+        </div>
+      } @else {
+        <!-- Tabs de días -->
+        <div class="tabs-bar">
+          @for (abbr of dayAbbrs; track abbr; let i = $index) {
+            <button
+              class="tab"
+              [class.active]="activeDay() === i"
+              [class.is-rest]="editableDays()[i]?.isRestDay"
+              (click)="selectDay(i)">
+              {{ abbr }}
+              @if (editableDays()[i]?.isRestDay) {
+                <span class="tab-rest-marker">z</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- ── Cuerpo del día activo ── -->
+        <div class="modal-body">
+          @if (currentDay(); as day) {
+
+            <!-- Fila superior: descripción + toggle descanso -->
+            <div class="day-header-row">
+              <input
+                class="desc-input"
+                type="text"
+                placeholder="Nombre del día ej. Pecho y tríceps"
+                [value]="day.description ?? ''"
+                [disabled]="day.isRestDay"
+                (input)="updateDescription(activeDay(), $any($event.target).value)"
+              />
+              <div class="toggle-group">
+                <span class="toggle-label">Descanso</span>
+                <button
+                  class="toggle-btn"
+                  [class.on]="day.isRestDay"
+                  (click)="toggleRestDay(activeDay())"
+                  [attr.aria-label]="day.isRestDay ? 'Cambiar a entrenamiento' : 'Marcar como descanso'"
+                ></button>
+              </div>
+            </div>
+
+            <!-- Contenido: ejercicios o estado de descanso -->
+            @if (day.isRestDay) {
+              <div class="rest-state">
+              <div class="rest-icon-circle">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+                </svg>
+              </div>
+                <p class="rest-title">Día de descanso</p>
+                <p class="rest-hint">Desactiva el toggle para agregar ejercicios.</p>
+              </div>
+            } @else {
+              <div class="exercises-list">
+                @for (ex of (day.exercises ?? []); track trackByIndex($index); let ei = $index) {
+                  <div class="ex-card">
+                    <div class="ex-card-header">
+                      <span class="ex-card-num">Ejercicio {{ ei + 1 }}</span>
+                      <button class="btn-remove-ex" (click)="removeExercise(activeDay(), ei)" aria-label="Eliminar ejercicio">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                          <line x1="18" y1="6" x2="6" y2="18"/>
+                          <line x1="6" y1="6" x2="18" y2="18"/>
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Nombre / Series / Reps -->
+                    <div class="ex-grid-top">
+                      <div class="field-group span-2">
+                        <label class="field-label">Nombre *</label>
+                        <input
+                          class="field-input"
+                          [class.error]="!ex.name.trim()"
+                          type="text"
+                          placeholder="ej. Press de banca"
+                          [value]="ex.name"
+                          (input)="updateExercise(activeDay(), ei, 'name', $any($event.target).value)"
+                        />
+                      </div>
+                      <div class="field-group">
+                        <label class="field-label">Series</label>
+                        <input
+                          class="field-input center"
+                          type="number"
+                          min="1" max="20"
+                          [value]="ex.sets"
+                          (input)="updateExercise(activeDay(), ei, 'sets', +$any($event.target).value)"
+                        />
+                      </div>
+                      <div class="field-group">
+                        <label class="field-label">Reps</label>
+                        <input
+                          class="field-input center"
+                          type="number"
+                          min="1" max="100"
+                          [value]="ex.reps"
+                          (input)="updateExercise(activeDay(), ei, 'reps', +$any($event.target).value)"
+                        />
+                      </div>
+                    </div>
+
+                    <!-- Máquina / Nota -->
+                    <div class="ex-grid-bottom">
+                      <div class="field-group">
+                        <label class="field-label">Máquina / equipo</label>
+                        <input
+                          class="field-input"
+                          type="text"
+                          placeholder="ej. Banco plano"
+                          [value]="ex.machine ?? ''"
+                          (input)="updateExercise(activeDay(), ei, 'machine', $any($event.target).value)"
+                        />
+                      </div>
+                      <div class="field-group">
+                        <label class="field-label">Nota</label>
+                        <input
+                          class="field-input"
+                          type="text"
+                          placeholder="ej. Bajar controlado"
+                          [value]="ex.note ?? ''"
+                          (input)="updateExercise(activeDay(), ei, 'note', $any($event.target).value)"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                }
+
+                <!-- Botón agregar ejercicio -->
+                <button class="btn-add-ex" (click)="addExercise(activeDay())">
+                  + Agregar ejercicio
+                </button>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- ── Footer ── -->
+        <div class="modal-footer">
+          <span class="footer-hint">
+            @if (!isValid()) {
+              <span class="hint-error">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" style="flex-shrink:0">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                Hay ejercicios sin nombre
+              </span>
+            } @else {
+              6 de 6 días configurados
+            }
+          </span>
+          <div class="footer-actions">
+            <button class="btn btn-cancel" (click)="onClose()" [disabled]="saving()">
+              Cancelar
+            </button>
+            <button
+              class="btn btn-save"
+              [class.warn]="shouldWarnStreakReset()"
+              [disabled]="!isValid() || saving()"
+              (click)="onSaveClick()">
+              @if (saving()) {
+                Guardando...
+              } @else if (shouldWarnStreakReset()) {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;flex-shrink:0">
+                  <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
+                </svg>
+                Guardar y perder racha
+              } @else {
+                Guardar cambios
+              }
+            </button>
+          </div>
+        </div>
+      }
+
+    </div>
+  </div>
+
+  <!-- ── Diálogo de confirmación de reset de racha ── -->
+  @if (showConfirm()) {
+    <div class="confirm-overlay" (click)="cancelConfirm()">
+      <div class="confirm-box" (click)="$event.stopPropagation()">
+        <div class="confirm-icon danger">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+            <line x1="12" y1="9" x2="12" y2="13"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <h3 class="confirm-title">¿Perder tu racha?</h3>
+        <p class="confirm-body">
+          Cambiar tus días de descanso reiniciará tu racha actual de
+          <strong>{{ streak }} días</strong> a cero. Esta acción no se puede deshacer.
+        </p>
+        <div class="confirm-actions">
+          <button class="btn btn-cancel" (click)="cancelConfirm()">Cancelar</button>
+          <button class="btn btn-danger" (click)="confirmSave()">Sí, guardar igual</button>
+        </div>
+      </div>
+    </div>
+  }
+}
