@@ -36,40 +36,8 @@
       Filtros
     </button>
 
-    <div class="filters-group filters-desktop">
-      <select
-        class="limit-select"
-        [ngModel]="filterRole()"
-        (ngModelChange)="filterRole.set($event); onFilterChange()"
-      >
-        <option value="">Todos los roles</option>
-        <option value="member">Miembros</option>
-        <option value="admin">Administradores</option>
-      </select>
-
-      <select
-        class="limit-select"
-        [ngModel]="filterStatus()"
-        (ngModelChange)="filterStatus.set($event); onFilterChange()"
-      >
-        <option value="">Todos los estados</option>
-        <option value="active">Activos</option>
-        <option value="inactive">Inactivos</option>
-      </select>
-
-      <select
-        class="limit-select"
-        [ngModel]="filterSubscription()"
-        (ngModelChange)="filterSubscription.set($event); onFilterChange()"
-      >
-        <option value="all">Suscripción: Todas</option>
-        <option value="true">Al corriente</option>
-        <option value="false">Deudores</option>
-      </select>
-    </div>
-
     @if (showFilters()) {
-    <div class="filters-group filters-mobile">
+    <div class="filters-group">
       <select
         class="limit-select"
         [ngModel]="filterRole()"

@@ -64,35 +64,10 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  flex-wrap: wrap;
   flex: 1;
-}
-
-.filters-desktop {
-  @media (max-width: 768px) {
-    display: none;
-  }
-}
-
-.filters-mobile {
-  display: none;
-  flex-direction: column;
-  width: 100%;
-  gap: 10px;
-  padding: 12px 0;
-  border-top: 1px solid rgba(255,255,255,0.08);
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-
-  select {
-    width: 100%;
-  }
-
-  @media (min-width: 769px) {
-    display: none;
-  }
 
   @media (max-width: 768px) {
-    display: flex;
+    flex-direction: column;
   }
 }
 .btn-filters-toggle {
