@@ -95,7 +95,7 @@
               </div>
             } @else {
               <div class="exercises-list">
-                @for (ex of (day.exercises ?? []); track trackByIndex($index); let ei = $index) {
+                @for (ex of day.exercises; track trackByIndex($index); let ei = $index) {
                   <div class="ex-card">
                     <div class="ex-card-header">
                       <span class="ex-card-num">Ejercicio {{ ei + 1 }}</span>
@@ -150,7 +150,7 @@
                           class="field-input"
                           type="text"
                           placeholder="ej. Banco plano"
-                          [value]="ex.machine ?? ''"
+                          [value]="ex.machine"
                           (input)="updateExercise(activeDay(), ei, 'machine', $any($event.target).value)"
                         />
                       </div>

@@ -26,6 +26,11 @@ export class LandingComponent implements OnInit, OnDestroy {
   subscriptionTypes: SubscriptionType[] = [];
   menuOpen = signal(false);
 
+  // Pagination for prices
+  currentPage = signal(1);
+  totalPages = signal(1);
+  loadingPrices = signal(false);
+
   private timer?: any;
 
   // ── Edit slides here with your own images & copy ──
@@ -75,15 +80,31 @@ export class LandingComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.startCarousel();
-    this.subscriptionsService.getAll().subscribe({
-      next: types => {
-        this.subscriptionTypes = types.filter(t => t.status === 'active');
+    this.loadPrices();
+  }
+
+  loadPrices(): void {
+    this.loadingPrices.set(true);
+    this.subscriptionsService.getAll(this.currentPage(), 4, undefined, 'active').subscribe({
+      next: res => {
+        this.subscriptionTypes = res.data;
+        this.totalPages.set(res.meta.totalPages);
+        this.loadingPrices.set(false);
       },
       error: err => {
         console.warn('No se pudieron cargar los tipos de suscripción:', err.message);
         this.subscriptionTypes = [];
+        this.loadingPrices.set(false);
       }
     });
+  }
+
+  changePage(delta: number): void {
+    const next = this.currentPage() + delta;
+    if (next >= 1 && next <= this.totalPages()) {
+      this.currentPage.set(next);
+      this.loadPrices();
+    }
   }
 
   ngOnDestroy(): void {

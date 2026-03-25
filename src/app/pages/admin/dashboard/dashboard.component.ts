@@ -1,9 +1,9 @@
 // src/app/pages/admin/dashboard/dashboard.component.ts
-import { Component, OnInit, signal, ElementRef, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SubscriptionsService } from '../../../core/services/subscriptions.service';
-import { DashboardStats, MonthlyRevenue } from '../../../core/models/subscription.model';
+import { DashboardService, DashboardSummary } from '../../../core/services/dashboard.service';
+import { PdfReportService } from '../../../core/services/pdf-report.service';
 
 @Component({
   selector: 'app-dashboard',
@@ -13,15 +13,18 @@ import { DashboardStats, MonthlyRevenue } from '../../../core/models/subscriptio
   styleUrls: ['./dashboard.component.scss'],
 })
 export class DashboardComponent implements OnInit {
-  stats = signal<DashboardStats | null>(null);
+  stats = signal<DashboardSummary | null>(null);
   loading = signal(true);
+  exportingPdf = signal(false);
   dateFrom = signal('');
   dateTo   = signal('');
 
-  constructor(private subscriptionsService: SubscriptionsService) {}
+  constructor(
+    private readonly dashboardService: DashboardService,
+    private readonly pdfReportService: PdfReportService,
+  ) {}
 
   ngOnInit(): void {
-    // Default: current month
     const now = new Date();
     const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
     this.dateFrom.set(this.toInputDate(firstDay));
@@ -31,7 +34,7 @@ export class DashboardComponent implements OnInit {
 
   loadStats(): void {
     this.loading.set(true);
-    this.subscriptionsService.getStats(this.dateFrom(), this.dateTo()).subscribe(s => {
+    this.dashboardService.getSummary(this.dateFrom(), this.dateTo()).subscribe(s => {
       this.stats.set(s);
       this.loading.set(false);
     });
@@ -47,12 +50,26 @@ export class DashboardComponent implements OnInit {
   }
 
   get maxRevenue(): number {
-    const data = this.stats()?.monthly_revenue ?? [];
+    const data = this.stats()?.monthlyChartData ?? [];
     return Math.max(...data.map(m => m.total), 1);
   }
 
   barHeight(val: number): number {
-    return Math.round((val / this.maxRevenue) * 100);
+    if (val === 0) return 0;
+    const pct = Math.round((val / this.maxRevenue) * 100);
+    return Math.max(pct, 2);
+  }
+
+  exportPDF(): void {
+    const s = this.stats();
+    if (!s) return;
+
+    this.exportingPdf.set(true);
+    this.dashboardService.getReportDetails(this.dateFrom(), this.dateTo()).subscribe(data => {
+      this.pdfReportService
+        .generateReport(s, data, this.dateFrom(), this.dateTo())
+        .finally(() => this.exportingPdf.set(false));
+    });
   }
 
   private toInputDate(d: Date): string {

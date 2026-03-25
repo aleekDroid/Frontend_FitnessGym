@@ -6,18 +6,31 @@
     <!-- Date filter -->
     <div class="date-filter">
       <div class="date-input-group">
-        <label>Desde</label>
-        <input type="date" class="form-control date-input" [value]="dateFrom()" (change)="dateFrom.set($any($event.target).value)" />
+        <label for="dateFrom">Desde</label>
+        <input type="date" id="dateFrom" class="form-control date-input" [value]="dateFrom()" [max]="dateTo()" (change)="dateFrom.set($any($event.target).value)" />
       </div>
       <div class="date-input-group">
-        <label>Hasta</label>
-        <input type="date" class="form-control date-input" [value]="dateTo()" (change)="dateTo.set($any($event.target).value)" />
+        <label for="dateTo">Hasta</label>
+        <input type="date" id="dateTo" class="form-control date-input" [value]="dateTo()" [min]="dateFrom()" (change)="dateTo.set($any($event.target).value)" />
       </div>
       <button class="btn btn-primary btn-sm" (click)="applyFilter()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
         Filtrar
       </button>
       <button class="btn btn-secondary btn-sm" (click)="resetFilter()">Este mes</button>
+      
+      <button class="btn btn-outline btn-sm" (click)="exportPDF()" [disabled]="loading() || exportingPdf()">
+        @if (exportingPdf()) {
+          <span class="spinner-sm"></span> Generando...
+        } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Exportar PDF
+        }
+      </button>
     </div>
   </div>
 
@@ -34,7 +47,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-label">Ingresos totales</div>
-          <div class="kpi-value">${{ stats()!.total_revenue_month | number }}</div>
+          <div class="kpi-value">${{ stats()!.totalIncome | number }}</div>
           <div class="kpi-sub">Mes actual</div>
         </div>
       </div>
@@ -45,7 +58,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-label">Miembros activos</div>
-          <div class="kpi-value">{{ stats()!.active_members }}</div>
+          <div class="kpi-value">{{ stats()!.activeMembers }}</div>
           <div class="kpi-sub">Con membresía vigente</div>
         </div>
       </div>
@@ -56,7 +69,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-label">Suscripciones vendidas</div>
-          <div class="kpi-value">{{ stats()!.total_subscriptions_month }}</div>
+          <div class="kpi-value">{{ stats()!.subscriptionsSold }}</div>
           <div class="kpi-sub">Este período</div>
         </div>
       </div>
@@ -67,7 +80,7 @@
         </div>
         <div class="kpi-info">
           <div class="kpi-label">Productos vendidos</div>
-          <div class="kpi-value">{{ stats()!.total_products_sold_month }}</div>
+          <div class="kpi-value">{{ stats()!.productsSold }}</div>
           <div class="kpi-sub">Este período</div>
         </div>
       </div>
@@ -87,17 +100,17 @@
         </div>
       </div>
       <div class="bar-chart">
-        @for (month of stats()!.monthly_revenue; track month.month) {
+        @for (month of stats()!.monthlyChartData; track $index) {
           <div class="bar-group">
             <div class="bar-stack">
               <div class="bar-tooltip">
                 <strong>${{ month.total | number }}</strong>
-                <span>Subs: ${{ month.subscriptions | number }}</span>
-                <span>Prod: ${{ month.products | number }}</span>
+                <span>Subs: ${{ month.suscripciones | number }}</span>
+                <span>Prod: ${{ month.productos | number }}</span>
               </div>
               <!-- Products on top -->
-              <div class="bar bar--products" [style.height.%]="barHeight(month.products)"></div>
-              <div class="bar bar--subs" [style.height.%]="barHeight(month.subscriptions)"></div>
+              <div class="bar bar--products" [style.height.%]="barHeight(month.productos)"></div>
+              <div class="bar bar--subs" [style.height.%]="barHeight(month.suscripciones)"></div>
             </div>
             <div class="bar-label">{{ month.month }}</div>
           </div>
@@ -119,17 +132,19 @@
           <div class="donut">
             <svg viewBox="0 0 100 100" class="donut-svg">
               <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="16"/>
+              <!-- Subscription segment -->
               <circle cx="50" cy="50" r="38" fill="none" stroke="#D84040" stroke-width="16"
-                [attr.stroke-dasharray]="(stats()!.total_subscriptions_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239) + ' 239'"
-                stroke-dashoffset="60"
+                [attr.stroke-dasharray]="(stats()!.distribution.subscriptions / (stats()!.totalIncome || 1) * 238.76) + ' 238.76'"
+                stroke-dashoffset="0"
                 stroke-linecap="round"/>
+              <!-- Product segment -->
               <circle cx="50" cy="50" r="38" fill="none" stroke="#8E1616" stroke-width="16"
-                [attr.stroke-dasharray]="(stats()!.total_products_sold_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239) + ' 239'"
-                [attr.stroke-dashoffset]="60 - (stats()!.total_subscriptions_month / (stats()!.total_subscriptions_month + stats()!.total_products_sold_month) * 239)"
+                [attr.stroke-dasharray]="(stats()!.distribution.products / (stats()!.totalIncome || 1) * 238.76) + ' 238.76'"
+                [attr.stroke-dashoffset]="-(stats()!.distribution.subscriptions / (stats()!.totalIncome || 1) * 238.76)"
                 stroke-linecap="round"/>
             </svg>
             <div class="donut-center">
-              <span class="donut-total">${{ stats()!.total_revenue_month | number }}</span>
+              <span class="donut-total">${{ stats()!.totalIncome | number }}</span>
               <span class="donut-label">Total</span>
             </div>
           </div>
@@ -138,12 +153,12 @@
           <div class="donut-legend-item">
             <span class="legend-dot legend-dot--subs"></span>
             <span>Suscripciones</span>
-            <strong>{{ stats()!.total_subscriptions_month }}</strong>
+            <strong>${{ stats()!.distribution.subscriptions | number }}</strong>
           </div>
           <div class="donut-legend-item">
             <span class="legend-dot legend-dot--products"></span>
             <span>Productos</span>
-            <strong>{{ stats()!.total_products_sold_month }}</strong>
+            <strong>${{ stats()!.distribution.products | number }}</strong>
           </div>
         </div>
       </div>
@@ -151,7 +166,7 @@
       <div class="breakdown-card card">
         <h3 class="breakdown-title">Últimos 8 meses — Resumen</h3>
         <div class="month-table">
-          @for (m of stats()!.monthly_revenue; track m.month) {
+          @for (m of stats()!.monthlyChartData; track $index) {
             <div class="month-row">
               <span class="month-name">{{ m.month }}</span>
               <div class="month-bar-wrapper">

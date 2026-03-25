@@ -127,6 +127,7 @@
             class="btn btn-secondary"
             style="width: 100%; justify-content: center"
             (click)="openAssignModal()"
+            [disabled]="user()!.status !== 'active'"
             title="Asignar una nueva membresía o plan a este usuario"
           >
             <svg
@@ -234,7 +235,7 @@
             </tr>
             } @empty {
             <tr>
-              <td colspan="5" class="empty-row">
+              <td colspan="6" class="empty-row">
                 No hay historial de pagos registrado
               </td>
             </tr>

@@ -1,14 +1,15 @@
 // src/app/pages/admin/prices/prices.component.ts
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
 import { SubscriptionType, CreateSubscriptionTypeDto } from '../../../core/models/subscription.model';
+import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
 @Component({
   selector: 'app-prices',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   templateUrl: './prices.component.html',
   styleUrls: ['./prices.component.scss'],
 })
@@ -21,9 +22,19 @@ export class PricesComponent implements OnInit {
   deleteTarget = signal<SubscriptionType | null>(null);
   showDeleteConfirm = signal(false);
 
+  // Filters and Pagination
+  currentPage = signal(1);
+  limit = signal(8);
+  totalItems = signal(0);
+  totalPages = signal(0);
+  searchQuery = signal('');
+  statusFilter = signal('');
+
+  private readonly searchSubject = new Subject<string>();
+
   priceForm: FormGroup;
 
-  constructor(private subscriptionsService: SubscriptionsService, private fb: FormBuilder) {
+  constructor(private readonly subscriptionsService: SubscriptionsService, private readonly fb: FormBuilder) {
     this.priceForm = this.fb.group({
       name:                  ['', Validators.required],
       price:                 ['', [Validators.required, Validators.min(1)]],
@@ -33,11 +44,59 @@ export class PricesComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void { this.loadData(); }
+  ngOnInit(): void {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      this.searchQuery.set(query);
+      this.currentPage.set(1);
+      this.loadData();
+    });
+    this.loadData();
+  }
 
   loadData(): void {
     this.loading.set(true);
-    this.subscriptionsService.getAll().subscribe(t => { this.types.set(t); this.loading.set(false); });
+    this.subscriptionsService.getAll(
+      this.currentPage(),
+      this.limit(),
+      this.searchQuery() || undefined,
+      this.statusFilter() || undefined
+    ).subscribe({
+      next: res => {
+        this.types.set(res.data);
+        this.totalItems.set(res.meta.totalItems);
+        this.totalPages.set(res.meta.totalPages);
+        this.currentPage.set(res.meta.currentPage);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
+    });
+  }
+
+  onSearch(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    this.searchSubject.next(input.value);
+  }
+
+  changeStatusFilter(status: string): void {
+    this.statusFilter.set(status);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  onLimitChange(newLimit: number): void {
+    this.limit.set(newLimit);
+    this.currentPage.set(1);
+    this.loadData();
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.totalPages()) {
+      this.currentPage.set(page);
+      this.loadData();
+    }
   }
 
   openCreate(): void {

@@ -1,27 +1,34 @@
 // src/app/core/services/subscriptions.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
-import { SubscriptionType, CreateSubscriptionTypeDto, DashboardStats, MonthlyRevenue, TransactionDetail } from '../models/subscription.model';
+import { delay } from 'rxjs/operators';
+import { SubscriptionType, CreateSubscriptionTypeDto, DashboardStats, MonthlyRevenue, TransactionDetail, PaginatedResponse } from '../models/subscription.model';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class SubscriptionsService {
   
-  constructor(private http: HttpClient, private authService: AuthService) { }
+  constructor(private readonly http: HttpClient, private readonly authService: AuthService) { }
 
   private getHeaders(): HttpHeaders {
     return new HttpHeaders({ Authorization: `Bearer ${this.authService.getToken()}` });
   }
 
-  getAll(): Observable<SubscriptionType[]> {
-    return this.http.get<any>(`${environment.apiUrl}/subscription/types?limit=100`).pipe(
-      map(response => {
-        return response.data || [];
-      })
-    );
+  getAll(page: number = 1, limit: number = 10, search?: string, status?: string): Observable<PaginatedResponse<SubscriptionType>> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (search) {
+      params = params.set('search', search);
+    }
+    if (status) {
+      params = params.set('status', status);
+    }
+
+    return this.http.get<PaginatedResponse<SubscriptionType>>(`${environment.apiUrl}/subscription/types`, { params });
   }
 
   // ── GET single subscription type ──

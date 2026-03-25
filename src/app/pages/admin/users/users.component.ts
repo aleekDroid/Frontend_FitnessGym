@@ -79,8 +79,8 @@ export class UsersComponent implements OnInit {
     });
 
     this.loadData();
-    this.subscriptionsService.getAll().subscribe(types => {
-      this.subscriptionTypes.set(types.filter(t => t.status === 'active'));
+    this.subscriptionsService.getAll().subscribe(res => {
+      this.subscriptionTypes.set(res.data.filter(t => t.status === 'active'));
     });
   }
 

@@ -3,8 +3,54 @@
 .page-subtitle {
   color: rgba(238,238,238,0.45);
   font-size: 0.9rem;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   margin-top: -16px;
+}
+
+/* ── Filters Bar ── */
+.filters-bar {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  position: relative;
+  flex: 1;
+  min-width: 200px;
+  svg {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: rgba(238, 238, 238, 0.4);
+  }
+  input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: var(--light);
+    font-size: 0.95rem;
+    outline: none;
+    transition: all 0.2s;
+    &:focus {
+      border-color: rgba(216, 64, 64, 0.5);
+      background: rgba(255, 255, 255, 0.08);
+    }
+    &::placeholder {
+      color: rgba(238, 238, 238, 0.3);
+    }
+  }
+}
+
+.status-select {
+  width: auto;
+  min-width: 160px;
+  padding: 10px 14px;
 }
 
 /* Price cards grid */
@@ -111,6 +157,78 @@
   display: flex;
   gap: 8px;
   margin-top: 4px;
+}
+
+/* ── Pagination ── */
+.pagination-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 4px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: rgba(238,238,238,0.45);
+
+  strong { color: var(--light); }
+
+  .text-muted { color: rgba(238,238,238,0.3); margin-left: 4px; }
+}
+
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.limit-select {
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: var(--light);
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  option {
+    background: #1e1e1e;
+    color: var(--light);
+  }
+}
+
+.btn.btn-outline {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: transparent;
+  color: rgba(238,238,238,0.6);
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(216,64,64,0.1);
+  }
+
+  &:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+  }
 }
 
 /* Form */

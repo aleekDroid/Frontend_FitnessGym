@@ -12,6 +12,18 @@ export interface SubscriptionType {
   updated_at?: string;
 }
 
+export interface PaginationMeta {
+  totalItems: number;
+  totalPages: number;
+  currentPage: number;
+  limit: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: PaginationMeta;
+}
+
 export interface CreateSubscriptionTypeDto {
   name: string;
   price: number;

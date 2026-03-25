@@ -112,19 +112,40 @@
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
         <h2>Precios</h2>
       </div>
-      <div class="prices-list">
-        @for (type of subscriptionTypes; track type.id) {
-          <div class="price-row">
-            <div class="price-info">
-              <span class="price-name">{{ type.name }}</span>
-              @if (type.person_per_suscription > 1) {
-                <span class="price-persons">{{ type.person_per_suscription }} personas</span>
-              }
-            </div>
-            <span class="price-amount">${{ type.price | number }}</span>
+      <div class="prices-list" [class.loading]="loadingPrices()">
+        @if (loadingPrices()) {
+          <div class="prices-loading">
+            <div class="spinner-sm"></div>
           </div>
+        } @else {
+          @for (type of subscriptionTypes; track type.id) {
+            <div class="price-row">
+              <div class="price-info">
+                <span class="price-name">{{ type.name }}</span>
+                @if (type.person_per_suscription > 1) {
+                  <span class="price-persons">{{ type.person_per_suscription }} personas</span>
+                }
+              </div>
+              <span class="price-amount">${{ type.price | number }}</span>
+            </div>
+          } @empty {
+            <p class="empty-prices">No hay planes disponibles en este momento.</p>
+          }
         }
       </div>
+
+      <!-- Paginación Landing -->
+      @if (totalPages() > 1) {
+        <div class="prices-pagination">
+          <button class="p-btn" [disabled]="currentPage() === 1 || loadingPrices()" (click)="changePage(-1)" aria-label="Anterior">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          </button>
+          <span class="p-info">{{ currentPage() }} / {{ totalPages() }}</span>
+          <button class="p-btn" [disabled]="currentPage() === totalPages() || loadingPrices()" (click)="changePage(1)" aria-label="Siguiente">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          </button>
+        </div>
+      }
     </div>
   </div>
 </section>

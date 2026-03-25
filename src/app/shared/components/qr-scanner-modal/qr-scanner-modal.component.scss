@@ -1,0 +1,21 @@
+.scanner-modal {
+  max-width: 500px;
+}
+.modal-body {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+.scanner-hint {
+  color: rgba(238, 238, 238, 0.5);
+  font-size: 0.9rem;
+  text-align: center;
+}
+#reader {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+}

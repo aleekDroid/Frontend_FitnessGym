@@ -1,0 +1,76 @@
+<div class="modal-overlay" (click)="closeModal.emit()">
+  <div class="modal-box result-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        {{ attendance.attendance_id ? 'Asistencia Registrada' : 'Acceso Denegado' }}
+      </h2>
+      <button class="modal-close" (click)="closeModal.emit()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      @if (attendance.attendance_id) {
+        <div class="result-success-icon">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" class="success-svg" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+      } @else {
+        <div class="result-error-icon">
+          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" class="error-svg" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="15" y1="9" x2="9" y2="15"></line>
+            <line x1="9" y1="9" x2="15" y2="15"></line>
+          </svg>
+        </div>
+      }
+      
+      <div class="user-info-display">
+        <div class="user-avatar-lg">
+          {{ attendance.user.user_name.charAt(0) }}{{ attendance.user.user_last_name.charAt(0) }}
+        </div>
+        <h3 class="user-name">{{ attendance.user.user_name }} {{ attendance.user.user_last_name }}</h3>
+        <p class="user-id">ID: #{{ attendance.user.user_id }}</p>
+      </div>
+      
+      <div class="membership-info-card">
+        <div class="info-row">
+          <span class="info-label">Suscripción:</span>
+          <span class="info-value">{{ attendance.suscripcion?.suscripcion_type_name || 'Sin suscripción' }}</span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Estado:</span>
+            <span class="badge" [ngClass]="{
+              'badge-success': attendance.suscripcion?.status === 'active',
+              'badge-danger': attendance.suscripcion?.status !== 'active'
+            }">
+              {{ (attendance.suscripcion && attendance.suscripcion.status === 'active') ? 'Activa' : 'Inactiva/Vencida' }}
+            </span>
+        </div>
+        @if (attendance.suscripcion && attendance.suscripcion.end_date) {
+          <div class="info-row">
+            <span class="info-label">Vence el:</span>
+            <span class="info-value">{{ formatDate(attendance.suscripcion.end_date) }}</span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Días restantes:</span>
+            <span class="info-value" [ngClass]="getDaysColorClass(getDaysLeft(attendance.suscripcion.end_date))">
+              {{ getDaysLeft(attendance.suscripcion.end_date) }} días
+            </span>
+          </div>
+        }
+      </div>
+
+      @if (!attendance.attendance_id) {
+        <p class="text-danger error-message">El usuario no tiene una suscripción vigente para acceder.</p>
+      }
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeModal.emit()">Cerrar</button>
+      <button class="btn btn-primary" (click)="viewProfile.emit(attendance.user.user_id)">
+        Ir al Perfil
+      </button>
+    </div>
+  </div>
+</div>

@@ -336,6 +336,55 @@
 .price-persons { font-size: 0.78rem; color: var(--accent); font-weight: 600; letter-spacing: 0.05em; }
 .price-amount { font-family: var(--font-display); font-size: 1.5rem; color: var(--accent); letter-spacing: 0.04em; }
 
+.prices-list.loading { opacity: 0.4; pointer-events: none; }
+.prices-loading { display: flex; align-items: center; justify-content: center; min-height: 120px; }
+.empty-prices { text-align: center; color: rgba(238,238,238,0.4); padding: 40px 0; font-style: italic; font-size: 0.9rem; }
+
+.prices-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+
+  .p-info {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: rgba(238,238,238,0.5);
+    letter-spacing: 0.1em;
+    min-width: 40px;
+    text-align: center;
+  }
+
+  .p-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--light);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover:not(:disabled) {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(216,64,64,0.4);
+    }
+
+    &:disabled {
+      opacity: 0.2;
+      cursor: not-allowed;
+    }
+  }
+}
+
 @media (max-width: 900px) {
   .info-grid { grid-template-columns: 1fr; }
 }

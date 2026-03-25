@@ -1,42 +1,57 @@
 <!-- src/app/pages/admin/home/home.component.html -->
 <div class="page-container">
-
   <!-- Page header -->
   <div class="page-header">
     <div>
       <h1 class="section-title">Asistencias de Hoy</h1>
       <p class="page-date">{{ todayDate }}</p>
     </div>
-    <div class="header-stats">
-      <div class="stat-chip stat-chip--total">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        {{ allAttendances().length }} asistencias
-      </div>
-      @if (expiredUsers.length > 0) {
-        <div class="stat-chip stat-chip--danger">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          {{ expiredUsers.length }} vencidas
-        </div>
-      }
-      @if (expiringUsers.length > 0) {
-        <div class="stat-chip stat-chip--warning">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-          {{ expiringUsers.length }} por vencer
-        </div>
-      }
-    </div>
   </div>
 
-  <!-- Search bar -->
-  <div class="search-wrapper home-search">
-    <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input
-      type="text"
-      class="search-input"
-      placeholder="Buscar por nombre, apellido o teléfono..."
-      [value]="searchQuery()"
-      (input)="onSearchChange($any($event.target).value)"
-    />
+  <div class="toolbar">
+    <div class="search-wrapper">
+      <svg
+        class="search-icon"
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+      <input
+        class="search-input"
+        placeholder="Buscar por nombre, apellido o teléfono..."
+        [value]="searchQuery()"
+        (input)="onSearchChange($any($event.target).value)"
+      />
+    </div>
+
+    <!-- Filtros group for layout matching -->
+    <div class="filters-group">
+      <div class="date-filter-wrapper">
+        <input
+          type="date"
+          class="limit-select"
+          [ngModel]="filterDate()"
+          (ngModelChange)="filterDate.set($event); onFilterChange()"
+        />
+      </div>
+
+      <select
+        class="limit-select"
+        [ngModel]="limit()"
+        (change)="onLimitChange(+$any($event.target).value)"
+      >
+        <option [value]="10">10 / pág</option>
+        <option [value]="25">25 / pág</option>
+        <option [value]="50">50 / pág</option>
+        <option [value]="100">100 / pág</option>
+      </select>
+    </div>
   </div>
 
   @if (loading()) {
@@ -45,118 +60,218 @@
       <p>Cargando asistencias...</p>
     </div>
   } @else {
+    <div class="table-container card">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Teléfono</th>
+            <th>Suscripción</th>
+            <th>Vencimiento</th>
+            <th>Fecha y Hora</th>
+            <th style="text-align: right">Acción</th>
+          </tr>
+        </thead>
 
-    <!-- ── VENCIDAS (red border) ── -->
-    @if (expiredUsers.length > 0) {
-      <section class="attendance-section">
-        <div class="section-label section-label--danger">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Membresía vencida ({{ expiredUsers.length }})
-        </div>
-        <div class="table-container attendance-table attendance-table--danger">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Venció el</th>
-                <th>Días vencido</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (user of expiredUsers; track user.id) {
-                <tr>
-                  <td class="user-name-cell">
-                    <div class="user-avatar-sm">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
-                    {{ user.name }} {{ user.last_name }}
-                  </td>
-                  <td>{{ user.number }}</td>
-                  <td>{{ formatDate(user.membership_end) }}</td>
-                  <td><span class="badge badge-danger">Vencida</span></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
+        <tbody>
+          @for (att of attendances(); track att.attendance_id) {
+            <tr>
+              <td class="user-name-cell">
+                <div
+                  class="user-avatar-sm"
+                  [ngClass]="{
+                    'user-avatar-sm--danger':
+                      getDaysLeft(att.suscripcion?.end_date) <= 0,
+                    'user-avatar-sm--warning':
+                      getDaysLeft(att.suscripcion?.end_date) > 0 &&
+                      getDaysLeft(att.suscripcion?.end_date) < 3,
+                    'user-avatar-sm--active':
+                      getDaysLeft(att.suscripcion?.end_date) >= 3,
+                  }"
+                >
+                  {{ att.user.user_name.charAt(0)
+                  }}{{ att.user.user_last_name.charAt(0) }}
+                </div>
+                <div>
+                  <div class="user-full-name">
+                    {{ att.user.user_name }} {{ att.user.user_last_name }}
+                  </div>
+                </div>
+              </td>
+              <td>{{ att.user.user_phone }}</td>
+              <td>
+                @if (att.suscripcion) {
+                  {{ att.suscripcion.suscripcion_type_name }}
+                } @else {
+                  <span
+                    class="text-muted"
+                    style="color: rgba(238, 238, 238, 0.5)"
+                    >Sin suscripción</span
+                  >
+                }
+              </td>
+              <td
+                [ngClass]="
+                  getSubscriptionColorClass(
+                    getDaysLeft(att.suscripcion?.end_date)
+                  )
+                "
+              >
+                @if (att.suscripcion) {
+                  @if (getDaysLeft(att.suscripcion.end_date) <= 0) {
+                    Vencida ({{ getDaysLeft(att.suscripcion.end_date) }} días)
+                  } @else {
+                    Faltan {{ getDaysLeft(att.suscripcion.end_date) }} días
+                  }
+                } @else {
+                  —
+                }
+              </td>
+              <td>
+                <div class="attendance-time-cell">
+                  <span class="attendance-date">{{
+                    formatDateOnly(att.created_at)
+                  }}</span>
+                  <span class="attendance-time">{{
+                    formatTime(att.created_at)
+                  }}</span>
+                </div>
+              </td>
+              <td class="actions-cell">
+                <button
+                  class="action-btn action-btn--info"
+                  (click)="viewUser(att.user.user_id)"
+                  title="Ver Detalles"
+                >
+                  <svg
+                    width="15"
+                    height="15"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td
+                colspan="7"
+                class="empty-row"
+                style="
+                  text-align: center;
+                  padding: 48px;
+                  color: rgba(238, 238, 238, 0.3);
+                  font-style: italic;
+                "
+              >
+                No se encontraron asistencias{{
+                  searchQuery()
+                    ? ' para "' + searchQuery() + '"'
+                    : " el " + filterDate()
+                }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
 
-    <!-- ── POR VENCER (yellow border) ── -->
-    @if (expiringUsers.length > 0) {
-      <section class="attendance-section">
-        <div class="section-label section-label--warning">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
-          Membresía próxima a vencer ({{ expiringUsers.length }}) — menos de 3 días
-        </div>
-        <div class="table-container attendance-table attendance-table--warning">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Vence el</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (user of expiringUsers; track user.id) {
-                <tr>
-                  <td class="user-name-cell">
-                    <div class="user-avatar-sm user-avatar-sm--warning">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
-                    {{ user.name }} {{ user.last_name }}
-                  </td>
-                  <td>{{ user.number }}</td>
-                  <td>{{ formatDate(user.membership_end) }}</td>
-                  <td><span class="badge badge-warning">Por vencer</span></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
-
-    <!-- ── ACTIVOS (gray border) ── -->
-    @if (activeUsers.length > 0) {
-      <section class="attendance-section">
-        <div class="section-label section-label--normal">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-          Membresía activa ({{ activeUsers.length }})
-        </div>
-        <div class="table-container attendance-table attendance-table--normal">
-          <table class="data-table">
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Teléfono</th>
-                <th>Vence el</th>
-                <th>Estado</th>
-              </tr>
-            </thead>
-            <tbody>
-              @for (user of activeUsers; track user.id) {
-                <tr>
-                  <td class="user-name-cell">
-                    <div class="user-avatar-sm user-avatar-sm--active">{{ user.name.charAt(0) }}{{ user.last_name.charAt(0) }}</div>
-                    {{ user.name }} {{ user.last_name }}
-                  </td>
-                  <td>{{ user.number }}</td>
-                  <td>{{ formatDate(user.membership_end) }}</td>
-                  <td><span class="badge badge-success">Activa</span></td>
-                </tr>
-              }
-            </tbody>
-          </table>
-        </div>
-      </section>
-    }
-
-    <!-- Empty state -->
-    @if (filteredAttendances.length === 0) {
-      <div class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
-        <p>No se encontraron asistencias{{ searchQuery() ? ' para "' + searchQuery() + '"' : ' hoy' }}</p>
+    <!-- Pagination -->
+    <div class="pagination-footer">
+      <div class="pagination-info">
+        Mostrando página <strong>{{ currentPage() }}</strong> de
+        <strong>{{ totalPages() || 1 }}</strong>
+        <span class="text-muted">({{ totalItems() }} asistencias totales)</span>
       </div>
-    }
+
+      <div class="pagination-controls">
+        <button
+          class="btn btn-outline"
+          [disabled]="currentPage() === 1"
+          (click)="goToPage(currentPage() - 1)"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="15 18 9 12 15 6" />
+          </svg>
+        </button>
+
+        <button
+          class="btn btn-outline"
+          [disabled]="currentPage() >= totalPages() || totalPages() === 0"
+          (click)="goToPage(currentPage() + 1)"
+        >
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <polyline points="9 18 15 12 9 6" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Floating Action Button -->
+  <button
+    class="fab-btn"
+    (click)="openScanner()"
+    title="Escanear QR de Asistencia"
+  >
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2.5"
+    >
+      <rect x="3" y="3" width="7" height="7"></rect>
+      <rect x="14" y="3" width="7" height="7"></rect>
+      <rect x="14" y="14" width="7" height="7"></rect>
+      <path d="M10 14H3v7h7v-7z"></path>
+      <path d="M7 17h.01"></path>
+      <path d="M17 7h.01"></path>
+      <path d="M7 7h.01"></path>
+    </svg>
+  </button>
+
+  @if (processingScan()) {
+    <div class="processing-overlay">
+      <div class="spinner-lg"></div>
+      <p>Procesando asistencia...</p>
+    </div>
+  }
+
+  <!-- MODALS -->
+  @if (showScanner()) {
+    <app-qr-scanner-modal
+      (closeScanner)="showScanner.set(false)"
+      (scanSuccess)="onScanSuccess($event)"
+    ></app-qr-scanner-modal>
+  }
+
+  @if (showResult() && scanResult()) {
+    <app-attendance-result-modal
+      [attendance]="scanResult()!"
+      (closeModal)="showResult.set(false)"
+      (viewProfile)="viewUser($event)"
+    ></app-attendance-result-modal>
   }
 </div>

@@ -1,0 +1,17 @@
+<div class="modal-overlay" (click)="closeScanner.emit()">
+  <div class="modal-box scanner-modal" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">Escanear QR de Asistencia</h2>
+      <button class="modal-close" (click)="closeScanner.emit()">✕</button>
+    </div>
+    
+    <div class="modal-body">
+      <div id="reader" style="width: 100%; min-height: 300px;"></div>
+      <p class="scanner-hint">Apunta la cámara al código QR del usuario</p>
+    </div>
+    
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeScanner.emit()">Cancelar</button>
+    </div>
+  </div>
+</div>

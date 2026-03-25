@@ -23,8 +23,9 @@ export interface LoginResponse {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly USER_KEY  = 'fg_user';
+  private readonly TOKEN_KEY = 'fg_token';
 
-  private readonly currentToken = signal<string | null>(null);
+  private readonly currentToken = signal<string | null>(localStorage.getItem(this.TOKEN_KEY));
   
   currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
 
@@ -48,12 +49,7 @@ export class AuthService {
       { withCredentials: true } // Enviar la cookie del refresh token.
     ).pipe(
       tap(res => {
-        this.currentToken.set(res.accessToken);
-        
-        if (res.user) {
-          localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
-          this.currentUser.set(res.user);
-        }
+        this.saveSession(res);
       })
     );
   }
@@ -68,6 +64,7 @@ export class AuthService {
 
   private clearSession(): void {
     localStorage.removeItem(this.USER_KEY);
+    localStorage.removeItem(this.TOKEN_KEY);
     this.currentToken.set(null);
     this.currentUser.set(null);
     this.router.navigate(['/login']);
@@ -78,7 +75,24 @@ export class AuthService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.currentToken();
+    return !!this.currentToken() && !this.isTokenExpired(this.currentToken()!);
+  }
+
+  isTokenExpired(token: string): boolean {
+    if (!token) return true;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return true;
+      // b64 decode payload (replacing url-safe chars)
+      const payload = JSON.parse(atob(parts[1].replaceAll('-', '+').replaceAll('_', '/')));
+      if (!payload.exp) return false;
+      // date in seconds
+      const now = Math.floor(Date.now() / 1000);
+      return now >= payload.exp;
+    } catch (e) {
+      // If decoding fails (invalid token format), consider token invalid/expired
+      return true;
+    }
   }
 
   isAdmin(): boolean {
@@ -87,8 +101,11 @@ export class AuthService {
 
   private saveSession(res: LoginResponse): void {
     this.currentToken.set(res.accessToken); 
-    localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
-    this.currentUser.set(res.user);
+    localStorage.setItem(this.TOKEN_KEY, res.accessToken);
+    if (res.user) {
+      localStorage.setItem(this.USER_KEY, JSON.stringify(res.user));
+      this.currentUser.set(res.user);
+    }
   }
 
   private loadUserFromStorage(): AuthUser | null {

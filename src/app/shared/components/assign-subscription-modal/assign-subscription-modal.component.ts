@@ -73,8 +73,8 @@ export class AssignSubscriptionModalComponent implements OnInit {
 
   ngOnInit(): void {
     // Load plans
-    this.subscriptionsService.getAll().subscribe(types => {
-      this.subscriptionTypes.set(types.filter(t => t.status === 'active'));
+    this.subscriptionsService.getAll(1, 10, '','active').subscribe(res => {
+      this.subscriptionTypes.set(res.data.filter(t => t.status === 'active'));
     });
 
     // Setup debounced search for Autocomplete in Assignment Modal
@@ -89,8 +89,8 @@ export class AssignSubscriptionModalComponent implements OnInit {
         return;
       }
       this.assignSearching.set(true);
-      // We search users globally, limit to 5
-      this.usersService.getUsers(1, 5, query).subscribe({
+      // We search users globally, limit to 10 based on req
+      this.usersService.getUsers(1, 10, query, 'active', 'member', 'true').subscribe({
         next: (res) => {
           // Exclude already selected users
           const currentSelectedIds = this.selectedAssignUsers().map(u => u.id);

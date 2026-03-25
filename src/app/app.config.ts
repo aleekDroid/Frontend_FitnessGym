@@ -19,16 +19,22 @@ export const appConfig: ApplicationConfig = {
     provideAppInitializer(() => {
       const authService = inject(AuthService);
       const userStr = localStorage.getItem('fg_user');
-      // User marker exists but no in-memory token → attempt silent refresh using the RT cookie
-      if (userStr && !authService.getToken()) {
+      const currentToken = authService.getToken();
+
+      // 1. If we have a token and it's NOT expired, we are good to go.
+      if (currentToken && !authService.isTokenExpired(currentToken)) {
+        return Promise.resolve();
+      }
+
+      // 2. If we have no token (or it's expired) but we have the user marker,
+      // attempt a silent refresh using the RT cookie.
+      if (userStr) {
         return firstValueFrom(
           authService.refreshToken().pipe(
             catchError((err: HttpErrorResponse) => {
-              // Only wipe session marker when RT is truly invalid (401).
-              // On 429 (rate-limited), the RT is still valid — keep marker so
-              // the next load can retry and recover the session automatically.
               if (err.status === 401) {
                 localStorage.removeItem('fg_user');
+                localStorage.removeItem('fg_token');
               }
               return of(null);
             })

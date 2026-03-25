@@ -5,6 +5,7 @@ import { authGuard, adminGuard, publicGuard, memberGuard } from './core/guards/a
 export const routes: Routes = [
   {
     path: '',
+    canActivate: [publicGuard],
     loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent),
   },
   {

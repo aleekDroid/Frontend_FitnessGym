@@ -1,0 +1,48 @@
+import { Injectable } from '@angular/core';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { AuthService } from './auth.service';
+import { environment } from '../../../environments/environment';
+
+export interface AttendanceUser {
+  user_id: number;
+  user_name: string;
+  user_last_name: string;
+  user_phone: string;
+}
+
+export interface AttendanceSubscription {
+  suscripcion_id: number;
+  suscripcion_type_name: string;
+  status: string;
+  end_date?: string;
+}
+
+export interface AttendanceResponse {
+  attendance_id: number | null;
+  created_at: string;
+  user: AttendanceUser;
+  suscripcion: AttendanceSubscription | null;
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class AttendanceService {
+  constructor(
+    private readonly http: HttpClient, 
+    private readonly authService: AuthService
+  ) {}
+
+  registerAttendance(idUser: number): Observable<AttendanceResponse> {
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${this.authService.getToken()}`
+    });
+    
+    return this.http.post<AttendanceResponse>(
+      `${environment.apiUrl}/attendances`,
+      { idUser },
+      { headers }
+    );
+  }
+}
