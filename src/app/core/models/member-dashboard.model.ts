@@ -31,6 +31,7 @@ export interface MemberUser {
   name: string;
   last_name: string;
   number: string;
+  qr_code_id?: string;
   isSetupPending: boolean;
   routine: Routine | null;
 }

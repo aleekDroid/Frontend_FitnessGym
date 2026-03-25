@@ -63,6 +63,12 @@ export class MemberDashboardComponent implements OnInit {
   modalLoading = signal(false);
   fullRoutine = signal<RoutineDay[]>([]);
 
+  // QR Modal state
+  showQrModal = signal(false);
+  qrImageUrl = signal<string | null>(null);
+  qrLoading = signal(false);
+  qrError = signal(false);
+
   quote = QUOTES[Math.floor(Math.random() * QUOTES.length)];
 
   // Mapeamos los días base de inglés (rutina) a español para UI
@@ -82,6 +88,7 @@ export class MemberDashboardComponent implements OnInit {
   payments = computed(() => this.data()?.paymentHistory ?? []);
 
   routine = computed(() => this.user()?.routine ?? null);
+  qrCodeId = computed(() => this.user()?.qr_code_id ?? null);
   streak = computed(() => this.routine()?.streak ?? 0);
   isStreakActive = computed(() => this.routine()?.isStreakActive ?? false);
   attendedToday = computed(() => this.routine()?.attendedToday ?? false);
@@ -297,5 +304,40 @@ export class MemberDashboardComponent implements OnInit {
 
   onRoutineModalClosed(): void {
     this.showRoutineModal.set(false);
+  }
+
+  // ─── QR Modal methods ───
+  openQrModal(): void {
+    const codeId = this.qrCodeId();
+    this.showQrModal.set(true);
+    if (!codeId) {
+      this.qrError.set(true);
+      return;
+    }
+    this.qrError.set(false);
+    this.qrLoading.set(true);
+    this.memberService.getQrCode(codeId).subscribe({
+      next: (blob) => {
+        // Blob must be created into URL for img src
+        const url = URL.createObjectURL(blob);
+        this.qrImageUrl.set(url);
+        this.qrLoading.set(false);
+      },
+      error: () => {
+        this.qrError.set(true);
+        this.qrLoading.set(false);
+      }
+    });
+  }
+
+  closeQrModal(): void {
+    this.showQrModal.set(false);
+    // free memory
+    const url = this.qrImageUrl();
+    if (url) {
+      URL.revokeObjectURL(url);
+    }
+    this.qrImageUrl.set(null);
+    this.qrError.set(false);
   }
 }

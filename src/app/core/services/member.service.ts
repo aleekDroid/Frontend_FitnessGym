@@ -17,6 +17,12 @@ export class MemberService {
     return this.http.get<MemberDashboardResponse>(`${this.base}/user/me`);
   }
 
+  getQrCode(qrCodeId: string): Observable<Blob> {
+    return this.http.get(`${this.base}/user/qr/${qrCodeId}`, {
+      responseType: 'blob'
+    });
+  }
+
   /**
    * GET /api/user/routine
    * Carga la rutina detallada con ejercicios para el modal de edición.
