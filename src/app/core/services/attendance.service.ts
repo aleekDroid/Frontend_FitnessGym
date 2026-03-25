@@ -34,14 +34,14 @@ export class AttendanceService {
     private readonly authService: AuthService
   ) {}
 
-  registerAttendance(idUser: number): Observable<AttendanceResponse> {
+  registerAttendance(qrCodeId: string): Observable<AttendanceResponse> {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${this.authService.getToken()}`
     });
     
     return this.http.post<AttendanceResponse>(
       `${environment.apiUrl}/attendances`,
-      { idUser },
+      { qrCodeId },
       { headers }
     );
   }

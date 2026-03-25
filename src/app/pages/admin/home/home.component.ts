@@ -212,11 +212,11 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.showScanner.set(true);
   }
 
-  onScanSuccess(idUser: number): void {
+  onScanSuccess(qrCodeId: string): void {
     this.showScanner.set(false);
     this.processingScan.set(true);
     
-    this.attendanceService.registerAttendance(idUser).subscribe({
+    this.attendanceService.registerAttendance(qrCodeId).subscribe({
       next: (res) => {
         this.processingScan.set(false);
         this.scanResult.set(res);

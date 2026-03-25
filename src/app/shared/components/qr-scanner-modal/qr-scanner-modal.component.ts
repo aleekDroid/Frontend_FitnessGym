@@ -10,7 +10,7 @@ import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
   styleUrls: ['./qr-scanner-modal.component.scss']
 })
 export class QrScannerModalComponent implements OnInit, OnDestroy {
-  @Output() scanSuccess = new EventEmitter<number>();
+  @Output() scanSuccess = new EventEmitter<string>();
   @Output() closeScanner = new EventEmitter<void>();
 
   private scanner: Html5QrcodeScanner | null = null;
@@ -39,9 +39,8 @@ export class QrScannerModalComponent implements OnInit, OnDestroy {
 
     this.scanner.render(
       (decodedText) => {
-        const idUser = Number.parseInt(decodedText, 10);
-        if (!Number.isNaN(idUser)) {
-          this.scanSuccess.emit(idUser);
+        if (decodedText) {
+          this.scanSuccess.emit(decodedText);
           this.stopScanner();
         }
       },
