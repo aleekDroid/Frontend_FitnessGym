@@ -7,11 +7,22 @@ import { ProductsService } from '../../../../core/services/products.service';
 import { Product } from '../../../../core/models/product.model';
 import { StatusConfirmModalComponent } from '../../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { ProductFormModalComponent } from '../../../../shared/components/product-form-modal/product-form-modal.component';
+import { StockAdjustmentModalComponent } from '../../../../shared/components/stock-adjustment-modal/stock-adjustment-modal.component';
+import { MovementDetailsModalComponent } from '../../../../shared/components/movement-details-modal/movement-details-modal.component';
 
 @Component({
   selector: 'app-product-details',
   standalone: true,
-  imports: [CommonModule, RouterModule, ReactiveFormsModule, FormsModule, StatusConfirmModalComponent, ProductFormModalComponent],
+  imports: [
+    CommonModule, 
+    RouterModule, 
+    ReactiveFormsModule, 
+    FormsModule, 
+    StatusConfirmModalComponent, 
+    ProductFormModalComponent,
+    StockAdjustmentModalComponent,
+    MovementDetailsModalComponent
+  ],
   templateUrl: './product-details.html',
   styleUrls: ['./product-details.scss']
 })
@@ -29,7 +40,6 @@ export class ProductDetails implements OnInit {
 
   showStockModal = signal(false);
   savingStock = signal(false);
-  stockForm: FormGroup;
 
   showMovementModal = signal(false);
   selectedMovement = signal<any | null>(null);
@@ -49,12 +59,6 @@ export class ProductDetails implements OnInit {
       price: [0, [Validators.required, Validators.min(0)]],
       stock: [0, [Validators.required, Validators.min(0)]], // Kept for type safety, but unused in edit
       description: ['']
-    });
-
-    this.stockForm = this.fb.group({
-      quantity: [1, Validators.required],
-      type: ['restock', Validators.required],
-      reason: ['', Validators.required]
     });
   }
 
@@ -162,7 +166,6 @@ export class ProductDetails implements OnInit {
   }
 
   openStockModal(): void {
-    this.stockForm.reset({ quantity: 1, type: 'restock', reason: '' });
     this.showStockModal.set(true);
   }
 
@@ -203,17 +206,10 @@ export class ProductDetails implements OnInit {
     });
   }
 
-  // onSubmit() was replaced by handleSave()!
-
-  onSubmitStock(): void {
-    if (this.stockForm.invalid || !this.productId) {
-      this.stockForm.markAllAsTouched();
-      return;
-    }
+  onSubmitStock(val: any): void {
+    if (!this.productId) return;
     
     this.savingStock.set(true);
-    const val = this.stockForm.value;
-    
     this.productsService.updateStock(this.productId, val.quantity, val.type, val.reason).subscribe({
       next: () => {
         this.savingStock.set(false);

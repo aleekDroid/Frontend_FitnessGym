@@ -63,3 +63,57 @@
   border-radius: 8px;
   border: 1px dashed rgba(255,255,255,0.1);
 }
+
+/* ── Active Subscription Warning ── */
+.active-sub-warning {
+  margin-top: 14px;
+  padding: 14px 16px;
+  background: rgba(250, 204, 21, 0.06);
+  border: 1px solid rgba(250, 204, 21, 0.2);
+  border-left: 3px solid #facc15;
+  border-radius: 8px;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #facc15;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 10px;
+
+  svg {
+    flex-shrink: 0;
+  }
+}
+
+.warning-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    font-size: 0.88rem;
+    color: rgba(238, 238, 238, 0.7);
+    padding-left: 24px;
+    position: relative;
+
+    &::before {
+      content: '•';
+      position: absolute;
+      left: 8px;
+      color: #facc15;
+      font-weight: bold;
+    }
+
+    strong {
+      color: var(--light);
+    }
+  }
+}

@@ -152,10 +152,11 @@
 
     <!-- Lado Derecho: Historial de Suscripciones -->
     <main class="main-content">
-      <h2 class="section-title">Historial de Pagos y Suscripciones</h2>
+      <div class="subscriptions-section">
+        <h2 class="section-title">Historial de Pagos y Suscripciones</h2>
 
-      <div class="table-container card">
-        <table class="data-table">
+        <div class="table-container card">
+          <table class="data-table">
           <thead>
             <tr>
               <th>Plan adquirido</th>
@@ -241,65 +242,83 @@
             </tr>
             }
           </tbody>
-        </table>
-      </div>
-
-      <!-- Paginación -->
-      @if (history().length > 0) {
-      <div class="pagination-footer">
-        <div class="pagination-info">
-          Mostrando página <strong>{{ currentPage() }}</strong> de
-          <strong>{{ totalPages() || 1 }}</strong>
-          <span class="text-muted"> ( {{ totalItems() }} pagos totales )</span>
+          </table>
         </div>
 
-        <div class="pagination-controls">
-          <button
-            class="btn btn-outline"
-            [disabled]="currentPage() === 1"
-            (click)="goToPage(currentPage() - 1)"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-            >
-              <polyline points="15 18 9 12 15 6" />
-            </svg>
-          </button>
+        <!-- Paginación -->
+        @if (history().length > 0) {
+        <div class="pagination-footer">
+          <div class="pagination-info">
+            Mostrando página <strong>{{ currentPage() }}</strong> de
+            <strong>{{ totalPages() || 1 }}</strong>
+            <span class="text-muted"> ( {{ totalItems() }} pagos totales )</span>
+          </div>
 
-          <select
-            class="limit-select"
-            [ngModel]="limit()"
-            (change)="onLimitChange(+$any($event.target).value)"
-          >
-            <option [value]="5">5 / pág</option>
-            <option [value]="10">10 / pág</option>
-            <option [value]="25">25 / pág</option>
-          </select>
-
-          <button
-            class="btn btn-outline"
-            [disabled]="currentPage() >= totalPages() || totalPages() === 0"
-            (click)="goToPage(currentPage() + 1)"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
+          <div class="pagination-controls">
+            <button
+              class="btn btn-outline"
+              [disabled]="currentPage() === 1"
+              (click)="goToPage(currentPage() - 1)"
             >
-              <polyline points="9 18 15 12 9 6" />
-            </svg>
-          </button>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6" />
+              </svg>
+            </button>
+
+            <select
+              class="limit-select"
+              [ngModel]="limit()"
+              (change)="onLimitChange(+$any($event.target).value)"
+            >
+              <option [value]="5">5 / pág</option>
+              <option [value]="10">10 / pág</option>
+              <option [value]="25">25 / pág</option>
+            </select>
+
+            <button
+              class="btn btn-outline"
+              [disabled]="currentPage() >= totalPages() || totalPages() === 0"
+              (click)="goToPage(currentPage() + 1)"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6" />
+              </svg>
+            </button>
+          </div>
+        </div>
+        }
+      </div>
+      <div class="attendance-section">
+        <h2 class="section-title">Últimas Asistencias</h2>
+        <div class="table-container card">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha y Hora</th>
+                <th class="text-center">ID de Asistencia</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (attendance of lastAttendances(); track attendance.id) {
+              <tr>
+                <td>
+                  <strong>{{ formatDateTime(attendance.created_at) }}</strong>
+                </td>
+                <td class="text-center">
+                  <span class="badge badge-outline">#{{ attendance.id }}</span>
+                </td>
+              </tr>
+              } @empty {
+              <tr>
+                <td colspan="2" class="empty-row">
+                  No se han registrado asistencias recientemente
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
         </div>
       </div>
-      }
     </main>
   </div>
   }
@@ -366,25 +385,25 @@
           <div class="field-error">El apellido es obligatorio.</div>
           }
         </div>
-      </div>
 
-      <div class="form-group">
-        <label for="edit_number">Teléfono</label>
-        <input
-          id="edit_number"
-          type="text"
-          formControlName="number"
-          class="form-control"
-          [class.is-invalid]="f['number'].touched && f['number'].errors"
-          placeholder="10 dígitos"
-        />
-        @if (f['number'].touched) { @if (f['number'].errors?.['required']) {
-        <div class="field-error">El teléfono es obligatorio.</div>
-        } @else if (f['number'].errors?.['phoneInUse']) {
-        <div class="field-error">
-          Este teléfono/matrícula ya está registrado por otro usuario.
+        <div class="form-group form-group--full">
+          <label for="edit_number">Teléfono</label>
+          <input
+            id="edit_number"
+            type="text"
+            formControlName="number"
+            class="form-control"
+            [class.is-invalid]="f['number'].touched && f['number'].errors"
+            placeholder="10 dígitos"
+          />
+          @if (f['number'].touched) { @if (f['number'].errors?.['required']) {
+          <div class="field-error">El teléfono es obligatorio.</div>
+          } @else if (f['number'].errors?.['phoneInUse']) {
+          <div class="field-error">
+            Este teléfono/matrícula ya está registrado por otro usuario.
+          </div>
+          } }
         </div>
-        } }
       </div>
 
       <div class="modal-footer">
@@ -437,16 +456,4 @@
   (closeEvent)="closeTransactionDetail()"
 >
 </app-transaction-detail-modal>
-}
-
-<!-- ══ TOAST NOTIFICATIONS ══ -->
-@if (toastMessage()) {
-<div class="toast-overlay">
-  <div class="toast-box" [class.toast-error]="toastType() === 'error'">
-    <span class="toast-icon">
-      @if (toastType() === 'success') { ✓ } @else { ✕ }
-    </span>
-    <p>{{ toastMessage() }}</p>
-  </div>
-</div>
 }

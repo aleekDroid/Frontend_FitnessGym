@@ -1,74 +1,128 @@
 <div class="modal-overlay" (click)="closeModal.emit()">
-  <div class="modal-box result-modal" (click)="$event.stopPropagation()">
+  <div
+    class="modal-box result-modal"
+    [class.is-success]="isSuccess"
+    [class.is-error]="!isSuccess"
+    (click)="$event.stopPropagation()"
+  >
     <div class="modal-header">
       <h2 class="modal-title">
-        {{ attendance.attendance_id ? 'Asistencia Registrada' : 'Acceso Denegado' }}
+        {{ isSuccess ? "ACCESO CONCEDIDO" : "ACCESO DENEGADO" }}
       </h2>
       <button class="modal-close" (click)="closeModal.emit()">✕</button>
     </div>
-    
+
     <div class="modal-body">
-      @if (attendance.attendance_id) {
-        <div class="result-success-icon">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" class="success-svg" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-        </div>
-      } @else {
-        <div class="result-error-icon">
-          <svg width="60" height="60" viewBox="0 0 24 24" fill="none" class="error-svg" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="15" y1="9" x2="9" y2="15"></line>
-            <line x1="9" y1="9" x2="15" y2="15"></line>
-          </svg>
-        </div>
-      }
-      
-      <div class="user-info-display">
-        <div class="user-avatar-lg">
-          {{ attendance.user.user_name.charAt(0) }}{{ attendance.user.user_last_name.charAt(0) }}
-        </div>
-        <h3 class="user-name">{{ attendance.user.user_name }} {{ attendance.user.user_last_name }}</h3>
-        <p class="user-id">ID: #{{ attendance.user.user_id }}</p>
-      </div>
-      
-      <div class="membership-info-card">
-        <div class="info-row">
-          <span class="info-label">Suscripción:</span>
-          <span class="info-value">{{ attendance.suscripcion?.suscripcion_type_name || 'Sin suscripción' }}</span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Estado:</span>
-            <span class="badge" [ngClass]="{
-              'badge-success': attendance.suscripcion?.status === 'active',
-              'badge-danger': attendance.suscripcion?.status !== 'active'
-            }">
-              {{ (attendance.suscripcion && attendance.suscripcion.status === 'active') ? 'Activa' : 'Inactiva/Vencida' }}
-            </span>
-        </div>
-        @if (attendance.suscripcion && attendance.suscripcion.end_date) {
-          <div class="info-row">
-            <span class="info-label">Vence el:</span>
-            <span class="info-value">{{ formatDate(attendance.suscripcion.end_date) }}</span>
+      <div class="status-indicator">
+        @if (isSuccess) {
+          <div class="icon-circle">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
           </div>
-          <div class="info-row">
-            <span class="info-label">Días restantes:</span>
-            <span class="info-value" [ngClass]="getDaysColorClass(getDaysLeft(attendance.suscripcion.end_date))">
-              {{ getDaysLeft(attendance.suscripcion.end_date) }} días
-            </span>
+        } @else {
+          <div class="icon-circle">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="3"
+            >
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
           </div>
         }
       </div>
 
-      @if (!attendance.attendance_id) {
-        <p class="text-danger error-message">El usuario no tiene una suscripción vigente para acceder.</p>
+      <div class="user-profile-summary">
+        <div class="user-avatar-main">
+          {{ attendance.user.user_name.charAt(0)
+          }}{{ attendance.user.user_last_name.charAt(0) }}
+        </div>
+        <div class="user-detail-group">
+          <h3 class="user-full-name">
+            {{ attendance.user.user_name }} {{ attendance.user.user_last_name }}
+          </h3>
+          <p class="user-id-tag">ID: #{{ attendance.user.user_id }}</p>
+        </div>
+      </div>
+
+      <div class="status-card shadow-sm">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">Suscripción</span>
+            <span class="info-value">{{
+              attendance.suscripcion?.suscripcion_type_name || "Sin suscripción"
+            }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Estado</span>
+            <span
+              class="status-badge"
+              [class.active]="attendance.suscripcion?.status === 'active'"
+            >
+              {{
+                attendance.suscripcion &&
+                attendance.suscripcion.status === "active"
+                  ? "ACTIVA"
+                  : "INACTIVA/VENCIDA"
+              }}
+            </span>
+          </div>
+
+          @if (attendance.suscripcion && attendance.suscripcion.end_date) {
+            <div class="info-item full-width">
+              <div class="expiry-stats">
+                <div class="stat">
+                  <span class="info-label">Vencimiento </span>
+                  <span class="info-value">{{
+                    formatDate(attendance.suscripcion.end_date)
+                  }}</span>
+                </div>
+                <div class="stat text-right">
+                  <span class="info-label">Días restantes</span>
+                  <span
+                    class="days-counter"
+                    [ngClass]="
+                      getDaysColorClass(
+                        getDaysLeft(attendance.suscripcion.end_date)
+                      )
+                    "
+                  >
+                    {{ getDaysLeft(attendance.suscripcion.end_date) }} días
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      </div>
+
+      @if (!isSuccess) {
+        <p class="denial-reason">
+          El usuario no tiene una suscripción vigente para acceder.
+        </p>
       }
     </div>
-    
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeModal.emit()">Cerrar</button>
-      <button class="btn btn-primary" (click)="viewProfile.emit(attendance.user.user_id)">
+
+    <div class="modal-actions">
+      <button class="btn btn-outline" (click)="closeModal.emit()">
+        Cerrar
+      </button>
+      <button
+        class="btn btn-action"
+        (click)="viewProfile.emit(attendance.user.user_id)"
+      >
         Ir al Perfil
       </button>
     </div>

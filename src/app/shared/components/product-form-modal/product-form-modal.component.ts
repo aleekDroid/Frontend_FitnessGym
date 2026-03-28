@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Product } from '../../../core/models/product.model';
@@ -19,7 +19,7 @@ export class ProductFormModalComponent implements OnInit {
 
   productForm: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(private readonly fb: FormBuilder) {
     this.productForm = this.fb.group({
       name: ['', Validators.required],
       serialNumber: ['', Validators.required],
@@ -47,6 +47,17 @@ export class ProductFormModalComponent implements OnInit {
 
   closeModal(): void {
     this.closeEvent.emit();
+  }
+
+  stepValue(controlName: string, step: number): void {
+    const control = this.productForm.get(controlName);
+    if (control && !control.disabled) {
+      let currentVal = Number.parseFloat(control.value) || 0;
+      let newVal = currentVal + step;
+      if (newVal < 0) newVal = 0;
+      control.setValue(newVal);
+      control.markAsDirty();
+    }
   }
 
   onSubmit(): void {

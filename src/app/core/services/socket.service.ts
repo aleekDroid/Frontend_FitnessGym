@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
 import { environment } from '../../../environments/environment';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +12,7 @@ export class SocketService {
 
   constructor(private readonly authService: AuthService) {}
 
-  connect(namespace: string, query: any = {}): Socket {
+  async connect(namespace: string, query: any = {}): Promise<Socket> {
     if (this.sockets.has(namespace)) {
       const existingSocket = this.sockets.get(namespace)!;
       if (!existingSocket.connected) {
@@ -20,7 +21,20 @@ export class SocketService {
       return existingSocket;
     }
 
-    const token = this.authService.getToken();
+    let token = this.authService.getToken();
+
+    // Check if the token is expired before attempting to connect
+    if (token && this.authService.isTokenExpired(token)) {
+      try {
+        const res = await firstValueFrom(this.authService.refreshToken());
+        token = res.accessToken;
+      } catch (error) {
+        console.error('SocketService: Failed to refresh token prior to connection', error);
+        this.authService.logout();
+        throw new Error('Unauthorized');
+      }
+    }
+
     const baseUrl = environment.production ? '' : 'http://localhost:3000';
     const url = `${baseUrl}/${namespace}`;
 

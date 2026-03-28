@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UsersService, UserDetailsResponse, SubscriptionHistoryItem } from '../../../../core/services/users.service';
+import { AttendanceService, AttendanceHistoryItem } from '../../../../core/services/attendance.service';
+import { NotificationService } from '../../../../core/services/notification.service';
 import { UserWithMembership } from '../../../../core/models/user.model';
 import { AssignSubscriptionModalComponent } from '../../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
 import { StatusConfirmModalComponent } from '../../../../shared/components/status-confirm-modal/status-confirm-modal.component';
@@ -23,6 +25,7 @@ export class UserDetails implements OnInit {
   // Data Signals
   user = signal<UserDetailsResponse['user'] | null>(null);
   history = signal<SubscriptionHistoryItem[]>([]);
+  lastAttendances = signal<AttendanceHistoryItem[]>([]);
   
   // Pagination Signals
   currentPage = signal(1);
@@ -41,15 +44,13 @@ export class UserDetails implements OnInit {
   showTransactionDetail = signal(false);
   selectedTransactionId = signal<number | null>(null);
 
-  // TOAST STATE
-  toastMessage = signal<string | null>(null);
-  toastType = signal<'success' | 'error'>('success');
-
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private usersService: UsersService,
-    private fb: FormBuilder
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly usersService: UsersService,
+    private readonly attendanceService: AttendanceService,
+    private readonly notificationService: NotificationService,
+    private readonly fb: FormBuilder
   ) {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
@@ -89,6 +90,15 @@ export class UserDetails implements OnInit {
         alert('No se pudo cargar la información del usuario.');
         this.loading.set(false);
         this.goBack();
+      }
+    });
+
+    this.attendanceService.getLastAttendances(this.userId).subscribe({
+      next: (attendances) => {
+        this.lastAttendances.set(attendances);
+      },
+      error: (err) => {
+        console.error('Error fetching last attendances:', err);
       }
     });
   }
@@ -148,6 +158,7 @@ export class UserDetails implements OnInit {
       next: () => {
         this.saving.set(false);
         this.closeEditModal();
+        this.notificationService.show('Perfil actualizado correctamente.', 'success');
         this.loadData();
       },
       error: (err) => {
@@ -187,13 +198,13 @@ export class UserDetails implements OnInit {
     this.usersService.toggleUserStatus(user.id, newStatus).subscribe({
       next: () => {
         this.user.update(u => u ? { ...u, status: newStatus } : u);
-        this.showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente.`, 'success');
+        this.notificationService.show(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente.`, 'success');
         this.togglingStatus.set(false);
         this.cancelToggleStatus();
       },
       error: (err) => {
         console.error('Error toggling status:', err);
-        this.showToast('No se pudo cambiar el estado del usuario.', 'error');
+        this.notificationService.show('No se pudo cambiar el estado del usuario.', 'error');
         this.togglingStatus.set(false);
       }
     });
@@ -203,15 +214,20 @@ export class UserDetails implements OnInit {
     // Legacy support for old modal if needed, but we use doStatusToggle now
   }
 
-  showToast(msg: string, type: 'success' | 'error' = 'success'): void {
-    this.toastMessage.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => { this.toastMessage.set(null); }, 3500);
-  }
-
   formatDate(dateStr?: string): string {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  formatDateTime(dateStr?: string): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleString('es-MX', { 
+      day: '2-digit', 
+      month: 'short', 
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   }
 
   formatMoney(amount: number): string {
@@ -242,7 +258,7 @@ export class UserDetails implements OnInit {
 
   onAssignSuccess(): void {
     this.showAssignModal.set(false);
-    this.showToast('Suscripción asignada exitosamente.', 'success');
+    this.notificationService.show('Suscripción asignada exitosamente.', 'success');
     this.loadData();
   }
 

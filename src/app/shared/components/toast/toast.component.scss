@@ -1,0 +1,127 @@
+.toast-overlay {
+  position: fixed;
+  top: 24px; // Positioned AT THE TOP as requested for mobile visibility
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 0 20px;
+  pointer-events: none;
+  animation: slideDownToast 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.toast-box {
+  pointer-events: auto;
+  min-width: 280px;
+  max-width: 450px;
+  background: rgba(30, 30, 35, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(74, 222, 128, 0.3); // Default success border
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+  }
+}
+
+.toast-icon {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.15);
+  color: #4ade80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.toast-content {
+  flex: 1;
+  p {
+    margin: 0;
+    color: #eee;
+    font-size: 0.95rem;
+    font-weight: 600;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+  }
+}
+
+.toast-close {
+  background: transparent;
+  border: none;
+  color: rgba(238, 238, 238, 0.4);
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+  }
+}
+
+/* Modifier States */
+.toast-error {
+  .toast-box {
+    border-color: rgba(239, 83, 80, 0.4);
+  }
+  .toast-icon {
+    background: rgba(239, 83, 80, 0.15);
+    color: #ef5350;
+  }
+}
+
+.toast-warning {
+  .toast-box {
+    border-color: rgba(255, 179, 0, 0.4);
+  }
+  .toast-icon {
+    background: rgba(255, 179, 0, 0.15);
+    color: #ffb300;
+  }
+}
+
+.toast-info {
+  .toast-box {
+    border-color: rgba(34, 150, 243, 0.4);
+  }
+  .toast-icon {
+    background: rgba(34, 150, 243, 0.15);
+    color: #2196f3;
+  }
+}
+
+@keyframes slideDownToast {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -40px) scale(0.95);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, 0) scale(1);
+  }
+}
+
+/* Mobile specific tweaks */
+@media (max-width: 480px) {
+  .toast-box {
+    width: 100%;
+    min-width: auto;
+  }
+}

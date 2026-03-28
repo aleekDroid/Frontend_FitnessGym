@@ -25,6 +25,12 @@ export interface AttendanceResponse {
   suscripcion: AttendanceSubscription | null;
 }
 
+export interface AttendanceHistoryItem {
+  id: number;
+  user_id: number;
+  created_at: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -42,6 +48,17 @@ export class AttendanceService {
     return this.http.post<AttendanceResponse>(
       `${environment.apiUrl}/attendances`,
       { qrCodeId },
+      { headers }
+    );
+  }
+
+  getLastAttendances(idUser: number): Observable<AttendanceHistoryItem[]> {
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${this.authService.getToken()}`
+    });
+    
+    return this.http.get<AttendanceHistoryItem[]>(
+      `${environment.apiUrl}/attendances/last/${idUser}`,
       { headers }
     );
   }

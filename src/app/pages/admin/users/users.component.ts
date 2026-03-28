@@ -1,4 +1,4 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UsersService } from '../../../core/services/users.service';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
+import { NotificationService } from '../../../core/services/notification.service';
 import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
 import { AssignSubscriptionModalComponent } from '../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
@@ -48,9 +49,7 @@ export class UsersComponent implements OnInit {
   // Mobile Filters Toggle
   showFilters = signal(false);
 
-  // TOAST STATE
-  toastMessage = signal<string | null>(null);
-  toastType = signal<'success' | 'error'>('success');
+  private readonly notificationService = inject(NotificationService);
 
   userForm: FormGroup;
 
@@ -110,13 +109,6 @@ export class UsersComponent implements OnInit {
     });
   }
 
-  showToast(msg: string, type: 'success' | 'error' = 'success'): void {
-    this.toastMessage.set(msg);
-    this.toastType.set(type);
-    setTimeout(() => {
-      this.toastMessage.set(null);
-    }, 3500);
-  }
 
   onSearch(val: string): void {
     this.searchSubject.next(val);
@@ -171,21 +163,28 @@ export class UsersComponent implements OnInit {
     const val = this.userForm.value;
 
     if (this.editUser()) {
-      this.usersService.update(this.editUser()!.id, { name: val.name, last_name: val.last_name, number: val.number }).subscribe(() => {
-        this.saving.set(false);
-        this.closeModal();
-        this.loadData();
+      this.usersService.update(this.editUser()!.id, { name: val.name, last_name: val.last_name, number: val.number }).subscribe({
+        next: () => {
+          this.notificationService.show('Datos del usuario actualizados correctamente', 'success');
+          this.saving.set(false);
+          this.closeModal();
+          this.loadData();
+        },
+        error: () => {
+          this.notificationService.show('No se pudo actualizar el usuario', 'error');
+          this.saving.set(false);
+        }
       });
     } else {
       this.usersService.create(val).subscribe({
         next: () => {
-          this.showToast('Usuario registrado con éxito', 'success'); 
+          this.notificationService.show('Usuario registrado con éxito', 'success');
           this.saving.set(false);
           this.closeModal();
           this.loadData();
         },
         error: (err) => {
-          this.showToast('Hubo un error al registrar el usuario. Revisa los datos.', 'error'); 
+          this.notificationService.show('Hubo un error al registrar el usuario. Revisa los datos.', 'error');
           console.error('Error al crear usuario:', err);
           this.saving.set(false);
         }
@@ -218,13 +217,13 @@ export class UsersComponent implements OnInit {
         this.users.update(users => users.map(u => 
           u.id === user.id ? { ...u, status: newStatus } : u
         ));
-        this.showToast(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success');
+        this.notificationService.show(`Usuario ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success');
         this.togglingStatus.set(false);
         this.cancelToggleStatus();
       },
       error: (err) => {
         console.error('Error toggling status:', err);
-        this.showToast('No se pudo cambiar el estado del usuario', 'error');
+        this.notificationService.show('No se pudo cambiar el estado del usuario', 'error');
         this.togglingStatus.set(false);
       }
     });
@@ -263,7 +262,7 @@ export class UsersComponent implements OnInit {
 
   onAssignSuccess(): void {
     this.showAssignModal.set(false);
-    this.showToast('Suscripción asignada exitosamente a los usuarios seleccionados.', 'success');
+    this.notificationService.show('Suscripción asignada exitosamente a los usuarios seleccionados.', 'success');
     this.loadData();
   }
 

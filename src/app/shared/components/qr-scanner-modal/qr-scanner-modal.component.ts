@@ -1,6 +1,6 @@
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
 
 @Component({
   selector: 'app-qr-scanner-modal',
@@ -13,48 +13,57 @@ export class QrScannerModalComponent implements OnInit, OnDestroy {
   @Output() scanSuccess = new EventEmitter<string>();
   @Output() closeScanner = new EventEmitter<void>();
 
-  private scanner: Html5QrcodeScanner | null = null;
+  private html5QrCode: Html5Qrcode | null = null;
+  errorMessage: string = '';
 
   ngOnInit(): void {
     // We delay the initialization slightly to ensure the element is in the DOM
     setTimeout(() => {
-      this.initScanner();
-    }, 100);
+      this.startScanner();
+    }, 300);
   }
 
   ngOnDestroy(): void {
     this.stopScanner();
   }
 
-  private initScanner(): void {
-    this.scanner = new Html5QrcodeScanner(
-      "reader",
-      { 
-        fps: 10, 
+  private async startScanner(): Promise<void> {
+    try {
+      this.html5QrCode = new Html5Qrcode("reader");
+      
+      const config = { 
+        fps: 15, 
         qrbox: { width: 250, height: 250 },
         formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
-      },
-      /* verbose= */ false
-    );
+      };
 
-    this.scanner.render(
-      (decodedText) => {
-        if (decodedText) {
-          this.scanSuccess.emit(decodedText);
-          this.stopScanner();
+      await this.html5QrCode.start(
+        { facingMode: "environment" }, // Prefer back camera
+        config,
+        (decodedText) => {
+          if (decodedText) {
+            this.scanSuccess.emit(decodedText);
+            this.stopScanner();
+          }
+        },
+        (errorMessage) => {
+          // Silent errors for real-time scanning
         }
-      },
-      (errorMessage) => {
-        // scanner error
-      }
-    );
-
+      );
+    } catch (err) {
+      console.error("Unable to start scanner", err);
+      this.errorMessage = "No se pudo acceder a la cámara. Verifica los permisos.";
+    }
   }
 
-  private stopScanner(): void {
-    if (this.scanner) {
-      this.scanner.clear().catch(err => console.error("Error stopping scanner", err));
-      this.scanner = null;
+  private async stopScanner(): Promise<void> {
+    if (this.html5QrCode && this.html5QrCode.isScanning) {
+      try {
+        await this.html5QrCode.stop();
+        this.html5QrCode.clear();
+      } catch (err) {
+        console.error("Error stopping scanner", err);
+      }
     }
   }
 }

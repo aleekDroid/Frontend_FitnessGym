@@ -6,8 +6,19 @@
     </div>
     
     <div class="modal-body">
-      <div id="reader" style="width: 100%; min-height: 300px;"></div>
-      <p class="scanner-hint">Apunta la cámara al código QR del usuario</p>
+      <div class="scanner-container">
+        <div id="reader"></div>
+        <div class="scanner-overlay">
+          <div class="scan-frame"></div>
+          <div class="scanning-line"></div>
+        </div>
+      </div>
+      
+      @if (errorMessage) {
+        <p class="error-text">{{ errorMessage }}</p>
+      } @else {
+        <p class="scanner-hint">Apunta la cámara al código QR del usuario</p>
+      }
     </div>
     
     <div class="modal-footer">

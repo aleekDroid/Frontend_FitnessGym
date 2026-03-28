@@ -70,43 +70,45 @@
     </div>
     }
 
-    <button
-      class="btn btn-secondary"
-      (click)="openAssignModal()"
-      style="margin-right: 12px"
-    >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
+    <div class="toolbar-actions">
+      <button
+        class="btn btn-secondary"
+        (click)="openAssignModal()"
       >
-        <path
-          d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-        ></path>
-        <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-        <line x1="12" y1="22.08" x2="12" y2="12"></line>
-      </svg>
-      Asignar Plan
-    </button>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <path
+            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+          ></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
+        Asignar Plan
+      </button>
 
-    <button class="btn btn-primary" (click)="openCreate()">
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="2.5"
-      >
-        <line x1="12" y1="5" x2="12" y2="19" />
-        <line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-      Registrar usuario
-    </button>
+      <button class="btn btn-primary" (click)="openCreate()">
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2.5"
+        >
+          <line x1="12" y1="5" x2="12" y2="19" />
+          <line x1="5" y1="12" x2="19" y2="12" />
+        </svg>
+        Registrar usuario
+      </button>
+    </div>
   </div>
+
 
   <h2 class="section-title">
     Todos los usuarios
@@ -305,8 +307,9 @@
       <form [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate>
         <div class="form-row">
           <div class="form-group">
-            <label>Nombre</label>
+            <label for="create_name">Nombre</label>
             <input
+              id="create_name"
               type="text"
               formControlName="name"
               class="form-control"
@@ -321,8 +324,9 @@
             }
           </div>
           <div class="form-group">
-            <label>Apellido</label>
+            <label for="create_last_name">Apellido</label>
             <input
+              id="create_last_name"
               type="text"
               formControlName="last_name"
               class="form-control"
@@ -332,17 +336,18 @@
               "
             />
           </div>
-        </div>
 
-        <div class="form-group">
-          <label>Número de teléfono (WhatsApp)</label>
-          <input
-            type="text"
-            formControlName="number"
-            class="form-control"
-            placeholder="Ej. 4421234567"
-            [class.is-invalid]="f['number'].touched && f['number'].errors"
-          />
+          <div class="form-group form-group--full">
+            <label for="create_number">Número de teléfono (WhatsApp)</label>
+            <input
+              id="create_number"
+              type="text"
+              formControlName="number"
+              class="form-control"
+              placeholder="Ej. 4421234567"
+              [class.is-invalid]="f['number'].touched && f['number'].errors"
+            />
+          </div>
         </div>
 
         <div class="modal-footer">

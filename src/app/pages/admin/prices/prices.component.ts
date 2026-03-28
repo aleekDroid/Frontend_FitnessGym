@@ -5,11 +5,14 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } 
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
 import { SubscriptionType, CreateSubscriptionTypeDto } from '../../../core/models/subscription.model';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
+import { ToastComponent } from '../../../shared/components/toast/toast.component';
+import { NotificationService } from '../../../core/services/notification.service';
 
 @Component({
   selector: 'app-prices',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, StatusConfirmModalComponent, ToastComponent],
   templateUrl: './prices.component.html',
   styleUrls: ['./prices.component.scss'],
 })
@@ -34,12 +37,16 @@ export class PricesComponent implements OnInit {
 
   priceForm: FormGroup;
 
-  constructor(private readonly subscriptionsService: SubscriptionsService, private readonly fb: FormBuilder) {
+  constructor(
+    private readonly subscriptionsService: SubscriptionsService, 
+    private readonly fb: FormBuilder,
+    private readonly notificationService: NotificationService
+  ) {
     this.priceForm = this.fb.group({
       name:                  ['', Validators.required],
-      price:                 ['', [Validators.required, Validators.min(1)]],
-      duration:              ['30', Validators.required],
-      person_per_suscription:['1', Validators.required],
+      price:                 [0, [Validators.required, Validators.min(1)]],
+      duration:              [30, [Validators.required, Validators.min(1)]],
+      person_per_suscription:[1, [Validators.required, Validators.min(1)]],
       description:           ['', Validators.required],
     });
   }
@@ -101,7 +108,7 @@ export class PricesComponent implements OnInit {
 
   openCreate(): void {
     this.editType.set(null);
-    this.priceForm.reset({ duration: 30, person_per_suscription: 1 });
+    this.priceForm.reset({ duration: 30, person_per_suscription: 1, price: 0 });
     this.showModal.set(true);
   }
 
@@ -113,15 +120,35 @@ export class PricesComponent implements OnInit {
 
   closeModal(): void { this.showModal.set(false); }
 
+  stepValue(controlName: string, step: number): void {
+    const control = this.priceForm.get(controlName);
+    if (control && !control.disabled) {
+      let currentVal = Number.parseFloat(control.value) || 0;
+      let newVal = Math.max(0, currentVal + step); // Prevents negative values
+      control.setValue(newVal);
+      control.markAsDirty();
+    }
+  }
+
   onSubmit(): void {
     if (this.priceForm.invalid) { this.priceForm.markAllAsTouched(); return; }
     this.saving.set(true);
     const val = this.priceForm.value;
 
     if (this.editType()) {
-      this.subscriptionsService.update(this.editType()!.id, val).subscribe(() => { this.saving.set(false); this.closeModal(); this.loadData(); });
+      this.subscriptionsService.update(this.editType()!.id, val).subscribe(() => { 
+        this.saving.set(false); 
+        this.closeModal(); 
+        this.notificationService.show('Membresía actualizada correctamente', 'success');
+        this.loadData(); 
+      });
     } else {
-      this.subscriptionsService.create(val as CreateSubscriptionTypeDto).subscribe(() => { this.saving.set(false); this.closeModal(); this.loadData(); });
+      this.subscriptionsService.create(val as CreateSubscriptionTypeDto).subscribe(() => { 
+        this.saving.set(false); 
+        this.closeModal(); 
+        this.notificationService.show('Membresía creada exitosamente', 'success');
+        this.loadData(); 
+      });
     }
   }
 
@@ -129,7 +156,13 @@ export class PricesComponent implements OnInit {
   cancelDelete(): void { this.showDeleteConfirm.set(false); this.deleteTarget.set(null); }
   doDelete(): void {
     if (!this.deleteTarget()) return;
-    this.subscriptionsService.delete(this.deleteTarget()!.id).subscribe(() => { this.cancelDelete(); this.loadData(); });
+    this.saving.set(true);
+    this.subscriptionsService.delete(this.deleteTarget()!.id).subscribe(() => { 
+      this.saving.set(false);
+      this.cancelDelete(); 
+      this.notificationService.show('Membresía eliminada de la base de datos', 'success');
+      this.loadData(); 
+    });
   }
 
   get f() { return this.priceForm.controls; }

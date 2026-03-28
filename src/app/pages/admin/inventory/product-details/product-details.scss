@@ -56,14 +56,46 @@
   font-family: monospace;
 }
 
-/* ── Buttons ── */
 .btn-outline {
-  background: transparent !important;
+  background: transparent;
   color: var(--light);
-  border: 1px solid rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25) !important;
   border-radius: 8px;
-  padding: 8px 16px;
-  &:hover { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+  transition: all 0.2s;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.5) !important;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .btn-outline {
+    padding: 8px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .toolbar { margin-bottom: 16px; }
+  .toolbar .btn-outline {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    justify-content: center;
+    border-radius: 12px;
+  }
 }
 
 .btn-icon {
@@ -195,73 +227,105 @@
 
 .empty-movements { text-align: center; color: rgba(238,238,238,0.3); padding: 48px; font-style: italic; font-size: 0.9rem; }
 
-/* Modal Detail — Redesigned */
-.movement-detail-content {
-  margin: 20px 0;
-}
-
-.md-hero {
+/* ── Custom Number Input ── */
+.number-control {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
-  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.2s;
+  height: 44px;
 
-  &--sale       { background: rgba(59,130,246,0.08); }
-  &--restock    { background: rgba(74,222,128,0.08); }
-  &--adjustment { background: rgba(250,204,21,0.08); }
-
-  &__icon {
-    width: 44px; height: 44px;
-    border-radius: 10px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
+  &:focus-within {
+    border-color: #d84040;
+    box-shadow: 0 0 0 4px rgba(216, 64, 64, 0.1);
   }
-  &--sale .md-hero__icon       { background: rgba(59,130,246,0.15); color: #3b82f6; }
-  &--restock .md-hero__icon    { background: rgba(74,222,128,0.15); color: #4ade80; }
-  &--adjustment .md-hero__icon { background: rgba(250,204,21,0.15); color: #facc15; }
 
-  &__info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-  &__type { font-weight: 700; font-size: 1rem; color: var(--light); }
-  &__date { font-size: 0.8rem; color: rgba(238,238,238,0.4); }
+  &.is-invalid {
+    border-color: #f87171;
+    &:focus-within { box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.1); }
+  }
 
-  &__qty {
-    font-family: var(--font-display);
-    font-size: 1.3rem;
-    font-weight: 800;
-    flex-shrink: 0;
-    padding: 4px 12px;
-    border-radius: 8px;
+  .form-control {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    height: 100%;
+    text-align: center;
+    
+    &:focus { box-shadow: none; border: none; }
+  }
 
-    &.qty-positive { color: #4ade80; background: rgba(74,222,128,0.1); }
-    &.qty-negative { color: #3b82f6; background: rgba(59,130,246,0.1); }
+  .btn-step {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    border: none;
+    width: 44px;
+    height: 100%;
+    font-size: 1.2rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    &:active {
+      background: rgba(255, 255, 255, 0.15);
+    }
   }
 }
 
-.md-rows {
-  display: flex; flex-direction: column; gap: 0;
+/* Hide default browser spinners */
+input[type=number].no-spinners::-webkit-inner-spin-button, 
+input[type=number].no-spinners::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number].no-spinners {
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 
-.md-row {
-  display: flex;
-  justify-content: space-between;
+/* Close button for modals */
+.btn-close {
+  background: transparent;
+  color: rgba(238, 238, 238, 0.5);
+  border: none;
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
   align-items: center;
-  padding: 11px 0;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
 
-  &__label { color: rgba(238,238,238,0.45); font-size: 0.85rem; font-weight: 500; }
-  &__value { color: var(--light); font-weight: 600; font-size: 0.92rem; text-align: right; max-width: 60%; }
-  &__badge { display: inline-flex; align-items: center; gap: 6px; }
-  &__total { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--accent); }
-
-  &--total {
-    padding-top: 14px;
-    .md-row__label { font-size: 0.95rem; font-weight: 600; color: rgba(238,238,238,0.6); }
+  &:hover {
+    color: var(--light);
+    background: rgba(255, 255, 255, 0.1);
   }
 }
 
-.md-divider {
-  height: 1px;
-  background: rgba(255,255,255,0.06);
-  margin: 4px 0;
+textarea.form-control {
+  resize: vertical;
+  max-height: 200px;
+}
+
+@media (max-width: 480px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+    
+    .btn { width: 100%; }
+  }
 }

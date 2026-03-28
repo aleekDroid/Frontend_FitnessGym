@@ -2,93 +2,72 @@
   padding: 24px;
   max-width: 1400px;
   margin: 0 auto;
+  overflow-x: hidden;
+}
 
-  @media (max-width: 768px) {
+@media (max-width: 768px) {
+  .page-container {
     padding: 16px 12px;
   }
+}
 
-  @media (max-width: 480px) {
+@media (max-width: 480px) {
+  .page-container {
     padding: 12px 8px;
   }
+}
+
+/* Base Button Styles - Defined early to be overridden */
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: var(--font-body);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-outline {
+  background: transparent;
+  color: var(--light);
+  border: 1px solid rgba(255,255,255,0.25) !important;
+  border-radius: 8px;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: rgba(255,255,255,0.08);
+  border-color: rgba(255,255,255,0.5) !important;
 }
 
 .toolbar {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* clave */
+  justify-content: space-between;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
-/* Botón atrás a la izquierda */
-.toolbar .btn {
-  flex: 0 0 auto;
-}
-
-/* Si tienes botón de menú (icono), empújalo a la derecha */
-.toolbar .menu-toggle {
-  margin-left: auto;
-}
-
-@media (max-width: 768px) {
-  .toolbar {
-    flex-wrap: wrap;
-    justify-content: space-between;
-    margin-bottom: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .toolbar {
-    justify-content: flex-start;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-
-  .toolbar .btn {
-    flex: 1;
-    min-width: calc(50% - 4px);
-    padding: 8px 10px;
-    font-size: 0.85rem;
-  }
-
-  .toolbar .btn-outline {
-    min-width: auto;
-    padding: 6px 10px;
-    font-size: 0.8rem;
-  }
-}
-
-.btn-outline {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+.toolbar .btn-outline {
   padding: 8px 16px;
-  background: transparent;
-  color: var(--light);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: var(--font-body);
-  font-weight: 500;
-  transition: all 0.2s;
-}
-
-.btn-outline:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.3);
+  font-size: 0.9rem;
 }
 
 @media (max-width: 480px) {
-  .btn-outline {
-    padding: 8px 12px;
-    font-size: 0.85rem;
-    gap: 6px;
-  }
-
-  .btn-outline svg {
-    width: 14px;
-    height: 14px;
+  .toolbar { margin-bottom: 16px; }
+  .toolbar .btn-outline {
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 1rem;
+    justify-content: center;
+    border-radius: 12px;
   }
 }
 
@@ -99,24 +78,14 @@
   align-items: start;
 }
 
+.details-grid > * {
+  min-width: 0;
+}
+
 @media (max-width: 992px) {
   .details-grid {
     grid-template-columns: 1fr;
     gap: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .details-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .details-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
   }
 }
 
@@ -131,14 +100,12 @@
 }
 
 @media (max-width: 768px) {
+  .sidebar {
+    width: 100%;
+  }
+
   .profile-card {
     padding: 24px 16px;
-  }
-}
-
-@media (max-width: 480px) {
-  .profile-card {
-    padding: 20px 12px;
   }
 }
 
@@ -285,7 +252,7 @@
 .role-admin {
   background: rgba(64, 169, 216, 0.15);
   border-color: rgba(64, 169, 216, 0.3);
-  color: #7dd3fc;
+  color: #bae6fd;
 }
 
 /* Common Badges */
@@ -305,9 +272,9 @@
   }
 }
 
-.badge-success { background: rgba(74,222,128,0.15); color: #4ade80; }
-.badge-danger { background: rgba(248,113,113,0.15); color: #f87171; }
-.badge-warning { background: rgba(250,204,21,0.15); color: #facc15; }
+.badge-success { background: rgba(74,222,128,0.15); color: #86efac; }
+.badge-danger { background: rgba(248,113,113,0.15); color: #fca5a5; }
+.badge-warning { background: rgba(250,204,21,0.15); color: #fef08a; }
 
 .payment-badge {
   padding: 4px 10px;
@@ -347,34 +314,70 @@
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Main Content & Table */
+/* ───────────────────────────────────────────
+   MAIN CONTENT LAYOUT
+─────────────────────────────────────────── */
 .main-content {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 0;
+  min-width: 0;
+  overflow: hidden;
 }
 
-@media (max-width: 480px) {
-  .main-content {
-    gap: 16px;
-  }
+/* ───────────────────────────────────────────
+   SECTION: Subscriptions (table + pager)
+─────────────────────────────────────────── */
+.subscriptions-section {
+  padding-bottom: 8px;
 }
 
+.subscriptions-section .section-title {
+  margin-bottom: 12px;
+}
+
+.subscriptions-section .table-container {
+  margin-bottom: 4px;
+}
+
+/* ───────────────────────────────────────────
+   SECTION: Attendance (table only)
+─────────────────────────────────────────── */
+.attendance-section {
+  padding-top: 24px;
+}
+
+.attendance-section .section-title {
+  margin-bottom: 12px;
+}
+
+.attendance-section .data-table {
+  min-width: 0;
+}
+
+/* ───────────────────────────────────────────
+   SHARED: Section Title
+─────────────────────────────────────────── */
 .section-title {
   font-family: var(--font-display);
   font-size: 1.4rem;
   color: var(--light);
   margin: 0;
+  display: inline-block;
+  position: relative;
+  padding-bottom: 8px;
 }
 
 @media (max-width: 480px) {
-  .section-title {
-    font-size: 1.1rem;
-  }
+  .section-title { font-size: 1.15rem; }
 }
 
+/* ───────────────────────────────────────────
+   SHARED: Table Container & Data Table
+─────────────────────────────────────────── */
 .table-container {
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.05);
   background: rgba(30, 30, 30, 0.4);
@@ -386,7 +389,7 @@
 }
 
 .data-table th, .data-table td {
-  padding: 16px;
+  padding: 14px 16px;
   text-align: left;
   border-bottom: 1px solid rgba(255,255,255,0.05);
 }
@@ -394,44 +397,29 @@
 .data-table th {
   color: rgba(238,238,238,0.4);
   font-weight: 600;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   background: rgba(0,0,0,0.2);
 }
 
-.data-table tbody tr {
-  transition: background 0.2s;
-}
-
-.data-table tbody tr:hover {
-  background: rgba(255,255,255,0.02);
-}
+.data-table tbody tr { transition: background 0.2s; }
+.data-table tbody tr:hover { background: rgba(255,255,255,0.02); }
 
 .data-table td {
   color: var(--light);
-  font-size: 0.95rem;
-  vertical-align: top;
+  font-size: 0.9rem;
+  vertical-align: middle;
 }
 
 @media (max-width: 768px) {
-  .data-table th, .data-table td {
-    padding: 12px 10px;
-  }
-
-  .data-table th {
-    font-size: 0.75rem;
-  }
-
-  .data-table td {
-    font-size: 0.85rem;
-  }
+  .data-table th, .data-table td { padding: 11px 10px; }
+  .data-table th { font-size: 0.72rem; }
+  .data-table td { font-size: 0.85rem; }
 }
 
 @media (max-width: 480px) {
-  .data-table th, .data-table td {
-    padding: 10px 8px;
-  }
+  .data-table th, .data-table td { padding: 9px 8px; }
 
   .data-table th {
     font-size: 0.7rem;
@@ -462,9 +450,9 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 4px;
+  padding: 8px 4px;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 8px;
 }
 
 @media (max-width: 768px) {
@@ -491,6 +479,23 @@
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.pagination-controls .btn-outline {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,0.12) !important;
+  color: rgba(238,238,238,0.6);
+}
+
+.pagination-controls .btn-outline:hover:not(:disabled) {
+  border-color: var(--accent) !important;
+  color: var(--accent);
+  background: rgba(216,64,64,0.1);
 }
 
 @media (max-width: 768px) {
@@ -532,33 +537,25 @@
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
-/* Base Button Styles Move Up for specificity */
-.btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-body);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
+.btn-secondary { 
+  background: rgba(255,255,255,0.1); 
+  color: var(--light); 
+  border: 1px solid rgba(255,255,255,0.1);
 }
-
-.btn-secondary { background: rgba(255,255,255,0.08); color: var(--light); }
-.btn-secondary:hover { background: rgba(255,255,255,0.15); }
+.btn-secondary:hover:not(:disabled) { 
+  background: rgba(255,255,255,0.18); 
+  border-color: rgba(255,255,255,0.3);
+}
 .btn-success { background: #4ade80; color: #000; }
-.btn-success:hover { background: #22c55e; }
+.btn-success:hover:not(:disabled) { background: #22c55e; }
 .btn-primary {
   background: var(--accent);
   color: white;
 }
-.btn-primary:hover {
+.btn-primary:hover:not(:disabled) {
   background: #ff4d4d;
   box-shadow: 0 0 20px rgba(216, 64, 64, 0.4);
 }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 .profile-actions .btn {
   justify-content: center;
@@ -584,10 +581,6 @@
     padding: 12px 10px;
     font-size: 0.95rem;
     border-radius: 10px;
-  }
-
-  .profile-actions .btn.btn-outline {
-    padding: 10px;
   }
 }
 
@@ -640,18 +633,18 @@
 
 @media (max-width: 480px) {
   .modal-overlay {
-    align-items: flex-end;
-    padding: 0;
+    align-items: center;
+    padding: 16px;
   }
 }
 
 .modal-box {
   background: #1e1e1e;
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 20px;
   width: 100%;
   max-width: 500px;
-  padding: 24px;
+  padding: 32px;
   box-shadow: 0 20px 40px rgba(0,0,0,0.4);
   animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -659,9 +652,9 @@
 @media (max-width: 480px) {
   .modal-box {
     max-width: 100%;
-    border-radius: 16px 16px 0 0;
-    padding: 20px 16px;
-    max-height: 90vh;
+    border-radius: 16px;
+    padding: 24px 20px;
+    max-height: 88vh;
     overflow-y: auto;
   }
 }
@@ -718,6 +711,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 16px;
+  margin-bottom: 0;
 }
 
 @media (max-width: 480px) {
@@ -729,6 +723,15 @@
 
 .form-group {
   margin-bottom: 16px;
+}
+
+/* Ensure consistent spacing when inside a grid */
+.form-row .form-group {
+  margin-bottom: 0;
+}
+
+.form-group--full {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 480px) {
@@ -775,42 +778,34 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 32px;
+  margin-top: 40px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 @media (max-width: 480px) {
   .modal-footer {
-    flex-direction: column-reverse;
-    gap: 10px;
-    margin-top: 20px;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 32px;
+    padding-top: 0;
+    border-top: none;
   }
 
   .modal-footer .btn {
     width: 100%;
     justify-content: center;
+    padding: 14px;
+    font-size: 1rem;
   }
+
+  /* El botón de guardar en la parte superior suele ser más común 
+     pero mantengamos el orden semántico normal de los stacks si se prefiere.
+     Si el usuario quiere el Cancelar abajo, column es suficiente si Cancelar es secundario. */
 }
 
-.btn {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: var(--font-body);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.btn-secondary { background: rgba(255,255,255,0.08); color: var(--light); }
-.btn-secondary:hover { background: rgba(255,255,255,0.15); }
-.btn-success { background: #4ade80; color: #000; }
-.btn-success:hover { background: #22c55e; }
 .btn-danger { background: var(--accent); color: white; }
 .btn-danger:hover { filter: brightness(1.1); }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 @media (max-width: 480px) {
   .btn {
@@ -861,129 +856,46 @@
   height: 32px;
 }
 
-/* =========================================
-   AJUSTES PARA MÓVILES (Agregado al final)
-   ========================================= */
-
 @media (max-width: 768px) {
-  /* 1. Arreglar el Header: Mantener botón Atrás a la izquierda y acciones a la derecha */
-  .page-header {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 15px !important;
-  }
-  
-  .header-left {
-    flex: 1 1 100% !important; /* Que el nombre y botón de atrás ocupen toda la línea superior */
-    justify-content: flex-start !important;
-  }
-
-  .header-actions {
-    width: 100% !important; 
-    justify-content: flex-end !important; /* Empuja el botón del menú a la derecha */
-  }
-
-  /* 2. Arreglar el Grid: Pasar de 2 columnas a 1 sola */
-  .details-grid {
-    grid-template-columns: 1fr !important;
-    gap: 16px !important;
-  }
-
-  /* 3. Aumentar Textos Pequeños */
   .section-title {
-    font-size: 1.4rem !important;
+    font-size: 1.6rem;
   }
 
-  .info-group .label {
-    font-size: 13px !important; /* Letras grises más legibles */
+  .profile-name {
+    font-size: 1.8rem;
   }
 
-  .info-group .value {
-    font-size: 16px !important; /* Datos del usuario más grandes */
-  }
-
-  .plan-name {
-    font-size: 1.25rem !important;
-  }
-
-  /* 4. Reducir márgenes muertos para aprovechar la pantalla */
-  .page-container {
-    padding: 15px !important;
-  }
-
-  .info-card {
-    padding: 15px !important;
-  }
-
-  /* 5. Evitar que la tabla rompa la pantalla (Scroll horizontal) */
-  .history-card .card-body,
-  .table-responsive {
-    overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
-  }
-
-  .history-table {
-    min-width: 500px !important; /* Fuerza a que aparezca la barra de scroll */
+  .profile-actions .btn {
+    width: 100%;
   }
 }
 
 @media (max-width: 480px) {
-
-  body {
-    font-size: 16px; /* base correcta */
+  .section-title {
+    font-size: 1.4rem;
   }
 
   .profile-name {
     font-size: 1.6rem;
   }
 
-  .profile-id {
-    font-size: 1.1rem;
-  }
-
-  .detail-label {
-    font-size: 0.9rem;
-  }
-
-  .detail-value {
-    font-size: 1rem;
-  }
-
-  .badge,
-  .role-badge {
-    font-size: 0.8rem;
-  }
-
-  .section-title {
-    font-size: 1.3rem;
-  }
-
-  .data-table td {
-    font-size: 0.9rem;
-  }
-
-  .data-table th {
-    font-size: 0.75rem;
-  }
-
-    .page-container {
-    padding: 16px;
-  }
-
-  .profile-card {
-    padding: 20px 16px;
-  }
-
-  .profile-details {
-    gap: 14px;
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    font-size: 1.8rem;
   }
 
   .detail-row {
     flex-direction: column;
     align-items: flex-start;
+    gap: 4px;
+  }
+
+  .detail-label {
+    font-size: 0.8rem;
   }
 
   .detail-value {
-    margin-top: 2px;
+    font-size: 1rem;
   }
 }

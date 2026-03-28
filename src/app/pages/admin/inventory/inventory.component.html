@@ -15,17 +15,17 @@
       </select>
 
       <div class="filter-range" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; height: 36px;">
-        <span style="font-size: 0.8rem; color: rgba(238,238,238,0.5); padding: 0 8px; font-weight: 600;">Stock</span>
-        <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 60px; background: transparent; padding: 0 4px;" placeholder="Mín" [ngModel]="filterMinStock()" (ngModelChange)="filterMinStock.set($event); onFilterChange()" />
-        <span style="color: rgba(255,255,255,0.2);">|</span>
-        <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 60px; background: transparent; padding: 0 4px;" placeholder="Máx" [ngModel]="filterMaxStock()" (ngModelChange)="filterMaxStock.set($event); onFilterChange()" />
+        <span style="font-size: 0.8rem; color: rgba(238,238,238,0.5); padding: 0 8px; font-weight: 600; white-space: nowrap;">Stock</span>
+        <input type="number" class="limit-select filter-range__input" style="border: none; border-radius: 0; width: 60px; background: transparent; padding: 0 4px;" placeholder="Mín" [ngModel]="filterMinStock()" (ngModelChange)="filterMinStock.set($event); onFilterChange()" />
+        <span style="color: rgba(255,255,255,0.2); flex-shrink: 0;">|</span>
+        <input type="number" class="limit-select filter-range__input" style="border: none; border-radius: 0; width: 60px; background: transparent; padding: 0 4px;" placeholder="Máx" [ngModel]="filterMaxStock()" (ngModelChange)="filterMaxStock.set($event); onFilterChange()" />
       </div>
 
       <div class="filter-range" style="display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 8px; overflow: hidden; height: 36px;">
-        <span style="font-size: 0.8rem; color: rgba(238,238,238,0.5); padding: 0 8px; font-weight: 600;">Precio</span>
-        <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 65px; background: transparent; padding: 0 4px;" placeholder="Mín" [ngModel]="filterMinPrice()" (ngModelChange)="filterMinPrice.set($event); onFilterChange()" />
-        <span style="color: rgba(255,255,255,0.2);">|</span>
-        <input type="number" class="limit-select" style="border: none; border-radius: 0; width: 65px; background: transparent; padding: 0 4px;" placeholder="Máx" [ngModel]="filterMaxPrice()" (ngModelChange)="filterMaxPrice.set($event); onFilterChange()" />
+        <span style="font-size: 0.8rem; color: rgba(238,238,238,0.5); padding: 0 8px; font-weight: 600; white-space: nowrap;">Precio</span>
+        <input type="number" class="limit-select filter-range__input" style="border: none; border-radius: 0; width: 65px; background: transparent; padding: 0 4px;" placeholder="Mín" [ngModel]="filterMinPrice()" (ngModelChange)="filterMinPrice.set($event); onFilterChange()" />
+        <span style="color: rgba(255,255,255,0.2); flex-shrink: 0;">|</span>
+        <input type="number" class="limit-select filter-range__input" style="border: none; border-radius: 0; width: 65px; background: transparent; padding: 0 4px;" placeholder="Máx" [ngModel]="filterMaxPrice()" (ngModelChange)="filterMaxPrice.set($event); onFilterChange()" />
       </div>
     </div>
 

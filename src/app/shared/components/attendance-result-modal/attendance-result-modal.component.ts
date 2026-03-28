@@ -14,6 +14,10 @@ export class AttendanceResultModalComponent {
   @Output() closeModal = new EventEmitter<void>();
   @Output() viewProfile = new EventEmitter<number>();
 
+  get isSuccess(): boolean {
+    return !!this.attendance.attendance_id;
+  }
+
 
   formatDate(dateStr?: string): string {
     if (!dateStr) return '—';

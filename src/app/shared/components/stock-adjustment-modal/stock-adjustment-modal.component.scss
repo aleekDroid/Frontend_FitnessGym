@@ -1,0 +1,103 @@
+/* ── Custom Number Input ── */
+.number-control {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: all 0.2s;
+  height: 44px;
+
+  &:focus-within {
+    border-color: #d84040;
+    box-shadow: 0 0 0 4px rgba(216, 64, 64, 0.1);
+  }
+
+  &.is-invalid {
+    border-color: #f87171;
+    &:focus-within { box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.1); }
+  }
+
+  .form-control {
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+    height: 100%;
+    text-align: center;
+    color: #fff;
+    
+    &:focus { box-shadow: none; border: none; }
+  }
+
+  .btn-step {
+    background: transparent;
+    color: rgba(255, 255, 255, 0.6);
+    border: none;
+    width: 44px;
+    height: 100%;
+    font-size: 1.2rem;
+    font-weight: 400;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    &:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    &:active {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}
+
+/* Hide default browser spinners */
+input[type=number].no-spinners::-webkit-inner-spin-button, 
+input[type=number].no-spinners::-webkit-outer-spin-button { 
+  -webkit-appearance: none; 
+  margin: 0; 
+}
+input[type=number].no-spinners {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+/* Close button for modals */
+.btn-close {
+  background: transparent;
+  color: rgba(238, 238, 238, 0.5);
+  border: none;
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+textarea.form-control {
+  resize: vertical;
+  max-height: 200px;
+}
+
+@media (max-width: 480px) {
+  .modal-footer {
+    flex-direction: column-reverse;
+    gap: 12px;
+    
+    .btn { width: 100%; }
+  }
+}

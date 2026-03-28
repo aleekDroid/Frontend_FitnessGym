@@ -1,0 +1,85 @@
+.md-hero {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+
+  &--sale       { background: rgba(59,130,246,0.08); }
+  &--restock    { background: rgba(74,222,128,0.08); }
+  &--adjustment { background: rgba(250,204,21,0.08); }
+
+  &__icon {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  &--sale .md-hero__icon       { background: rgba(59,130,246,0.15); color: #3b82f6; }
+  &--restock .md-hero__icon    { background: rgba(74,222,128,0.15); color: #4ade80; }
+  &--adjustment .md-hero__icon { background: rgba(250,204,21,0.15); color: #facc15; }
+
+  &__info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+  &__type { font-weight: 700; font-size: 1rem; color: var(--light); }
+  &__date { font-size: 0.8rem; color: rgba(238,238,238,0.4); }
+
+  &__qty {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 800;
+    flex-shrink: 0;
+    padding: 4px 12px;
+    border-radius: 8px;
+
+    &.qty-positive { color: #4ade80; background: rgba(74,222,128,0.1); }
+    &.qty-negative { color: #3b82f6; background: rgba(59,130,246,0.1); }
+  }
+}
+
+.md-rows {
+  display: flex; flex-direction: column; gap: 0;
+}
+
+.md-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 11px 0;
+
+  &__label { color: rgba(238,238,238,0.45); font-size: 0.85rem; font-weight: 500; }
+  &__value { color: var(--light); font-weight: 600; font-size: 0.92rem; text-align: right; max-width: 60%; }
+  &__badge { display: inline-flex; align-items: center; gap: 6px; }
+  &__total { font-family: var(--font-display); font-size: 1.3rem; font-weight: 800; color: var(--accent); }
+
+  &--total {
+    padding-top: 14px;
+    .md-row__label { font-size: 0.95rem; font-weight: 600; color: rgba(238,238,238,0.6); }
+  }
+}
+
+.md-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  margin: 4px 0;
+}
+
+.btn-close {
+  background: transparent;
+  color: rgba(238, 238, 238, 0.5);
+  border: none;
+  font-size: 1.2rem;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+  }
+}

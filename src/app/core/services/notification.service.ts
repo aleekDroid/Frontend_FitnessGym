@@ -11,16 +11,33 @@ export interface AppNotification {
 
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
-  private _counter = 0;
+  private readonly activeNotification = signal<AppNotification | null>(null);
+  private timeoutId: any = null;
+
+  get currentNotification() {
+    return this.activeNotification.asReadonly();
+  }
+
+  show(message: string, type: NotificationType = 'success', durationMs = 4000): void {
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+    }
+
+    this.activeNotification.set({ id: Date.now(), type, message });
+
+    if (durationMs > 0) {
+      this.timeoutId = setTimeout(() => this.dismiss(), durationMs);
+    }
+  }
+
+  dismiss(): void {
+    this.activeNotification.set(null);
+    if (this.timeoutId) {
+      clearTimeout(this.timeoutId);
+      this.timeoutId = null;
+    }
+  }
+
+  /** @deprecated Use currentNotification and dismiss() */
   readonly notifications = signal<AppNotification[]>([]);
-
-  show(message: string, type: NotificationType = 'error', durationMs = 4000): void {
-    const id = ++this._counter;
-    this.notifications.update(list => [...list, { id, type, message }]);
-    setTimeout(() => this.dismiss(id), durationMs);
-  }
-
-  dismiss(id: number): void {
-    this.notifications.update(list => list.filter(n => n.id !== id));
-  }
 }

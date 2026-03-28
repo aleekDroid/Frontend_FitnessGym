@@ -152,16 +152,30 @@ export class InventoryComponent implements OnInit {
       // Exclude stock from the update payload
       const { stock, ...updatePayload } = val;
       const payload = { id: this.editProduct()!.id, ...updatePayload };
-      this.productsService.update(payload).subscribe(() => { 
-        this.saving.set(false); 
-        this.closeModal(); 
-        this.loadData(); 
+      this.productsService.update(payload).subscribe({
+        next: () => { 
+          this.saving.set(false); 
+          this.notificationService.show('Producto actualizado correctamente', 'success');
+          this.closeModal(); 
+          this.loadData(); 
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.notificationService.show(err.error?.message || 'Error al actualizar el producto', 'error');
+        }
       });
     } else {
-      this.productsService.create(val as CreateProductDto).subscribe(() => { 
-        this.saving.set(false); 
-        this.closeModal(); 
-        this.loadData(); 
+      this.productsService.create(val as CreateProductDto).subscribe({
+        next: () => { 
+          this.saving.set(false); 
+          this.notificationService.show('Producto registrado correctamente', 'success');
+          this.closeModal(); 
+          this.loadData(); 
+        },
+        error: (err) => {
+          this.saving.set(false);
+          this.notificationService.show(err.error?.message || 'Error al registrar el producto', 'error');
+        }
       });
     }
   }
@@ -170,9 +184,21 @@ export class InventoryComponent implements OnInit {
   cancelToggleStatus(): void { this.showStatusConfirm.set(false); this.statusTarget.set(null); }
   doToggleStatus(): void {
     if (!this.statusTarget()) return;
+    this.togglingStatus.set(true);
     const p = this.statusTarget()!;
     const newStatus = p.status === 'active' ? 'inactive' : 'active';
-    this.productsService.toggleStatus(p.id, newStatus).subscribe(() => { this.cancelToggleStatus(); this.loadData(); });
+    this.productsService.toggleStatus(p.id, newStatus).subscribe({
+      next: () => { 
+        this.togglingStatus.set(false);
+        this.notificationService.show(`Producto ${newStatus === 'active' ? 'activado' : 'desactivado'} correctamente`, 'success');
+        this.cancelToggleStatus(); 
+        this.loadData(); 
+      },
+      error: (err) => {
+        this.togglingStatus.set(false);
+        this.notificationService.show(err.error?.message || 'Error al cambiar el estado del producto', 'error');
+      }
+    });
   }
 
   get f() { return this.productForm.controls; }

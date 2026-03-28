@@ -35,23 +35,31 @@
 
         <div class="form-group">
           <label>Precio ($)</label>
-          <input 
-            type="number" 
-            formControlName="price" 
-            class="form-control" 
-            placeholder="0.00" 
-            min="0" />
+          <div class="number-control" [class.is-invalid]="f['price'].touched && f['price'].invalid">
+            <button type="button" class="btn-step" (click)="stepValue('price', -1)">−</button>
+            <input 
+              type="number" 
+              formControlName="price" 
+              class="form-control text-center no-spinners" 
+              placeholder="0" 
+              min="0" />
+            <button type="button" class="btn-step" (click)="stepValue('price', 1)">+</button>
+          </div>
         </div>
 
         @if (!product) {
-          <div class="form-group">
+          <div class="form-group" style="grid-column:1/-1">
             <label>Existencias iniciales (pzs)</label>
-            <input 
-              type="number" 
-              formControlName="stock" 
-              class="form-control" 
-              placeholder="0" 
-              min="0" />
+            <div class="number-control" [class.is-invalid]="f['stock'].touched && f['stock'].invalid">
+              <button type="button" class="btn-step" (click)="stepValue('stock', -1)">−</button>
+              <input 
+                type="number" 
+                formControlName="stock" 
+                class="form-control text-center no-spinners" 
+                placeholder="0" 
+                min="0" />
+              <button type="button" class="btn-step" (click)="stepValue('stock', 1)">+</button>
+            </div>
           </div>
         }
 
@@ -67,7 +75,7 @@
 
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-success" [disabled]="isLoading">
+        <button type="submit" class="btn btn-primary" [disabled]="isLoading">
           @if (isLoading) { 
             <span class="spinner-sm"></span> Guardando... 
           } @else { 

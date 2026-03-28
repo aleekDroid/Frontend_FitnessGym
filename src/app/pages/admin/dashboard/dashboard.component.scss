@@ -22,9 +22,15 @@
   label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(238,238,238,0.45); }
 }
 .date-input {
-  padding: 9px 12px;
+  height: 42px;
+  padding: 0 12px;
   min-width: 150px;
   color-scheme: dark;
+}
+
+.date-filter .btn-sm {
+  height: 42px;
+  padding: 0 20px;
 }
 
 .btn-outline {
@@ -279,6 +285,48 @@
 }
 
 @media (max-width: 600px) {
+  .dash-header { gap: 16px; margin-bottom: 24px; }
+  
+  .date-filter {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    width: 100%;
+    align-items: stretch;
+    
+    .date-input-group { grid-column: span 1; }
+    .btn { grid-column: span 1; font-size: 0.85rem; padding: 0 10px; }
+    .btn-outline { grid-column: span 2; }
+  }
+
   .bar-chart { padding: 0 8px; }
-  .kpi-grid { grid-template-columns: 1fr 1fr; }
+  
+  .kpi-grid { 
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px;
+  }
+  
+  .kpi-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 16px 10px;
+    gap: 8px;
+    
+    .kpi-icon {
+      width: 40px;
+      height: 40px;
+      svg { width: 20px; height: 20px; }
+    }
+    
+    .kpi-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .kpi-label { font-size: 0.68rem; margin-bottom: 4px; }
+    .kpi-value { font-size: 1.4rem; margin-bottom: 2px; }
+    .kpi-sub { font-size: 0.65rem; line-height: 1.2; }
+  }
 }

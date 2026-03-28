@@ -2,7 +2,7 @@
 
 <div class="page-container">
   <div class="toolbar">
-    <h1 class="section-title" style="margin-bottom: 0">Membresías y Precios</h1>
+    <h1 class="section-title">Membresías y Precios</h1>
     <button
       class="btn btn-primary"
       style="margin-left: auto"
@@ -248,43 +248,48 @@
         <div class="form-row">
           <div class="form-group">
             <label>Precio ($)</label>
-            <input
-              type="number"
-              formControlName="price"
-              class="form-control"
-              placeholder="0"
-              min="1"
-              [class.is-invalid]="f['price'].touched && f['price'].errors"
-            />
+            <div class="number-control" [class.is-invalid]="f['price'].touched && f['price'].errors">
+              <button type="button" class="btn-step" (click)="stepValue('price', -1)">−</button>
+              <input
+                type="number"
+                formControlName="price"
+                class="form-control text-center no-spinners"
+                placeholder="0"
+                min="0"
+              />
+              <button type="button" class="btn-step" (click)="stepValue('price', 1)">+</button>
+            </div>
             @if (f["price"].touched && f["price"].errors?.["required"]) {
               <span class="field-error">Requerido</span>
             }
           </div>
           <div class="form-group">
             <label>Duración (días)</label>
-            <select
-              formControlName="duration"
-              class="form-control"
-              [class.is-invalid]="f['duration'].touched && f['duration'].errors"
-            >
-              <option value="30">30 días (1 mes)</option>
-              <option value="180">180 días (6 meses)</option>
-              <option value="365">365 días (1 año)</option>
-            </select>
+            <div class="number-control" [class.is-invalid]="f['duration'].touched && f['duration'].errors">
+              <button type="button" class="btn-step" (click)="stepValue('duration', -1)">−</button>
+              <input
+                type="number"
+                formControlName="duration"
+                class="form-control text-center no-spinners"
+                placeholder="Ej. 30"
+                min="1"
+              />
+              <button type="button" class="btn-step" (click)="stepValue('duration', 1)">+</button>
+            </div>
           </div>
           <div class="form-group">
             <label>Personas incluidas</label>
-            <select
-              formControlName="person_per_suscription"
-              class="form-control"
-              [class.is-invalid]="
-                f['person_per_suscription'].touched &&
-                f['person_per_suscription'].errors
-              "
-            >
-              <option value="1">1 persona</option>
-              <option value="2">2 personas</option>
-            </select>
+            <div class="number-control" [class.is-invalid]="f['person_per_suscription'].touched && f['person_per_suscription'].errors">
+              <button type="button" class="btn-step" (click)="stepValue('person_per_suscription', -1)">−</button>
+              <input
+                type="number"
+                formControlName="person_per_suscription"
+                class="form-control text-center no-spinners"
+                placeholder="Ej. 1"
+                min="1"
+              />
+              <button type="button" class="btn-step" (click)="stepValue('person_per_suscription', 1)">+</button>
+            </div>
           </div>
         </div>
 
@@ -329,36 +334,15 @@
 
 <!-- ══ Delete confirm ══ -->
 @if (showDeleteConfirm()) {
-  <div class="modal-overlay" (click)="cancelDelete()">
-    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
-      <div class="delete-confirm">
-        <div class="delete-icon">
-          <svg
-            width="32"
-            height="32"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.8"
-          >
-            <line x1="12" y1="1" x2="12" y2="23" />
-            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
-          </svg>
-        </div>
-        <h3>¿Eliminar membresía?</h3>
-        <p>
-          Se eliminará <strong>{{ deleteTarget()?.name }}</strong
-          >. Los usuarios activos no serán afectados.
-        </p>
-        <div class="modal-footer">
-          <button class="btn btn-secondary" (click)="cancelDelete()">
-            Cancelar
-          </button>
-          <button class="btn btn-danger" (click)="doDelete()">
-            Sí, eliminar
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <app-status-confirm-modal
+    [entityType]="'membresía'"
+    [entityName]="deleteTarget()?.name || ''"
+    [isActive]="true"
+    [isLoading]="saving()"
+    warningMessage="Los usuarios activos no serán afectados."
+    (closeEvent)="cancelDelete()"
+    (confirmEvent)="doDelete()">
+  </app-status-confirm-modal>
 }
+
+<app-toast></app-toast>

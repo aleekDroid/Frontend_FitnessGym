@@ -1,0 +1,69 @@
+<div class="modal-overlay" (click)="closeModal()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>Ajustar Inventario</h2>
+      <button class="btn-close" (click)="closeModal()">✕</button>
+    </div>
+
+    <form [formGroup]="stockForm" (ngSubmit)="onSubmit()">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Cantidad</label>
+          <div class="number-control" [class.is-invalid]="stockForm.controls['quantity'].touched && stockForm.controls['quantity'].invalid">
+            <button type="button" class="btn-step" (click)="stepStockValue(-1)">−</button>
+            <input
+              type="number"
+              formControlName="quantity"
+              class="form-control text-center no-spinners"
+              placeholder="Ej. 10 o -5"
+            />
+            <button type="button" class="btn-step" (click)="stepStockValue(1)">+</button>
+          </div>
+          @if (stockForm.controls['quantity'].invalid &&
+          stockForm.controls['quantity'].touched) {
+          <small class="field-error">Cantidad requerida</small>
+          }
+        </div>
+        <div class="form-group">
+          <label>Tipo de Movimiento</label>
+          <select formControlName="type" class="form-control">
+            <option value="restock">Reabastecimiento (+)</option>
+            <option value="damage">Merma / Daño (-)</option>
+            <option value="return">Devolución (+)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Motivo del ajuste</label>
+        <textarea
+          formControlName="reason"
+          class="form-control"
+          rows="2"
+          placeholder="Ej. Llegó el pedido del proveedor..."
+        ></textarea>
+        @if (stockForm.controls['reason'].invalid &&
+        stockForm.controls['reason'].touched) {
+        <small class="field-error">El motivo es obligatorio.</small>
+        }
+      </div>
+
+      <div class="modal-footer" style="justify-content: center;">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeModal()"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          class="btn btn-success"
+          [disabled]="isSaving"
+        >
+          @if (isSaving) { <span class="spinner-sm"></span> Guardando... }
+          @else { Registrar Movimiento }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

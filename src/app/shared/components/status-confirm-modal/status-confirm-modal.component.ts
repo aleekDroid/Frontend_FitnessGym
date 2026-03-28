@@ -6,7 +6,8 @@ import { CommonModule } from '@angular/common';
   selector: 'app-status-confirm-modal',
   standalone: true,
   imports: [CommonModule],
-  templateUrl: './status-confirm-modal.component.html'
+  templateUrl: './status-confirm-modal.component.html',
+  styleUrl: './status-confirm-modal.component.scss'
 })
 export class StatusConfirmModalComponent {
   @Input() entityType: string = 'elemento'; 

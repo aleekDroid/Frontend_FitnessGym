@@ -404,5 +404,30 @@
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .modal-box--lg { max-width: 95vw; padding: 16px; }
-  .cart-header, .cart-item { grid-template-columns: 1.5fr 1fr 1.2fr 1fr 32px; font-size: 0.82rem; }
+
+  /* Hide price column on mobile to make room for Quantity & Subtotal */
+  .cart-header, .cart-item { 
+    grid-template-columns: 1fr 85px 75px 32px; 
+    gap: 6px;
+    padding: 10px 8px;
+  }
+  
+  .cart-col--price { display: none; }
+
+  /* Compact quantity controls */
+  .qty-btn { width: 24px; height: 24px; font-size: 0.9rem; }
+  .qty-input { width: 26px; font-size: 0.8rem; }
+  .qty-control { border-radius: 6px; }
+
+  /* Stack actions so text doesn't wrap awkwardly */
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+
+    .btn { 
+      width: 100%; 
+      justify-content: center; 
+      padding: 12px;
+    }
+  }
 }

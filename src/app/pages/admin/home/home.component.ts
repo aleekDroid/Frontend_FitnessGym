@@ -71,62 +71,62 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
 
-  ngOnInit(): void {
-    const socket = this.socketService.connect('attendances', {
-      page: this.currentPage(),
-      limit: this.limit(),
-      date: this.filterDate(),
-      search: this.searchQuery() || undefined,
-      userId: this.filterUserId() || undefined
-    });
-
-
-    socket.on('initial_data', (payload: any) => {
-      this.attendances.set(payload.data || []);
-      if (payload.meta) {
-        this.totalItems.set(payload.meta.total || 0);
-        this.totalPages.set(payload.meta.lastPage || Math.ceil((payload.meta.total || 0) / this.limit()));
-        this.currentPage.set(payload.meta.page || 1);
-      }
-      this.loading.set(false);
-    });
-
-    socket.on('new_attendance', (newAtt: WsAttendance) => {
-      // Add new attendance to the top (if we are on the first page and filter matches, etc.)
-      // Typically we just unshift if search is empty or matches roughly. 
-      // A simple unshift works for a live dashboard.
-      this.attendances.update((list: WsAttendance[]) => {
-        const newList = [newAtt, ...list];
-        if (newList.length > this.limit()) {
-          newList.pop();
-        }
-        return newList;
+  async ngOnInit(): Promise<void> {
+    try {
+      const socket = await this.socketService.connect('attendances', {
+        page: this.currentPage(),
+        limit: this.limit(),
+        date: this.filterDate(),
+        search: this.searchQuery() || undefined,
+        userId: this.filterUserId() || undefined
       });
-      this.totalItems.update((t: number) => t + 1);
 
-    });
+      socket.on('initial_data', (payload: any) => {
+        this.attendances.set(payload.data || []);
+        if (payload.meta) {
+          this.totalItems.set(payload.meta.total || 0);
+          this.totalPages.set(payload.meta.lastPage || Math.ceil((payload.meta.total || 0) / this.limit()));
+          this.currentPage.set(payload.meta.page || 1);
+        }
+        this.loading.set(false);
+      });
 
-    this.searchSub = this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.searchQuery.set(query);
-      this.currentPage.set(1);
+      socket.on('new_attendance', (newAtt: WsAttendance) => {
+        // Add new attendance to the top
+        this.attendances.update((list: WsAttendance[]) => {
+          const newList = [newAtt, ...list];
+          if (newList.length > this.limit()) {
+            newList.pop();
+          }
+          return newList;
+        });
+        this.totalItems.update((t: number) => t + 1);
+      });
+
+      // In case of reconnection, request data again
+      socket.on('connect', () => {
+        this.updateFilters();
+      });
+
+      this.searchSub = this.searchSubject.pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      ).subscribe(query => {
+        this.searchQuery.set(query);
+        this.currentPage.set(1);
+        this.updateFilters();
+      });
+
+      // Forced initial load
       this.updateFilters();
-    });
-
-    // Forced initial load: if the socket was already connected, 
-    // the server connection event might have already fired.
-    // We emit update_filters to get the fresh data.
-    this.updateFilters();
-
-    // In case of reconnection, we should also request data again
-    socket.on('connect', () => {
-      this.updateFilters();
-    });
+    } catch (error) {
+      console.error('HomeComponent: Failed to connect to socket', error);
+      this.loading.set(false);
+    }
   }
 
   ngOnDestroy(): void {
+    // getSocket is still synchronous, it just returns the map entry
     const socket = this.socketService.getSocket('attendances');
     if (socket) {
       socket.off('initial_data');

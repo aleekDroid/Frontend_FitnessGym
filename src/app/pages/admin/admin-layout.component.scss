@@ -161,24 +161,34 @@
 /* Hamburger */
 .hamburger {
   display: none;
-  flex-direction: column;
-  gap: 5px;
   background: none;
   border: none;
   cursor: pointer;
   padding: 4px;
   margin-left: auto;
-  span {
+  color: var(--light);
+  transition: all 0.3s;
+
+  svg {
     display: block;
-    width: 22px;
-    height: 2px;
-    background: var(--light);
-    border-radius: 2px;
-    transition: all 0.3s;
+    overflow: visible;
+    line {
+      transition: transform 0.3s ease, opacity 0.2s ease;
+      transform-origin: 12px 12px;
+    }
   }
-  &.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
-  &.open span:nth-child(2) { opacity: 0; }
-  &.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+  /* Hamburger State (Closed) */
+  .line-1 { transform: translateY(-7px); }
+  .line-2 { transform: translateY(0); opacity: 1; }
+  .line-3 { transform: translateY(7px); }
+
+  /* X State (Open) */
+  &.open {
+    .line-1 { transform: translateY(0) rotate(45deg) scale(1.2); }
+    .line-2 { transform: translateY(0) scaleX(0); opacity: 0; }
+    .line-3 { transform: translateY(0) rotate(-45deg) scale(1.2); }
+  }
 }
 
 .mobile-admin-nav {
