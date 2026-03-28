@@ -115,6 +115,9 @@ export class RoutineEditModalComponent implements OnChanges {
   // ─── Acciones de ejercicios ───
 
   addExercise(dayIndex: number): void {
+    const day = this.editableDays()[dayIndex];
+    if (!day || (day.exercises ?? []).length >= 10) return;
+    
     const blank: Exercise = { name: '', sets: 3, reps: 10, machine: '', note: '' };
     this.editableDays.update((days) =>
       days.map((d, i) =>
@@ -209,5 +212,25 @@ export class RoutineEditModalComponent implements OnChanges {
 
   trackByIndex(index: number): number {
     return index;
+  }
+
+  stepExerciseValue(dayIndex: number, exIndex: number, field: 'sets' | 'reps', step: number): void {
+    const day = this.editableDays()[dayIndex];
+    if (!day || !day.exercises) return;
+    const ex = day.exercises[exIndex];
+    if (!ex) return;
+
+    let newVal = (Number(ex[field]) || 0) + step;
+    
+    // Bounds
+    if (field === 'sets') {
+      if (newVal < 1) newVal = 1;
+      if (newVal > 20) newVal = 20;
+    } else {
+      if (newVal < 1) newVal = 1;
+      if (newVal > 100) newVal = 100;
+    }
+
+    this.updateExercise(dayIndex, exIndex, field, newVal);
   }
 }

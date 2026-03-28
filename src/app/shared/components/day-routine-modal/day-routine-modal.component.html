@@ -1,0 +1,81 @@
+@if (visible && day) {
+  <div class="modal-overlay" (click)="onClose()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      
+      <!-- ── Header ── -->
+      <div class="modal-header">
+        <div class="header-content">
+          <div class="header-left">
+            <span class="day-badge">{{ getDayLabel(day.day) }}</span>
+            <h2 class="modal-title">{{ day.description || 'Entrenamiento del día' }}</h2>
+          </div>
+          <button class="btn-close" (click)="onClose()" aria-label="Cerrar modal">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Body ── -->
+      <div class="modal-body">
+        @if (day.isRestDay) {
+          <div class="rest-view">
+            <div class="rest-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+              </svg>
+            </div>
+            <h3>Hoy toca descansar</h3>
+            <p>El descanso es parte fundamental de tu progreso. ¡Disfruta de tu día!</p>
+          </div>
+        } @else {
+          <div class="exercises-list">
+            @for (ex of day.exercises; track $index) {
+              <div class="exercise-card">
+                <div class="card-header">
+                  <span class="ex-number">#{{ $index + 1 }}</span>
+                  <h4 class="ex-name">{{ ex.name }}</h4>
+                </div>
+                
+                <div class="ex-details-grid">
+                  <div class="detail-item">
+                    <span class="detail-label">Series</span>
+                    <span class="detail-value">{{ ex.sets }}</span>
+                  </div>
+                  <div class="detail-item">
+                    <span class="detail-label">Reps</span>
+                    <span class="detail-value">{{ ex.reps }}</span>
+                  </div>
+                  @if (ex.machine) {
+                    <div class="detail-item span-2">
+                      <span class="detail-label">Máquina / Equipo</span>
+                      <span class="detail-value">{{ ex.machine }}</span>
+                    </div>
+                  }
+                </div>
+
+                @if (ex.note) {
+                  <div class="ex-note">
+                    <span class="note-label">Nota:</span>
+                    <p>{{ ex.note }}</p>
+                  </div>
+                }
+              </div>
+            } @empty {
+              <div class="empty-state">
+                <p>No hay ejercicios registrados para este día.</p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- ── Footer ── -->
+      <div class="modal-footer">
+        <button class="btn-primary" (click)="onClose()">Entendido</button>
+      </div>
+    </div>
+  </div>
+}

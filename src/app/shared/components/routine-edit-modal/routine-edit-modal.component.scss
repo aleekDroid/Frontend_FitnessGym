@@ -349,7 +349,7 @@
 /* Grids de campos */
 .ex-grid-top {
   display: grid;
-  grid-template-columns: 1fr 1fr 64px 64px;
+  grid-template-columns: 1fr 1fr 100px 100px;
   gap: 8px;
   margin-bottom: 8px;
 }
@@ -390,8 +390,53 @@
   &.center { text-align: center; }
 
   /* Ocultar flechas del input type number */
-  &[type='number']::-webkit-inner-spin-button,
-  &[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; }
+  &.no-spinners::-webkit-inner-spin-button,
+  &.no-spinners::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  &[type='number'] { -moz-appearance: textfield; }
+}
+
+/* Custom Number Controls */
+.number-control {
+  display: flex;
+  align-items: stretch;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 6px;
+  overflow: hidden;
+  height: 32px;
+
+  .field-input {
+    border: none;
+    background: transparent;
+    text-align: center;
+    padding: 0;
+    width: 100%;
+    font-weight: 600;
+    color: #fff;
+    &:focus { border: none; box-shadow: none; }
+  }
+
+  .ctrl-btn {
+    width: 32px;
+    background: rgba(255, 255, 255, 0.03);
+    border: none;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    user-select: none;
+
+    &:hover {
+      background: rgba(216, 64, 64, 0.15);
+      color: var(--accent);
+    }
+    &:active {
+      background: rgba(216, 64, 64, 0.3);
+    }
+  }
 }
 
 .btn-add-ex {

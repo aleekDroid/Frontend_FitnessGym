@@ -325,6 +325,7 @@
               [class.rest]="day.isRestDay"
               [class.attended]="isAttendedThisWeek(day.day)"
               [class.today]="isTodayCard(day.day)"
+              (click)="openDayRoutine(day)"
             >
               <div class="day-name">{{ getDayLabel(day.day) }}</div>
               <div class="status-indicator"></div>
@@ -440,6 +441,12 @@
       (saved)="onRoutineSaved($event)"
       (closed)="onRoutineModalClosed()">
     </app-routine-edit-modal>
+
+    <app-day-routine-modal
+      [visible]="showDayRoutineModal()"
+      [day]="selectedDayForView()"
+      (closed)="closeDayRoutine()"
+    />
 
     <!-- ══ QR MODAL ══ -->
     @if (showQrModal()) {

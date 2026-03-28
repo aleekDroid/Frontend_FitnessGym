@@ -8,6 +8,7 @@ import {
   RoutineDay,
 } from "../../../core/models/member-dashboard.model";
 import { RoutineEditModalComponent } from "../../../shared/components/routine-edit-modal/routine-edit-modal.component";
+import { DayRoutineModalComponent } from "../../../shared/components/day-routine-modal/day-routine-modal.component";
 
 const QUOTES = [
   "El dolor que sientes hoy será la fuerza que sientes mañana.",
@@ -44,7 +45,7 @@ const ENG_TO_SPA: Record<string, string> = {
 @Component({
   selector: "app-member-dashboard",
   standalone: true,
-  imports: [CommonModule, RoutineEditModalComponent],
+  imports: [CommonModule, RoutineEditModalComponent, DayRoutineModalComponent],
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
 })
@@ -62,6 +63,8 @@ export class MemberDashboardComponent implements OnInit {
   showRoutineModal = signal(false);
   modalLoading = signal(false);
   fullRoutine = signal<RoutineDay[]>([]);
+  showDayRoutineModal = signal(false);
+  selectedDayForView = signal<RoutineDay | null>(null);
 
   // QR Modal state
   showQrModal = signal(false);
@@ -304,6 +307,18 @@ export class MemberDashboardComponent implements OnInit {
 
   onRoutineModalClosed(): void {
     this.showRoutineModal.set(false);
+  }
+
+  // ─── Day Routine View methods ───
+
+  openDayRoutine(day: RoutineDay): void {
+    this.selectedDayForView.set(day);
+    this.showDayRoutineModal.set(true);
+  }
+
+  closeDayRoutine(): void {
+    this.showDayRoutineModal.set(false);
+    this.selectedDayForView.set(null);
   }
 
   // ─── QR Modal methods ───
