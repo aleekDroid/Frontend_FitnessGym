@@ -178,8 +178,8 @@
                 <button 
                   class="btn-add-ex" 
                   (click)="addExercise(activeDay())"
-                  [disabled]="(day.exercises ?? []).length >= 10">
-                  @if ((day.exercises ?? []).length >= 10) {
+                  [disabled]="day.exercises.length >= 10">
+                  @if (day.exercises.length >= 10) {
                     Límite de 10 ejercicios alcanzado
                   } @else {
                     + Agregar ejercicio

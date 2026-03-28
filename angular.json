@@ -22,7 +22,16 @@
               { "glob": "**/*", "input": "public" }
             ],
             "styles": ["src/styles.scss"],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "core-js",
+              "canvg",
+              "raf",
+              "rgbcolor",
+              "sweetalert2",
+              "html2canvas",
+              "jspdf"
+            ]
           },
           "configurations": {
             "production": {
