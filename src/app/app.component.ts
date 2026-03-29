@@ -1,7 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { ToastComponent } from './shared/components/toast/toast.component';
+import { inject as injectAnalytics } from '@vercel/analytics';
+import { injectSpeedInsights } from '@vercel/speed-insights';
 
 @Component({
   selector: 'app-root',
@@ -13,7 +15,12 @@ import { ToastComponent } from './shared/components/toast/toast.component';
   `,
   styles: [``]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   constructor() {}
+
+  ngOnInit() {
+    injectAnalytics();
+    injectSpeedInsights();
+  }
 }
 

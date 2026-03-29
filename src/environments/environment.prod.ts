@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.fitnessgymqro.com/api' // URL de tu backend en producción
+  apiUrl: '/api' // Redirige a través de Nginx en producción para ocultar la URL real
 };
