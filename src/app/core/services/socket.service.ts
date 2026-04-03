@@ -35,7 +35,7 @@ export class SocketService {
       }
     }
 
-    const baseUrl = environment.production ? '' : 'http://localhost:3000';
+    const baseUrl = environment.production ? '' : 'https://backend-fitness-gym.vercel.app/api';
     const url = `${baseUrl}/${namespace}`;
 
     const socket = io(url, {

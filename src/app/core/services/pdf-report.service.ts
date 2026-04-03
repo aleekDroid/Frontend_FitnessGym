@@ -1,3 +1,4 @@
+// src/app/core/services/pdf-report.service.ts
 import { Injectable } from '@angular/core';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -230,6 +231,11 @@ export class PdfReportService {
     });
 
     currentY = (doc as any).lastAutoTable.finalY + 12;
+
+    if (currentY > ph - 25) {
+      doc.addPage();
+      currentY = 20;
+    }
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
