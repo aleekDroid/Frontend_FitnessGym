@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Product } from '../../../core/models/product.model';
+import { QrScannerModalComponent } from '../qr-scanner-modal/qr-scanner-modal.component';
 
 @Component({
   selector: 'app-product-form-modal',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, QrScannerModalComponent],
   templateUrl: './product-form-modal.component.html',
   styleUrls: ['./product-form-modal.component.scss']
 })
@@ -27,6 +28,13 @@ export class ProductFormModalComponent implements OnInit {
       description: [''],
       stock: [0, [Validators.required, Validators.min(0)]]
     });
+  }
+
+  showScanner = false;
+
+  onCodeScanned(code: string) {
+    this.productForm.patchValue({ serialNumber: code });
+    this.showScanner = false;
   }
 
   ngOnInit(): void {

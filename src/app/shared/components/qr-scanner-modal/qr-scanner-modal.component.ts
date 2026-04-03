@@ -1,3 +1,4 @@
+// src/app/shared/components/qr-scanner-modal/qr-scanner-modal.component.ts
 import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Html5Qrcode, Html5QrcodeSupportedFormats } from 'html5-qrcode';
@@ -34,7 +35,7 @@ export class QrScannerModalComponent implements OnInit, OnDestroy {
       const config = { 
         fps: 15, 
         qrbox: { width: 250, height: 250 },
-        formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
+        // formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ]
       };
 
       await this.html5QrCode.start(

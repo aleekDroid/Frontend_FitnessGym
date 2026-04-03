@@ -1,4 +1,4 @@
-
+// src/app/pages/admin/inventory/product-details/product-details.ts
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';

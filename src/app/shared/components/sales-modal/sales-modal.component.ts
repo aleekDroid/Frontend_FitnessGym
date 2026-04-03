@@ -5,6 +5,7 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Product } from '../../../core/models/product.model';
 import { ProductsService } from '../../../core/services/products.service';
+import { QrScannerModalComponent } from '../qr-scanner-modal/qr-scanner-modal.component';
 
 export interface CartItem {
   product: Product;
@@ -14,7 +15,7 @@ export interface CartItem {
 @Component({
   selector: 'app-sales-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, QrScannerModalComponent],
   templateUrl: './sales-modal.component.html',
   styleUrls: ['./sales-modal.component.scss']
 })
@@ -66,6 +67,13 @@ export class SalesModalComponent implements OnInit {
         error: () => this.searching.set(false)
       });
     });
+  }
+
+  showScanner = false;
+
+  onCodeScanned(code: string) {
+    this.onSearchInput(code); 
+    this.showScanner = false;
   }
 
   onSearchInput(val: string): void {

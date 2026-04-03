@@ -1,7 +1,8 @@
+// src/app/shared/components/qr-scanner-modal/qr-scanner-modal.component.html
 <div class="modal-overlay" (click)="closeScanner.emit()">
   <div class="modal-box scanner-modal" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2 class="modal-title">Escanear QR de Asistencia</h2>
+      <h2 class="modal-title">Escanear QR</h2>
       <button class="modal-close" (click)="closeScanner.emit()">✕</button>
     </div>
     
@@ -17,7 +18,7 @@
       @if (errorMessage) {
         <p class="error-text">{{ errorMessage }}</p>
       } @else {
-        <p class="scanner-hint">Apunta la cámara al código QR del usuario</p>
+        <p class="scanner-hint">Apunta la cámara al código QR</p>
       }
     </div>
     
