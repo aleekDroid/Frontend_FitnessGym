@@ -15,7 +15,7 @@ export class AttendanceResultModalComponent {
   @Output() viewProfile = new EventEmitter<number>();
 
   get isSuccess(): boolean {
-    return !!this.attendance.attendance_id;
+    return this.attendance.status === 'authorized';
   }
 
 

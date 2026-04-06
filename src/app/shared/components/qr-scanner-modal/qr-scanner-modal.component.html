@@ -1,29 +1,70 @@
-// src/app/shared/components/qr-scanner-modal/qr-scanner-modal.component.html
-<div class="modal-overlay" (click)="closeScanner.emit()">
+<div class="modal-overlay" (click)="!unsupervised && closeScanner.emit()">
   <div class="modal-box scanner-modal" (click)="$event.stopPropagation()">
-    <div class="modal-header">
+
+    <div class="modal-header" [class.modal-header--centered]="unsupervised">
       <h2 class="modal-title">Escanear código</h2>
-      <button class="modal-close" (click)="closeScanner.emit()">✕</button>
+      <!-- La ✕ solo aparece cuando NO estamos en modo sin supervisión -->
+      @if (!unsupervised) {
+        <button class="modal-close" (click)="closeScanner.emit()">✕</button>
+      }
     </div>
-    
+
     <div class="modal-body">
-      <div class="scanner-container">
+      <div
+        class="scanner-container"
+        [class.scanner-container--qr]="mode === 'qr'"
+        [class.scanner-container--barcode]="mode === 'barcode'"
+      >
         <div id="reader"></div>
         <div class="scanner-overlay">
-          <div class="scan-frame"></div>
-          <div class="scanning-line"></div>
+          <div
+            class="scan-frame"
+            [class.scan-frame--qr]="mode === 'qr'"
+            [class.scan-frame--barcode]="mode === 'barcode'"
+          >
+            <div class="scanning-line"></div>
+          </div>
         </div>
+
+        <!-- Result Overlay (Unsupervised) -->
+        @if (unsupervised && status !== 'idle') {
+          <div class="status-result" [class.status-result--success]="status === 'success'" [class.status-result--error]="status === 'error'">
+            <div class="status-icon">
+              @if (status === 'success') {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              } @else {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              }
+            </div>
+            <h3>{{ status === 'success' ? 'ACCESO CUMPLIDO' : 'ACCESO DENEGADO' }}</h3>
+            <p>{{ status === 'success' ? 'Bienvenido al Gimnasio' : 'Consulte en recepción' }}</p>
+          </div>
+        }
       </div>
-      
+
       @if (errorMessage) {
         <p class="error-text">{{ errorMessage }}</p>
       } @else {
-        <p class="scanner-hint">Apunta la cámara al código QR/de barras.</p>
+        <p class="scanner-hint" [class.scanner-hint--active]="unsupervised">{{ hintText }}</p>
       }
     </div>
-    
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeScanner.emit()">Cancelar</button>
-    </div>
+
+    <!-- Footer: solo toggle Autoservicio (en modo QR) -->
+    @if (mode === 'qr') {
+      <div class="modal-footer">
+        <label class="modal-toggle" title="Activar/Desactivar Autoservicio">
+          <span class="switch-label">Autoservicio</span>
+          <div class="switch">
+            <input type="checkbox" [checked]="unsupervised" (change)="toggleUnsupervised()">
+            <span class="slider round"></span>
+          </div>
+        </label>
+      </div>
+    }
+
   </div>
 </div>

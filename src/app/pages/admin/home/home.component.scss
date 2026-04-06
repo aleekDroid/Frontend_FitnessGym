@@ -2,11 +2,30 @@
 
 .page-header {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 16px;
-  margin-bottom: 24px;
+  gap: 20px;
+  margin-bottom: 32px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ── FAB GROUP (toggle + button, bottom-right) ── */
+.fab-group {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  z-index: 100;
+
+  @media (max-width: 768px) {
+    bottom: 20px;
+    right: 20px;
+  }
 }
 
 .page-date {
@@ -153,11 +172,48 @@
   &--danger  { background: linear-gradient(135deg, #d32f2f, #ef5350); }
   &--warning { background: linear-gradient(135deg, #f57c00, #ffb300); }
   &--active  { background: linear-gradient(135deg, #1b5e20, #4caf50); }
+  &--denied  { background: linear-gradient(135deg, #616161, #9e9e9e); }
 }
 
 .text-danger { color: #ef5350 !important; font-weight: 600; }
 .text-warning { color: #ffb300 !important; font-weight: 600; }
 .text-success { color: #4caf50 !important; font-weight: 600; }
+
+/* Status Badges */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+
+  &--authorized {
+    background: rgba(76, 175, 80, 0.15);
+    color: #66bb6a;
+    border: 1px solid rgba(76, 175, 80, 0.25);
+  }
+
+  &--denied {
+    background: rgba(239, 83, 80, 0.15);
+    color: #ef5350;
+    border: 1px solid rgba(239, 83, 80, 0.25);
+    cursor: help;
+  }
+}
+
+/* Denied row visual */
+.row-denied {
+  opacity: 0.75;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
 
 /* Attendance Time Cell */
 .attendance-time-cell {
@@ -285,9 +341,6 @@
 
 /* ── FAB BUTTON ── */
 .fab-btn {
-  position: fixed;
-  bottom: 24px;
-  right: 24px;
   width: 56px;
   height: 56px;
   border-radius: 50%;
@@ -300,7 +353,6 @@
   justify-content: center;
   box-shadow: 0 4px 16px rgba(216, 64, 64, 0.4);
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  z-index: 100;
 
   &:hover {
     transform: scale(1.1) rotate(5deg);

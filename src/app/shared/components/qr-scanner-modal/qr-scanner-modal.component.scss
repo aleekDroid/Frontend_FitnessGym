@@ -1,6 +1,7 @@
 .scanner-modal {
-  max-width: 450px;
+  max-width: 520px;
   width: 95%;
+  transition: transform 0.3s ease;
 }
 
 .modal-body {
@@ -11,43 +12,121 @@
   gap: 20px;
 }
 
+// ── Container: adapts aspect ratio per mode ──────────────────────────────────
+
 .scanner-container {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
-  max-width: 320px;
   border-radius: 16px;
   overflow: hidden;
   background: #000;
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+
+  &--qr {
+    max-width: 400px;
+    aspect-ratio: 1 / 1;
+  }
+
+  &--barcode {
+    max-width: 100%;
+    aspect-ratio: 4 / 3;
+  }
 }
+
+// ── Status Result Overlay ────────────────────────────────────────────────────
+
+.status-result {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: white;
+  animation: fade-in 0.3s ease;
+  padding: 20px;
+
+  &--success {
+    background: rgba(16, 185, 129, 0.95); // Emerald 500
+    color: #fff;
+  }
+
+  &--error {
+    background: rgba(220, 38, 38, 0.95);  // Red 600
+    color: #fff;
+  }
+
+  .status-icon {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 20px;
+    padding: 15px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    animation: scale-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    
+    svg {
+      width: 100%;
+      height: 100%;
+      stroke: currentColor;
+    }
+  }
+
+  h3 {
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  p {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 500;
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scale-up {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+// ── Reader: fills container ──────────────────────────────────────────────────
 
 #reader {
   width: 100% !important;
   height: 100% !important;
-  
-  // Hide internal library UI elements
+
   ::ng-deep {
-    button { display: none !important; }
-    img { display: none !important; }
-    #reader__dashboard { display: none !important; }
-    #reader__status_span { display: none !important; }
-    video { object-fit: cover !important; width: 100% !important; height: 100% !important; }
-    
-    // Hide the library's default white corners/markers
+    button                { display: none !important; }
+    img                   { display: none !important; }
+    #reader__dashboard    { display: none !important; }
+    #reader__status_span  { display: none !important; }
+    video {
+      object-fit: cover !important;
+      width: 100% !important;
+      height: 100% !important;
+    }
     div[style*="background-color: rgb(255, 255, 255)"],
-    div[style*="background-color: white"] { 
-      display: none !important; 
+    div[style*="background-color: white"] {
+      display: none !important;
     }
   }
 }
 
+// ── Overlay (pointer-events: none) ───────────────────────────────────────────
+
 .scanner-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
   z-index: 10;
   display: flex;
@@ -55,15 +134,16 @@
   justify-content: center;
 }
 
+// ── Scan frame ───────────────────────────────────────────────────────────────
+
 .scan-frame {
-  width: 250px;
-  height: 250px;
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: 12px;
   position: relative;
-  box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.45);
+  display: flex;
 
-  // Focus corners
+  // Accent corners (shared)
   &::before, &::after {
     content: '';
     position: absolute;
@@ -73,43 +153,67 @@
     border-style: solid;
     border-width: 0;
   }
-
   &::before {
     top: -2px; left: -2px;
-    border-top-width: 3px; border-left-width: 3px;
+    border-top-width: 3px;
+    border-left-width: 3px;
     border-top-left-radius: 8px;
   }
-
   &::after {
     bottom: -2px; right: -2px;
-    border-bottom-width: 3px; border-right-width: 3px;
+    border-bottom-width: 3px;
+    border-right-width: 3px;
     border-bottom-right-radius: 8px;
+  }
+
+  // Square for QR
+  &--qr {
+    width: 70%;
+    height: 70%;
+  }
+
+  // Rectangular for barcodes
+  &--barcode {
+    width: 85%;
+    height: 55%;
   }
 }
 
+// ── Scanning line animation ───────────────────────────────────────────────────
+
 .scanning-line {
   position: absolute;
-  top: calc(50% - 125px);
-  left: calc(50% - 125px);
-  width: 250px;
+  top: 0;
+  left: 0;
+  width: 100%;
   height: 2px;
   background: var(--accent);
   box-shadow: 0 0 15px 2px var(--accent);
   border-radius: 100%;
-  animation: scan 2s ease-in-out infinite;
   z-index: 11;
+  animation: scan-anim 2s ease-in-out infinite;
 }
 
-@keyframes scan {
-  0%, 100% { transform: translateY(0); opacity: 0.5; }
-  50% { transform: translateY(250px); opacity: 1; }
+@keyframes scan-anim {
+  0%, 100% { top: 0%; opacity: 0.5; }
+  50%       { top: 100%; opacity: 1; }
 }
+
+// ── Text ─────────────────────────────────────────────────────────────────────
 
 .scanner-hint {
   color: rgba(238, 238, 238, 0.5);
   font-size: 0.9rem;
   text-align: center;
   font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 20px;
+  
+  &--active {
+    background: rgba(var(--accent-rgb), 0.1);
+    color: var(--accent);
+    box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.1);
+  }
 }
 
 .error-text {
@@ -122,8 +226,86 @@
   border: 1px solid rgba(239, 154, 154, 0.2);
 }
 
+// ── Footer toggle row ──────────────────────────────────────────────────────
 .modal-footer {
   padding: 0 24px 24px;
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+// Cuando está en modo sin supervisión: sin ✕, título centrado
+::ng-deep .modal-header--centered {
   justify-content: center;
+}
+
+.modal-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+
+  .switch-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--light);
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+
+  .switch {
+    position: relative;
+    display: inline-block;
+    width: 36px;
+    height: 18px;
+
+    input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+
+      &:checked + .slider {
+        background-color: var(--accent);
+        box-shadow: 0 0 10px rgba(var(--accent-rgb), 0.3);
+      }
+
+      &:focus + .slider {
+        box-shadow: 0 0 1px var(--accent);
+      }
+
+      &:checked + .slider:before {
+        transform: translateX(18px);
+      }
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .4s;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+
+      &:before {
+        position: absolute;
+        content: "";
+        height: 12px;
+        width: 12px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+      }
+
+      &.round {
+        border-radius: 34px;
+        &:before { border-radius: 50%; }
+      }
+    }
+  }
 }

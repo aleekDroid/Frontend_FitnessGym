@@ -90,8 +90,9 @@
 </div>
 
 @if (showScanner) {
-  <app-qr-scanner-modal 
-    (scanSuccess)="onCodeScanned($event)" 
+  <app-qr-scanner-modal
+    mode="barcode"
+    (scanSuccess)="onCodeScanned($event)"
     (closeScanner)="showScanner = false">
   </app-qr-scanner-modal>
 }

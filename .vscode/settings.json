@@ -1,3 +1,7 @@
 {
-    "material-icon-theme.activeIconPack": "angular"
+    "material-icon-theme.activeIconPack": "angular",
+    "sonarlint.connectedMode.project": {
+        "connectionId": "http-localhost-9000",
+        "projectKey": "fitness_gym_frontend"
+    }
 }

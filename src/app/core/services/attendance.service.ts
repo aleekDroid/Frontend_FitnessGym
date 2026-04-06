@@ -20,6 +20,8 @@ export interface AttendanceSubscription {
 
 export interface AttendanceResponse {
   attendance_id: number | null;
+  status: 'authorized' | 'denied';
+  deny_reason?: string | null;
   created_at: string;
   user: AttendanceUser;
   suscripcion: AttendanceSubscription | null;

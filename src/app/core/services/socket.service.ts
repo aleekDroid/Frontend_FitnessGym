@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
-import { environment } from '../../../environments/environment';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable({
@@ -35,8 +34,7 @@ export class SocketService {
       }
     }
 
-    const baseUrl = environment.production ? '' : 'https://backend-fitness-gym.vercel.app/api';
-    const url = `${baseUrl}/${namespace}`;
+    const url = `/${namespace}`;
 
     const socket = io(url, {
       auth: { token: token || '' },

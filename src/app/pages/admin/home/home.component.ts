@@ -1,209 +1,156 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { Subject, Subscription } from 'rxjs';
-import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { AttendanceService } from '../../../core/services/attendance.service';
 import { SocketService } from '../../../core/services/socket.service';
-import { AttendanceService, AttendanceResponse } from '../../../core/services/attendance.service';
-import { QrScannerModalComponent } from '../../../shared/components/qr-scanner-modal/qr-scanner-modal.component';
 import { AttendanceResultModalComponent } from '../../../shared/components/attendance-result-modal/attendance-result-modal.component';
+import { QrScannerModalComponent } from '../../../shared/components/qr-scanner-modal/qr-scanner-modal.component';
 import Swal from 'sweetalert2';
-
-interface WsAttendanceUser {
-  user_id: number;
-  user_name: string;
-  user_last_name: string;
-  user_phone: string;
-}
-
-interface WsAttendanceSubscription {
-  suscripcion_id: number;
-  suscripcion_type_name: string;
-  status: string;
-  end_date?: string;
-}
-
-interface WsAttendance {
-  attendance_id: number | null;
-  created_at: string;
-  user: WsAttendanceUser;
-  suscripcion: WsAttendanceSubscription | null;
-}
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, QrScannerModalComponent, AttendanceResultModalComponent],
+  imports: [CommonModule, FormsModule, AttendanceResultModalComponent, QrScannerModalComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit, OnDestroy {
-  attendances = signal<WsAttendance[]>([]);
-  loading = signal(true);
+  attendances = signal<any[]>([]);
+  loading = signal<boolean>(true);
+  totalItems = signal<number>(0);
+  totalPagesCount = signal<number>(1);
   todayDate = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
-  // Scanner Modals State
-  showScanner = signal(false);
-  showResult = signal(false);
-  scanResult = signal<AttendanceResponse | null>(null);
-  processingScan = signal(false);
-
   // Filtros
-  currentPage = signal(1);
-  limit = signal(10);
-  totalItems = signal(0);
-  totalPages = signal(0);
-  searchQuery = signal('');
-  
-  // By default, filter by today's date in YYYY-MM-DD format
-  filterDate = signal(new Date().toLocaleDateString('en-CA')); // 'en-CA' gives YYYY-MM-DD
-  filterUserId = signal('');
+  searchQuery = signal<string>('');
+  filterStatus = signal<string>('');
+  filterDate = signal<string>(new Date().toISOString().split('T')[0]);
+  limit = signal<number>(10);
+  currentPage = signal<number>(1);
 
+  // ── MODAL & SCANNER STATES ──
+  showScanner = signal<boolean>(false);
+  unsupervisedMode = signal<boolean>(false);
+  currentScanStatus = signal<'idle' | 'success' | 'error'>('idle');
+  processingScan = signal<boolean>(false);
+  scanResult = signal<any>(null);
+  showResult = signal<boolean>(false);
 
-  private readonly searchSubject = new Subject<string>();
-  private searchSub?: Subscription;
+  private readonly attendanceService = inject(AttendanceService);
+  private readonly socketService = inject(SocketService);
 
-  constructor(
-    private readonly socketService: SocketService,
-    private readonly attendanceService: AttendanceService,
-    private readonly router: Router
-  ) {}
+  ngOnInit(): void {
+    this.connectSocket();
+  }
 
+  ngOnDestroy(): void {
+    this.socketService.disconnect('attendances');
+  }
 
-  async ngOnInit(): Promise<void> {
+  // ── WEBSOCKET ──
+
+  private async connectSocket(): Promise<void> {
+    this.loading.set(true);
     try {
-      const socket = await this.socketService.connect('attendances', {
-        page: this.currentPage(),
-        limit: this.limit(),
-        date: this.filterDate(),
-        search: this.searchQuery() || undefined,
-        userId: this.filterUserId() || undefined
-      });
+      const socket = await this.socketService.connect('attendances', this.buildFilters());
 
-      socket.on('initial_data', (payload: any) => {
-        this.attendances.set(payload.data || []);
-        if (payload.meta) {
-          this.totalItems.set(payload.meta.total || 0);
-          this.totalPages.set(payload.meta.lastPage || Math.ceil((payload.meta.total || 0) / this.limit()));
-          this.currentPage.set(payload.meta.page || 1);
-        }
+      // Datos iniciales enviados por Gateway al conectarse
+      socket.on('initial_data', (res: any) => {
+        this.attendances.set(res.data ?? []);
+        this.totalItems.set(res.meta?.total ?? 0);
+        this.totalPagesCount.set(res.meta?.lastPage ?? 1);
         this.loading.set(false);
       });
 
-      socket.on('new_attendance', (newAtt: WsAttendance) => {
-        // Add new attendance to the top
-        this.attendances.update((list: WsAttendance[]) => {
-          const newList = [newAtt, ...list];
-          if (newList.length > this.limit()) {
-            newList.pop();
-          }
-          return newList;
-        });
-        this.totalItems.update((t: number) => t + 1);
+      // Nuevas asistencias en tiempo real (broadcast tras cada escaneo)
+      socket.on('new_attendance', (att: any) => {
+        this.attendances.update(list => [att, ...list].slice(0, this.limit()));
+        this.totalItems.update(n => n + 1);
       });
 
-      // In case of reconnection, request data again
-      socket.on('connect', () => {
-        this.updateFilters();
-      });
-
-      this.searchSub = this.searchSubject.pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      ).subscribe(query => {
-        this.searchQuery.set(query);
-        this.currentPage.set(1);
-        this.updateFilters();
-      });
-
-      // Forced initial load
-      this.updateFilters();
-    } catch (error) {
-      console.error('HomeComponent: Failed to connect to socket', error);
+      socket.on('connect_error', () => this.loading.set(false));
+    } catch {
       this.loading.set(false);
     }
   }
 
-  ngOnDestroy(): void {
-    // getSocket is still synchronous, it just returns the map entry
-    const socket = this.socketService.getSocket('attendances');
-    if (socket) {
-      socket.off('initial_data');
-      socket.off('new_attendance');
-      socket.off('connect');
-    }
-    this.searchSub?.unsubscribe();
+  private buildFilters() {
+    const f: Record<string, any> = {
+      page: this.currentPage(),
+      limit: this.limit(),
+      date: this.filterDate(),
+    };
+    if (this.searchQuery()) f['search'] = this.searchQuery();
+    if (this.filterStatus()) f['status'] = this.filterStatus();
+    return f;
   }
 
-  updateFilters(): void {
+  /** Emite 'update_filters' al Gateway para que reconsulte con los nuevos filtros */
+  private emitFilters(): void {
     const socket = this.socketService.getSocket('attendances');
-    if (socket) {
+    if (socket?.connected) {
       this.loading.set(true);
-      socket.emit('update_filters', {
-        page: this.currentPage(),
-        limit: this.limit(),
-        search: this.searchQuery() || undefined,
-        date: this.filterDate() || undefined,
-        userId: this.filterUserId() || undefined
-      });
-
+      socket.emit('update_filters', this.buildFilters());
+    } else {
+      this.socketService.disconnect('attendances');
+      this.connectSocket();
     }
   }
 
   onFilterChange(): void {
     this.currentPage.set(1);
-    this.updateFilters();
+    this.emitFilters();
   }
 
-  onSearchChange(val: string): void {
-    this.searchSubject.next(val);
+  onSearchChange(query: string): void {
+    this.searchQuery.set(query);
+    this.currentPage.set(1);
+    this.emitFilters();
   }
 
   onLimitChange(newLimit: number): void {
     this.limit.set(newLimit);
     this.currentPage.set(1);
-    this.updateFilters();
+    this.emitFilters();
   }
-
 
   goToPage(page: number): void {
-    if (page >= 1 && page <= this.totalPages()) {
-      this.currentPage.set(page);
-      this.updateFilters();
-    }
+    this.currentPage.set(page);
+    this.emitFilters();
   }
 
-  viewUser(userId: number): void {
-    this.router.navigate(['/admin/users', userId]);
+  totalPages(): number {
+    return this.totalPagesCount();
   }
 
-  getDaysLeft(endDate?: string): number {
+  // ── UTILIDADES ──
+
+  getDaysLeft(endDate: string | undefined): number {
     if (!endDate) return 0;
-    const end = new Date(endDate);
-    const today = new Date();
-    end.setHours(0,0,0,0);
-    today.setHours(0,0,0,0);
-    const diffTime = end.getTime() - today.getTime();
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    const diff = new Date(endDate).getTime() - Date.now();
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 
-  getSubscriptionColorClass(daysLeft: number): string {
-    if (daysLeft <= 0) return 'text-danger';
-    if (daysLeft < 3) return 'text-warning';
-    return 'text-success';
-  }
-
-  formatTime(dateStr: string): string {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  formatDate(dateStr: string): string {
+    return new Date(dateStr).toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 
   formatDateOnly(dateStr: string): string {
-    if (!dateStr) return '—';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
+    return this.formatDate(dateStr);
+  }
+
+  formatTime(dateStr: string): string {
+    return new Date(dateStr).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  getSubscriptionColorClass(days: number): string {
+    if (days <= 0) return 'text-danger';
+    if (days < 3) return 'text-warning';
+    return 'text-success';
+  }
+
+  viewUser(_userId: string): void {
+    // TODO: abrir modal de detalle de usuario
   }
 
   // ── SCANNER LOGIC ──
@@ -213,30 +160,45 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   onScanSuccess(qrCodeId: string): void {
-    this.showScanner.set(false);
+    if (!this.unsupervisedMode()) {
+      this.showScanner.set(false);
+    }
+
     this.processingScan.set(true);
-    
+    this.currentScanStatus.set('idle');
+
     this.attendanceService.registerAttendance(qrCodeId).subscribe({
-      next: (res) => {
+      next: (res: any) => {
         this.processingScan.set(false);
         this.scanResult.set(res);
-        this.showResult.set(true);
-        // Note: The websocket will update the table automatically because 
-        // the backend emits the event on success.
+
+        if (this.unsupervisedMode()) {
+          // 'authorized' → verde; cualquier otro valor (denied, etc.) → rojo
+          const isAllowed = res?.status === 'authorized';
+          this.currentScanStatus.set(isAllowed ? 'success' : 'error');
+          setTimeout(() => this.currentScanStatus.set('idle'), 3000);
+        } else {
+          this.showResult.set(true);
+        }
       },
-      error: (err) => {
+      error: (err: any) => {
         this.processingScan.set(false);
-        Swal.fire({
-          icon: 'error',
-          title: 'Error de Asistencia',
-          text: err.error?.message || 'El usuario no existe, está inactivo o no tiene suscripción vigente.',
-          timer: 3500,
-          background: '#1a1a1a',
-          color: '#eee',
-          confirmButtonColor: '#d32f2f'
-        });
-      }
+
+        if (this.unsupervisedMode()) {
+          this.currentScanStatus.set('error');
+          setTimeout(() => this.currentScanStatus.set('idle'), 3000);
+        } else {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error de Asistencia',
+            text: err.error?.message || 'El usuario no existe, está inactivo o no tiene suscripción vigente.',
+            timer: 3500,
+            background: '#1a1a1a',
+            color: '#eee',
+            confirmButtonColor: '#d32f2f',
+          });
+        }
+      },
     });
   }
 }
-

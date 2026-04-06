@@ -3,6 +3,11 @@
     {
       "source": "/api/:path*",
       "destination": "https://api.fitnessgymqro.com/api/:path*"
+    },
+    {
+      "source": "/socket.io/:path*",
+      "destination": "https://api.fitnessgymqro.com/socket.io/:path*"
     }
   ]
 }
+
