@@ -16,13 +16,42 @@
         [class.scanner-container--barcode]="mode === 'barcode'"
       >
         <div id="reader"></div>
+        
         <div class="scanner-overlay">
+          <!-- Marco visual de escaneo -->
           <div
             class="scan-frame"
             [class.scan-frame--qr]="mode === 'qr'"
             [class.scan-frame--barcode]="mode === 'barcode'"
           >
             <div class="scanning-line"></div>
+          </div>
+
+          <!-- Controles de Cámara (Flash y Zoom) -->
+          <div class="camera-controls">
+            @if (isTorchSupported) {
+              <button 
+                class="control-btn" 
+                [class.control-btn--active]="isTorchOn"
+                (click)="toggleTorch()"
+                title="Alternar Linterna"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                </svg>
+              </button>
+            }
+
+            @if (isZoomSupported) {
+              <button 
+                class="control-btn" 
+                [class.control-btn--active]="isZoomOn"
+                (click)="toggleZoom()"
+                title="Alternar Zoom 2x"
+              >
+                <span class="zoom-text">{{ isZoomOn ? '1x' : '2x' }}</span>
+              </button>
+            }
           </div>
         </div>
 

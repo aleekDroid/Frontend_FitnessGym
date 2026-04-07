@@ -30,6 +30,21 @@
   &--barcode {
     max-width: 100%;
     aspect-ratio: 4 / 3;
+
+    #reader {
+      width: 100%;
+      height: 280px; // Altura explícita requerida por Quagga
+      
+      video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      canvas {
+        display: none; // Ocultar canvas de debug de Quagga
+      }
+    }
   }
 }
 
@@ -166,16 +181,67 @@
     border-bottom-right-radius: 8px;
   }
 
-  // Square for QR
+  // Square for QR (1:1)
   &--qr {
-    width: 70%;
-    height: 70%;
+    width: 75%;
+    height: 75%;
   }
 
-  // Rectangular for barcodes
+  // Rectangular for barcodes (~3.6:1)
   &--barcode {
-    width: 85%;
-    height: 55%;
+    width: 90%;
+    height: 25%; // Franja estrecha optimizada para EAN-13/CODE-128
+  }
+}
+
+// ── Camera Controls (Flash, Zoom) ───────────────────────────────────────────
+
+.camera-controls {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 30;
+}
+
+.control-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  pointer-events: auto; // Crucial ya que el overlay tiene none
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.7);
+    transform: scale(1.05);
+  }
+
+  &--active {
+    background: var(--accent) !important;
+    color: #000 !important;
+    border-color: var(--accent);
+    box-shadow: 0 0 15px var(--accent);
+  }
+
+  svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .zoom-text {
+    font-weight: 800;
+    font-size: 0.9rem;
   }
 }
 
