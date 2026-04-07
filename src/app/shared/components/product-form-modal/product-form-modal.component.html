@@ -20,20 +20,23 @@
           }
         </div>
 
-<div class="input-with-action">
-  <input 
-    type="text" 
-    formControlName="serialNumber" 
-    class="form-control" 
-    placeholder="PRO-001" 
-    [class.is-invalid]="f['serialNumber'].touched && f['serialNumber'].invalid" />
-    
-  <button type="button" class="btn-action" (click)="showScanner = true" title="Escanear código">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <path d="M3 5v14M21 5v14M8 5v14M12 5v14M16 5v14"></path>
-    </svg>
-  </button>
-</div>
+        <div class="form-group">
+          <label>Código de barras / Serie</label>
+          <div class="input-with-action">
+            <input 
+              type="text" 
+              formControlName="serialNumber" 
+              class="form-control" 
+              placeholder="PRO-001" 
+              [class.is-invalid]="f['serialNumber'].touched && f['serialNumber'].invalid" />
+              
+            <button type="button" class="btn-action" (click)="showScanner = true" title="Escanear código">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 5v14M21 5v14M8 5v14M12 5v14M16 5v14"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
 
         <div class="form-group">
           <label>Precio ($)</label>

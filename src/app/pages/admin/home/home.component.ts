@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AttendanceService } from '../../../core/services/attendance.service';
@@ -38,6 +39,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private readonly attendanceService = inject(AttendanceService);
   private readonly socketService = inject(SocketService);
+  private readonly router = inject(Router);
 
   ngOnInit(): void {
     this.connectSocket();
@@ -149,8 +151,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     return 'text-success';
   }
 
-  viewUser(_userId: string): void {
-    // TODO: abrir modal de detalle de usuario
+  viewUser(userId: string): void {
+    this.router.navigate(['/admin/users', userId]);
   }
 
   // ── SCANNER LOGIC ──
