@@ -5,6 +5,8 @@ import { ToastComponent } from './shared/components/toast/toast.component';
 import { inject as injectAnalytics } from '@vercel/analytics';
 import { injectSpeedInsights } from '@vercel/speed-insights';
 
+import { environment } from '../environments/environment';
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -19,8 +21,10 @@ export class AppComponent implements OnInit {
   constructor() {}
 
   ngOnInit() {
-    injectAnalytics();
-    injectSpeedInsights();
+    if (environment.production) {
+      injectAnalytics();
+      injectSpeedInsights();
+    }
   }
 }
 

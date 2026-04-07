@@ -125,6 +125,9 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
 
   private async startJsQr(): Promise<void> {
     try {
+      const reader = document.getElementById('reader') as HTMLElement;
+      if (reader) reader.innerHTML = '';
+
       this.videoStream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'environment',
@@ -132,8 +135,6 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
           height: { ideal: 720 },
         },
       });
-
-      const reader = document.getElementById('reader') as HTMLElement;
 
       this.videoEl = document.createElement('video');
       this.videoEl.srcObject = this.videoStream;
@@ -193,6 +194,9 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private async startQuagga(): Promise<void> {
+    const reader = document.getElementById('reader') as HTMLElement;
+    if (reader) reader.innerHTML = '';
+
     return new Promise((resolve, reject) => {
       Quagga.init(
         {
