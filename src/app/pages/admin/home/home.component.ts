@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AttendanceService } from '../../../core/services/attendance.service';
-import { SocketService } from '../../../core/services/socket.service';
+import { PusherService } from '../../../core/services/pusher.service';
 import { AttendanceResultModalComponent } from '../../../shared/components/attendance-result-modal/attendance-result-modal.component';
 import { QrScannerModalComponent } from '../../../shared/components/qr-scanner-modal/qr-scanner-modal.component';
 import Swal from 'sweetalert2';
@@ -38,42 +38,42 @@ export class HomeComponent implements OnInit, OnDestroy {
   showResult = signal<boolean>(false);
 
   private readonly attendanceService = inject(AttendanceService);
-  private readonly socketService = inject(SocketService);
+  private readonly pusherService = inject(PusherService);
   private readonly router = inject(Router);
 
   ngOnInit(): void {
-    this.connectSocket();
+    this.loadAttendances();
+    this.connectRealtime();
   }
 
   ngOnDestroy(): void {
-    this.socketService.disconnect('attendances');
+    this.pusherService.unsubscribe('attendances');
   }
 
-  // ── WEBSOCKET ──
+  // ── REALTME (PUSHER) ──
 
-  private async connectSocket(): Promise<void> {
+  private connectRealtime(): void {
+    const channel = this.pusherService.subscribe('attendances');
+
+    // Nuevas asistencias en tiempo real
+    channel.bind('new_attendance', (att: any) => {
+      this.attendances.update(list => [att, ...list].slice(0, this.limit()));
+      this.totalItems.update(n => n + 1);
+    });
+  }
+
+  /** Carga inicial y por filtros vía HTTP */
+  private loadAttendances(): void {
     this.loading.set(true);
-    try {
-      const socket = await this.socketService.connect('attendances', this.buildFilters());
-
-      // Datos iniciales enviados por Gateway al conectarse
-      socket.on('initial_data', (res: any) => {
+    this.attendanceService.findAll(this.buildFilters()).subscribe({
+      next: (res: any) => {
         this.attendances.set(res.data ?? []);
         this.totalItems.set(res.meta?.total ?? 0);
         this.totalPagesCount.set(res.meta?.lastPage ?? 1);
         this.loading.set(false);
-      });
-
-      // Nuevas asistencias en tiempo real (broadcast tras cada escaneo)
-      socket.on('new_attendance', (att: any) => {
-        this.attendances.update(list => [att, ...list].slice(0, this.limit()));
-        this.totalItems.update(n => n + 1);
-      });
-
-      socket.on('connect_error', () => this.loading.set(false));
-    } catch {
-      this.loading.set(false);
-    }
+      },
+      error: () => this.loading.set(false)
+    });
   }
 
   private buildFilters() {
@@ -87,16 +87,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     return f;
   }
 
-  /** Emite 'update_filters' al Gateway para que reconsulte con los nuevos filtros */
+  /** Refresca la lista de asistencias usando filtros HTTP */
   private emitFilters(): void {
-    const socket = this.socketService.getSocket('attendances');
-    if (socket?.connected) {
-      this.loading.set(true);
-      socket.emit('update_filters', this.buildFilters());
-    } else {
-      this.socketService.disconnect('attendances');
-      this.connectSocket();
-    }
+    this.loadAttendances();
   }
 
   onFilterChange(): void {

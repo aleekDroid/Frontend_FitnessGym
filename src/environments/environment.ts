@@ -1,5 +1,9 @@
 // src/environments/environment.ts
 export const environment = {
   production: false,
-  apiUrl: '/api' // Routes through Angular proxy (proxy.conf.json) to localhost:3000
+  apiUrl: '/api',
+  pusher: {
+    key: '8055409c9d31e6514818',
+    cluster: 'us2'
+  }
 };

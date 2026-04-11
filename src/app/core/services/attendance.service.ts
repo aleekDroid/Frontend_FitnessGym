@@ -64,4 +64,15 @@ export class AttendanceService {
       { headers }
     );
   }
+
+  findAll(filters: any): Observable<any> {
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${this.authService.getToken()}`
+    });
+
+    return this.http.get<any>(`${environment.apiUrl}/attendances`, {
+      headers,
+      params: filters
+    });
+  }
 }
