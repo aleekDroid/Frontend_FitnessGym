@@ -347,6 +347,15 @@
               placeholder="Ej. 4421234567"
               [class.is-invalid]="f['number'].touched && f['number'].errors"
             />
+            @if (f['number'].touched) {
+              @if (f['number'].errors?.['required']) {
+                <span class="field-error">Obligatorio</span>
+              } @else if (f['number'].errors?.['minlength']) {
+                <span class="field-error">Mínimo 10 dígitos</span>
+              } @else if (f['number'].errors?.['pattern']) {
+                <span class="field-error">Solo números</span>
+              }
+            }
           </div>
         </div>
 
@@ -390,4 +399,54 @@
     (closeEvent)="closeAssignModal()"
     (successEvent)="onAssignSuccess()">
   </app-assign-subscription-modal>
+}
+
+<!-- ══ MODAL: Password Success ══ -->
+@if (showPasswordModal()) {
+  <div class="modal-overlay" (click)="closePasswordModal()">
+    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2 class="modal-title">¡Usuario Creado!</h2>
+        <button class="modal-close" (click)="closePasswordModal()">✕</button>
+      </div>
+
+      <div class="modal-body text-center">
+        <div class="success-icon-wrapper">
+          <svg class="success-icon" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        
+        <p class="modal-description">
+          El usuario se ha registrado exitosamente. Por favor, entrega la siguiente <strong>contraseña temporal</strong> al usuario:
+        </p>
+
+        <div class="password-card">
+          <code class="temp-password">{{ generatedPassword() }}</code>
+          <button class="btn-copy" (click)="copyToClipboard(generatedPassword())" title="Copiar contraseña">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+        </div>
+        
+        <p class="password-hint">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          El usuario deberá cambiarla en su primer inicio de sesión.
+        </p>
+      </div>
+
+      <div class="modal-footer footer-center">
+        <button type="button" class="btn btn-primary" (click)="closePasswordModal()">
+          Entendido
+        </button>
+      </div>
+    </div>
+  </div>
 }

@@ -43,6 +43,10 @@ export class UsersComponent implements OnInit {
   statusTarget = signal<UserWithMembership | null>(null);
   showStatusConfirm = signal(false);
 
+  // New: Password display after registration
+  showPasswordModal = signal(false);
+  generatedPassword = signal('');
+
   // Modal Assign Subscription State
   showAssignModal = signal(false);
 
@@ -62,7 +66,7 @@ export class UsersComponent implements OnInit {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required]]
+      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern('^[0-9]*$')]]
     });
   }
 
@@ -177,11 +181,17 @@ export class UsersComponent implements OnInit {
       });
     } else {
       this.usersService.create(val).subscribe({
-        next: () => {
+        next: (res) => {
           this.notificationService.show('Usuario registrado con éxito', 'success');
           this.saving.set(false);
           this.closeModal();
           this.loadData();
+          
+          // Show the generated password
+          if (res && res.password) {
+            this.generatedPassword.set(res.password);
+            this.showPasswordModal.set(true);
+          }
         },
         error: (err) => {
           this.notificationService.show('Hubo un error al registrar el usuario. Revisa los datos.', 'error');
@@ -272,5 +282,20 @@ export class UsersComponent implements OnInit {
 
   closeFilters(): void {
     this.showFilters.set(false);
+  }
+
+  // Password Success Modal Actions
+  closePasswordModal(): void {
+    this.showPasswordModal.set(false);
+    this.generatedPassword.set('');
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.notificationService.show('Contraseña copiada al portapapeles', 'success');
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      this.notificationService.show('No se pudo copiar la contraseña', 'error');
+    });
   }
 }

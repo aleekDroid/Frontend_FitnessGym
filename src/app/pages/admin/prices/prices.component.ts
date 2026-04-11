@@ -22,8 +22,8 @@ export class PricesComponent implements OnInit {
   saving = signal(false);
   showModal = signal(false);
   editType = signal<SubscriptionType | null>(null);
-  deleteTarget = signal<SubscriptionType | null>(null);
-  showDeleteConfirm = signal(false);
+  statusTarget = signal<SubscriptionType | null>(null);
+  showStatusConfirm = signal(false);
 
   // Filters and Pagination
   currentPage = signal(1);
@@ -115,10 +115,24 @@ export class PricesComponent implements OnInit {
   openEdit(t: SubscriptionType): void {
     this.editType.set(t);
     this.priceForm.patchValue({ name: t.name, price: t.price, duration: t.duration, person_per_suscription: t.person_per_suscription, description: t.description });
+    
+    // Lock fields for "visita" slug
+    if (t.slug === 'visita') {
+      this.priceForm.get('name')?.disable();
+      this.priceForm.get('duration')?.disable();
+    } else {
+      this.priceForm.get('name')?.enable();
+      this.priceForm.get('duration')?.enable();
+    }
+    
     this.showModal.set(true);
   }
 
-  closeModal(): void { this.showModal.set(false); }
+  closeModal(): void { 
+    this.priceForm.get('name')?.enable(); // Ensure enabled when reopening or for create
+    this.priceForm.get('duration')?.enable();
+    this.showModal.set(false); 
+  }
 
   stepValue(controlName: string, step: number): void {
     const control = this.priceForm.get(controlName);
@@ -133,7 +147,8 @@ export class PricesComponent implements OnInit {
   onSubmit(): void {
     if (this.priceForm.invalid) { this.priceForm.markAllAsTouched(); return; }
     this.saving.set(true);
-    const val = this.priceForm.value;
+    // Use getRawValue() to include disabled fields (necessary for the backend update if fields are locked)
+    const val = this.priceForm.getRawValue();
 
     if (this.editType()) {
       this.subscriptionsService.update(this.editType()!.id, val).subscribe(() => { 
@@ -143,7 +158,7 @@ export class PricesComponent implements OnInit {
         this.loadData(); 
       });
     } else {
-      this.subscriptionsService.create(val as CreateSubscriptionTypeDto).subscribe(() => { 
+      this.subscriptionsService.create(val).subscribe(() => { 
         this.saving.set(false); 
         this.closeModal(); 
         this.notificationService.show('Membresía creada exitosamente', 'success');
@@ -152,16 +167,38 @@ export class PricesComponent implements OnInit {
     }
   }
 
-  confirmDelete(t: SubscriptionType): void { this.deleteTarget.set(t); this.showDeleteConfirm.set(true); }
-  cancelDelete(): void { this.showDeleteConfirm.set(false); this.deleteTarget.set(null); }
-  doDelete(): void {
-    if (!this.deleteTarget()) return;
+  confirmToggleStatus(t: SubscriptionType): void { 
+    this.statusTarget.set(t); 
+    this.showStatusConfirm.set(true); 
+  }
+  
+  cancelStatusConfirm(): void { 
+    this.showStatusConfirm.set(false); 
+    this.statusTarget.set(null); 
+  }
+  
+  doToggleStatus(): void {
+    const target = this.statusTarget();
+    if (!target) return;
+    
     this.saving.set(true);
-    this.subscriptionsService.delete(this.deleteTarget()!.id).subscribe(() => { 
-      this.saving.set(false);
-      this.cancelDelete(); 
-      this.notificationService.show('Membresía eliminada de la base de datos', 'success');
-      this.loadData(); 
+    const newStatus = target.status === 'active' ? 'inactive' : 'active';
+    
+    this.subscriptionsService.updateStatus(target.id, newStatus).subscribe({
+      next: () => {
+        this.saving.set(false);
+        this.cancelStatusConfirm(); 
+        this.notificationService.show(
+          `Membresía ${newStatus === 'active' ? 'activada' : 'desactivada'} correctamente`, 
+          'success'
+        );
+        this.loadData(); 
+      },
+      error: (err) => {
+        console.error('Error toggling status:', err);
+        this.saving.set(false);
+        this.notificationService.show('Error al cambiar el estado de la membresía', 'error');
+      }
     });
   }
 

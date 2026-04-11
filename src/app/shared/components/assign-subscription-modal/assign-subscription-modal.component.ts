@@ -174,9 +174,25 @@ export class AssignSubscriptionModalComponent implements OnInit {
     if (val.payment_method === 'transferencia') mappedPayment = 'transfer';
 
     this.subscriptionsService.assignSubscription(val.subscription_id, userIds, mappedPayment).subscribe({
-      next: () => {
+      next: (res) => {
         this.saving.set(false);
-        this.successEvent.emit(); // Emits signal to reload parent data and show toast
+        
+        if (res.visitaGratis) {
+          import('sweetalert2').then((Swal) => {
+            Swal.default.fire({
+              title: '¡Visita Gratuita!',
+              text: 'Esta visita es por cuenta de la casa. ¡Felicidades al usuario!',
+              icon: 'success',
+              confirmButtonText: 'Genial',
+              confirmButtonColor: '#d84040',
+              backdrop: `rgba(216, 64, 64, 0.2)`
+            }).then(() => {
+              this.successEvent.emit();
+            });
+          });
+        } else {
+          this.successEvent.emit(); // Emits signal to reload parent data and show toast
+        }
       },
       error: (err) => {
         console.error('Error assigning subscription:', err);

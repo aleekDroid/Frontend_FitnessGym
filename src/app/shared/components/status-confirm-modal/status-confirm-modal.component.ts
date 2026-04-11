@@ -15,6 +15,9 @@ export class StatusConfirmModalComponent {
   @Input() isActive: boolean = true;
   @Input() isLoading: boolean = false;
   @Input() warningMessage: string | null = null;
+  @Input() customTitle: string | null = null;
+  @Input() customMessage: string | null = null;
+  @Input() confirmBtnText: string | null = null;
   
   @Output() closeEvent = new EventEmitter<void>();
   @Output() confirmEvent = new EventEmitter<void>();

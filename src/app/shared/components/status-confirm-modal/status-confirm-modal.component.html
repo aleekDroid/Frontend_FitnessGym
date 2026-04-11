@@ -40,16 +40,20 @@
           }
         </div>
 
-        <h3>{{ isActive ? "Desactivar" : "Activar" }} {{ entityType }}</h3>
+        <h3>{{ customTitle || (isActive ? "Desactivar " + entityType : "Activar " + entityType) }}</h3>
       </div>
 
       <!-- Cuerpo -->
       <div class="status-body">
         <p class="status-question">
-          ¿Estás seguro que deseas
-          <strong>{{ isActive ? "desactivar" : "activar" }}</strong> a
-          <span class="entity-name">{{ entityName }}</span
-          >?
+          @if (customMessage) {
+            {{ customMessage }}
+          } @else {
+            ¿Estás seguro que deseas
+            <strong>{{ isActive ? "desactivar" : "activar" }}</strong> a
+            <span class="entity-name">{{ entityName }}</span
+            >?
+          }
         </p>
 
         @if (warningMessage && isActive) {
@@ -72,7 +76,7 @@
             @if (isLoading) {
               <span class="spinner-sm"></span> Guardando...
             } @else {
-              {{ isActive ? "Sí, desactivar" : "Sí, activar" }}
+              {{ confirmBtnText || (isActive ? "Sí, desactivar" : "Sí, activar") }}
             }
           </button>
         </div>

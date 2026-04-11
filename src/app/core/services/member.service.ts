@@ -58,6 +58,18 @@ export class MemberService {
     return this.http.post<void>(`${this.base}/user/routine`, { days });
   }
 
+  /**
+   * POST /api/user/change-password
+   * Cambia la contraseña del usuario.
+   * Require oldPassword y password.
+   */
+  changePassword(oldPassword: string, password: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.base}/user/change-password`, {
+      oldPassword,
+      password,
+    });
+  }
+
   /** Genera los 6 días con isRestDay=false y exercises=[] */
   private buildEmptyRoutine(): RoutineDay[] {
     const names = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];

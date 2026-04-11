@@ -17,6 +17,7 @@ export class LoginComponent {
   loading = signal(false);
   errorMsg = signal('');
   showPassword = signal(false);
+  showHelpModal = signal(false);
 
   constructor(
     private fb: FormBuilder,
@@ -24,7 +25,7 @@ export class LoginComponent {
     private router: Router
   ) {
     this.loginForm = this.fb.group({
-      number:   ['', [Validators.required, Validators.minLength(7)]],
+      number:   ['', [Validators.required, Validators.minLength(10), Validators.pattern('^\\+?[0-9]*$')]],
       password: ['', [Validators.required, Validators.minLength(6)]],
     });
   }

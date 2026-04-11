@@ -172,6 +172,29 @@
   font-weight: 500;
 }
 
+.forgot-pass-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.forgot-pass-link {
+  background: none;
+  border: none;
+  color: rgba(238, 238, 238, 0.4);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 4px 0;
+  border-bottom: 1px solid transparent;
+  
+  &:hover {
+    color: var(--accent);
+    border-bottom-color: rgba(216, 64, 64, 0.3);
+  }
+}
+
 /* Submit button */
 .submit-btn {
   margin-top: 8px;
@@ -209,4 +232,34 @@
 @media (max-width: 480px) {
   .login-card { padding: 36px 24px; }
   .back-btn { top: 16px; left: 16px; }
+}
+
+/* ── Help Modal ── */
+.modal-box--help {
+  text-align: center;
+  
+  .modal-content {
+    padding: 10px 0;
+  }
+  
+  .help-icon-wrapper {
+    width: 80px;
+    height: 80px;
+    background: rgba(216, 64, 64, 0.1);
+    color: var(--accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    border: 1px solid rgba(216, 64, 64, 0.2);
+    box-shadow: 0 0 24px rgba(216, 64, 64, 0.15);
+  }
+  
+  .help-text {
+    color: rgba(238, 238, 238, 0.7);
+    line-height: 1.6;
+    font-size: 1.05rem;
+    strong { color: var(--light); }
+  }
 }

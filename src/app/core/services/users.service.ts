@@ -150,4 +150,13 @@ export class UsersService {
   toggleUserStatus(id: number, status: 'active' | 'inactive'): Observable<any> {
     return this.http.patch<any>(`${environment.apiUrl}/user/status`, { id, status }, { headers: this.getHeaders() });
   }
+
+  // ── POST reset password (Admin) ──
+  resetPasswordAdmin(userId: number): Observable<{ message: string, password: string }> {
+    return this.http.post<{ message: string, password: string }>(
+      `${environment.apiUrl}/user/reset-password-admin`,
+      { userId },
+      { headers: this.getHeaders() }
+    );
+  }
 }

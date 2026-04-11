@@ -44,6 +44,12 @@ export class UserDetails implements OnInit {
   showTransactionDetail = signal(false);
   selectedTransactionId = signal<number | null>(null);
 
+  // Password Reset Signals
+  showResetConfirm = signal(false);
+  showPasswordModal = signal(false);
+  generatedPassword = signal('');
+  resettingPassword = signal(false);
+
   constructor(
     private readonly route: ActivatedRoute,
     private readonly router: Router,
@@ -55,7 +61,7 @@ export class UserDetails implements OnInit {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required]]
+      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern('^[0-9]*$')]]
     });
   }
 
@@ -271,6 +277,51 @@ export class UserDetails implements OnInit {
   closeTransactionDetail(): void {
     this.showTransactionDetail.set(false);
     this.selectedTransactionId.set(null);
+  }
+
+  // ── PASSWORD RESET ──
+  confirmResetPassword(): void {
+    this.showResetConfirm.set(true);
+  }
+
+  cancelResetPassword(): void {
+    if (this.resettingPassword()) return;
+    this.showResetConfirm.set(false);
+  }
+
+  doResetPassword(): void {
+    const user = this.user();
+    if (!user) return;
+
+    this.resettingPassword.set(true);
+    this.usersService.resetPasswordAdmin(user.id).subscribe({
+      next: (res) => {
+        this.resettingPassword.set(false);
+        this.showResetConfirm.set(false);
+        this.generatedPassword.set(res.password);
+        this.showPasswordModal.set(true);
+        this.notificationService.show('Contraseña reseteada exitosamente.', 'success');
+      },
+      error: (err) => {
+        console.error('Error resetting password:', err);
+        this.notificationService.show('No se pudo resetear la contraseña.', 'error');
+        this.resettingPassword.set(false);
+      }
+    });
+  }
+
+  closePasswordModal(): void {
+    this.showPasswordModal.set(false);
+    this.generatedPassword.set('');
+  }
+
+  copyToClipboard(text: string): void {
+    navigator.clipboard.writeText(text).then(() => {
+      this.notificationService.show('Contraseña copiada al portapapeles', 'success');
+    }).catch(err => {
+      console.error('Error al copiar:', err);
+      this.notificationService.show('No se pudo copiar la contraseña', 'error');
+    });
   }
 }
 

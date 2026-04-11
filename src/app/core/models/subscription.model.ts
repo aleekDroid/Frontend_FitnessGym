@@ -8,6 +8,7 @@ export interface SubscriptionType {
   status: 'active' | 'inactive' | 'suspended';
   person_per_suscription: number;
   description?: string;
+  slug?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -30,6 +31,7 @@ export interface CreateSubscriptionTypeDto {
   duration: number;
   person_per_suscription: number;
   description?: string;
+  slug?: string;
 }
 
 export interface DashboardStats {

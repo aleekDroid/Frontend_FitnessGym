@@ -147,6 +147,31 @@
             Asignar Nuevo Plan
           </button>
         </div>
+
+        <div class="profile-actions" style="margin-top: 10px">
+          <button
+            class="btn btn-outline"
+            style="width: 100%; justify-content: center; color: var(--accent); border-color: rgba(216, 64, 64, 0.3);"
+            (click)="confirmResetPassword()"
+            [disabled]="user()!.status !== 'active'"
+            title="Resetear la contraseña de este usuario"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M21 2v6h-6"></path>
+              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+              <path d="M3 22v-6h6"></path>
+              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+            </svg>
+            Resetear Contraseña
+          </button>
+        </div>
       </div>
     </aside>
 
@@ -396,13 +421,19 @@
             [class.is-invalid]="f['number'].touched && f['number'].errors"
             placeholder="10 dígitos"
           />
-          @if (f['number'].touched) { @if (f['number'].errors?.['required']) {
-          <div class="field-error">El teléfono es obligatorio.</div>
-          } @else if (f['number'].errors?.['phoneInUse']) {
-          <div class="field-error">
-            Este teléfono/matrícula ya está registrado por otro usuario.
-          </div>
-          } }
+          @if (f['number'].touched) {
+            @if (f['number'].errors?.['required']) {
+              <div class="field-error">El teléfono es obligatorio.</div>
+            } @else if (f['number'].errors?.['minlength']) {
+              <div class="field-error">El teléfono debe tener al menos 10 dígitos.</div>
+            } @else if (f['number'].errors?.['pattern']) {
+              <div class="field-error">Solo se permiten números.</div>
+            } @else if (f['number'].errors?.['phoneInUse']) {
+              <div class="field-error">
+                Este teléfono/matrícula ya está registrado por otro usuario.
+              </div>
+            }
+          }
         </div>
       </div>
 
@@ -456,4 +487,103 @@
   (closeEvent)="closeTransactionDetail()"
 >
 </app-transaction-detail-modal>
+}
+
+<!-- ══ MODAL: Reset Password Confirm ══ -->
+@if (showResetConfirm()) {
+<app-status-confirm-modal
+  entityType="contraseña"
+  [entityName]="'del usuario ' + user()!.name + ' ' + user()!.last_name"
+  [isActive]="true"
+  [isLoading]="resettingPassword()"
+  [customTitle]="'¿Restablecer Contraseña?'"
+  [customMessage]="'Se generará una nueva contraseña temporal para este usuario. Esta acción no se puede deshacer.'"
+  [confirmBtnText]="'Sí, resetear'"
+  (closeEvent)="cancelResetPassword()"
+  (confirmEvent)="doResetPassword()"
+>
+</app-status-confirm-modal>
+}
+
+<!-- ══ MODAL: Password Success ══ -->
+@if (showPasswordModal()) {
+<div class="modal-overlay" (click)="closePasswordModal()">
+  <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2 class="modal-title">¡Contraseña Reseteada!</h2>
+      <button class="modal-close" (click)="closePasswordModal()">✕</button>
+    </div>
+
+    <div class="modal-body text-center">
+      <div class="success-icon-wrapper">
+        <svg
+          class="success-icon"
+          width="60"
+          height="60"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+
+      <p class="modal-description">
+        La contraseña se ha restablecido exitosamente. Por favor, entrega la
+        siguiente <strong>contraseña temporal</strong> al usuario:
+      </p>
+
+      <div class="password-card">
+        <code class="temp-password">{{ generatedPassword() }}</code>
+        <button
+          class="btn-copy"
+          (click)="copyToClipboard(generatedPassword())"
+          title="Copiar contraseña"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path
+              d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+            ></path>
+          </svg>
+        </button>
+      </div>
+
+      <p class="password-hint">
+        <svg
+          width="14"
+          height="14"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        El usuario deberá cambiarla en su próximo inicio de sesión.
+      </p>
+    </div>
+
+    <div class="modal-footer footer-center">
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="closePasswordModal()"
+      >
+        Entendido
+      </button>
+    </div>
+  </div>
+</div>
 }

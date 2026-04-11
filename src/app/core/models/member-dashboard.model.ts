@@ -33,6 +33,7 @@ export interface MemberUser {
   number: string;
   qr_code_id?: string;
   isSetupPending: boolean;
+  isTemporaryPassword?: boolean;
   routine: Routine | null;
 }
 

@@ -52,19 +52,19 @@ export class SubscriptionsService {
   update(id: number, dto: Partial<CreateSubscriptionTypeDto>): Observable<SubscriptionType> {
     return this.http.patch<SubscriptionType>(`${environment.apiUrl}/subscription/type/${id}`, dto, { headers: this.getHeaders() });
   }
-  delete(id: number): Observable<void> {
-    return this.http.patch<void>(`${environment.apiUrl}/subscription/type/status/${id}`, { status: 'inactive' });
+  updateStatus(id: number, status: string): Observable<void> {
+    return this.http.patch<void>(`${environment.apiUrl}/subscription/type/status/${id}`, { status });
   }
 
   // ── POST assign subscription to user ──
-  assignSubscription(subscriptionId: number, userIds: number[], paymentMethod: string): Observable<any> {
+  assignSubscription(subscriptionId: number, userIds: number[], paymentMethod: string): Observable<{ message: string; visitaGratis: boolean }> {
     const payload = {
       subscription_id: Number(subscriptionId),
       users_id: userIds,
       payment_method: paymentMethod
     };
 
-    return this.http.post<any>(`${environment.apiUrl}/subscription/user`, payload);
+    return this.http.post<{ message: string; visitaGratis: boolean }>(`${environment.apiUrl}/subscription/user`, payload);
   }
 
   // ── Dashboard stats ──

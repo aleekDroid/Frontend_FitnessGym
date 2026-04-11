@@ -899,3 +899,106 @@
     font-size: 1rem;
   }
 }
+
+/* ── PASSWORD SUCCESS MODAL SPECIAL STYLES ── */
+.modal-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--light);
+}
+
+.modal-close {
+  background: transparent;
+  border: none;
+  color: rgba(238, 238, 238, 0.5);
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.success-icon-wrapper {
+  margin: 20px 0;
+  display: flex;
+  justify-content: center;
+  color: #4ade80; /* Success green */
+}
+
+.success-icon {
+  filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.3));
+  animation: scaleIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modal-description {
+  color: rgba(238, 238, 238, 0.7);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin-bottom: 24px;
+}
+
+.password-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1.5px dashed rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  transition: all 0.3s ease;
+}
+
+.password-card:hover {
+  border-color: var(--accent);
+  background: rgba(216, 64, 64, 0.05);
+}
+
+.temp-password {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 1.15rem; /* Reduced to fit in single line */
+  font-weight: 700;
+  color: var(--light);
+  letter-spacing: 1px;
+  word-break: break-all;
+}
+
+.btn-copy {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(238, 238, 238, 0.6);
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-copy:hover {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+  transform: scale(1.05);
+}
+
+.password-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(238, 238, 238, 0.7);
+  margin-bottom: 24px;
+}
+
+.footer-center {
+  justify-content: center !important;
+  padding-bottom: 25px !important;
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}

@@ -42,6 +42,8 @@
   flex-direction: column;
   gap: 28px;
   align-items: center;
+  overflow-y: auto; // Scrollable body
+  flex: 1;
 }
 
 /* Status Icon */
@@ -226,3 +228,32 @@
 .text-warning { color: #ffb300 !important; }
 .text-success { color: #4ade80 !important; }
 .text-right { text-align: right; }
+
+@media (max-height: 700px), (max-width: 480px) {
+  .modal-header { padding: 16px 20px 0; }
+  .modal-title { font-size: 1.2rem; }
+  
+  .modal-body {
+    padding: 20px;
+    gap: 20px;
+  }
+  
+  .icon-circle {
+    width: 60px;
+    height: 60px;
+    svg { width: 32px; height: 32px; }
+  }
+  
+  .user-avatar-main {
+    width: 60px;
+    height: 60px;
+    font-size: 1.4rem;
+  }
+  
+  .user-full-name { font-size: 1.2rem; }
+  
+  .status-card { padding: 16px; }
+  .info-grid { gap: 12px; }
+  
+  .modal-actions { padding: 16px 20px; }
+}

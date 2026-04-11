@@ -9,6 +9,7 @@ import {
 } from "../../../core/models/member-dashboard.model";
 import { RoutineEditModalComponent } from "../../../shared/components/routine-edit-modal/routine-edit-modal.component";
 import { DayRoutineModalComponent } from "../../../shared/components/day-routine-modal/day-routine-modal.component";
+import { ChangePasswordModalComponent } from "../../../shared/components/change-password-modal/change-password-modal.component";
 
 const QUOTES = [
   "El dolor que sientes hoy será la fuerza que sientes mañana.",
@@ -45,7 +46,7 @@ const ENG_TO_SPA: Record<string, string> = {
 @Component({
   selector: "app-member-dashboard",
   standalone: true,
-  imports: [CommonModule, RoutineEditModalComponent, DayRoutineModalComponent],
+  imports: [CommonModule, RoutineEditModalComponent, DayRoutineModalComponent, ChangePasswordModalComponent],
   templateUrl: "./dashboard.component.html",
   styleUrls: ["./dashboard.component.scss"],
 })
@@ -127,6 +128,9 @@ export class MemberDashboardComponent implements OnInit {
 
   /** true = usuario no ha guardado su primera rutina — la racha está en modo protegido */
   isSetupPending = computed(() => this.user()?.isSetupPending ?? false);
+
+  /** true = el usuario tiene una contraseña temporal y DEBE cambiarla */
+  isTemporaryPassword = computed(() => this.user()?.isTemporaryPassword ?? false);
 
 
   daysLeft = computed(() => {
@@ -354,5 +358,10 @@ export class MemberDashboardComponent implements OnInit {
     }
     this.qrImageUrl.set(null);
     this.qrError.set(false);
+  }
+
+  onPasswordChanged(): void {
+    // Recargar datos para que isTemporaryPassword sea false
+    this.loadDashboardData();
   }
 }
