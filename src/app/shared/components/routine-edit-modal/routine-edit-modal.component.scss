@@ -123,8 +123,13 @@
   color: #facc15;
   line-height: 1.5;
   flex-shrink: 0;
-  /* --- AGREGAR ESTO --- */
   transition: all 0.2s ease;
+
+  &.is-joker {
+    background: rgba(81, 192, 255, 0.08);
+    border-color: rgba(81, 192, 255, 0.2);
+    color: #81ccff;
+  }
 }
 
 .warn-icon { flex-shrink: 0; font-size: 14px; margin-top: 1px; }
@@ -564,6 +569,12 @@
     background: rgba(216, 64, 64, 0.12);
     border: 1px solid rgba(216, 64, 64, 0.3);
     color: #ff7070;
+  }
+
+  &.info {
+    background: rgba(81, 192, 255, 0.12);
+    border: 1px solid rgba(81, 192, 255, 0.3);
+    color: #81ccff;
   }
 }
 

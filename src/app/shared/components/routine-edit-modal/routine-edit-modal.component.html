@@ -21,7 +21,18 @@
       </div>
 
       <!-- ── Banner de racha ── -->
-      @if (shouldWarnStreakReset()) {
+      @if (streakRiskMode() === 'JOKER') {
+        <div class="streak-warning is-joker">
+          <span class="warn-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </span>
+          <span>
+            Modificaste los días de descanso. Guardar consumirá <strong>1 comodín</strong> para mantener tu racha.
+          </span>
+        </div>
+      } @else if (streakRiskMode() === 'RESET') {
         <div class="streak-warning">
           <span class="warn-icon">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
@@ -30,7 +41,7 @@
           </span>
           <span>
             Modificaste los días de descanso. Guardar reiniciará tu racha de
-            <strong>{{ streak }} días</strong> a 0.
+            <strong>{{ streak }} días</strong> a 0 (no tienes comodines).
           </span>
         </div>
       }
@@ -215,7 +226,12 @@
               (click)="onSaveClick()">
               @if (saving()) {
                 Guardando...
-              } @else if (shouldWarnStreakReset()) {
+              } @else if (streakRiskMode() === 'JOKER') {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;flex-shrink:0">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Guardar y usar comodín
+              } @else if (streakRiskMode() === 'RESET') {
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="margin-right:4px;flex-shrink:0">
                   <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
                 </svg>
@@ -235,21 +251,33 @@
   @if (showConfirm()) {
     <div class="confirm-overlay" (click)="cancelConfirm()">
       <div class="confirm-box" (click)="$event.stopPropagation()">
-        <div class="confirm-icon danger">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/>
-            <line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
+        <div class="confirm-icon" [class.danger]="streakRiskMode() === 'RESET'" [class.info]="streakRiskMode() === 'JOKER'">
+          @if (streakRiskMode() === 'JOKER') {
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          } @else {
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+          }
         </div>
-        <h3 class="confirm-title">¿Perder tu racha?</h3>
+        <h3 class="confirm-title">{{ streakRiskMode() === 'JOKER' ? '¿Usar un comodín?' : '¿Perder tu racha?' }}</h3>
         <p class="confirm-body">
-          Cambiar tus días de descanso reiniciará tu racha actual de
-          <strong>{{ streak }} días</strong> a cero. Esta acción no se puede deshacer.
+          @if (streakRiskMode() === 'JOKER') {
+            Cambiar tus días de descanso consumirá <strong>1 comodín</strong> (tienes {{ jokers }}). Esto te permitirá mantener tu racha actual de <strong>{{ streak }} días</strong>.
+          } @else {
+            Cambiar tus días de descanso reiniciará tu racha actual de
+            <strong>{{ streak }} días</strong> a cero ya que no tienes comodines disponibles. Esta acción no se puede deshacer.
+          }
         </p>
         <div class="confirm-actions">
           <button class="btn btn-cancel" (click)="cancelConfirm()">Cancelar</button>
-          <button class="btn btn-danger" (click)="confirmSave()">Sí, guardar igual</button>
+          <button class="btn" [class.btn-danger]="streakRiskMode() === 'RESET'" [class.btn-save]="streakRiskMode() === 'JOKER'" (click)="confirmSave()">
+            {{ streakRiskMode() === 'JOKER' ? 'Entendido, usar comodín' : 'Sí, perder racha' }}
+          </button>
         </div>
       </div>
     </div>

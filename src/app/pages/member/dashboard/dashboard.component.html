@@ -230,7 +230,7 @@
           </div>
 
           <div class="streak-meta-item" style="text-align: right">
-            <span class="streak-meta-val">{{ attendances().length }}</span>
+            <span class="streak-meta-val">{{ data()?.attendancesInCycle ?? 0 }}</span>
             <span class="streak-meta-lbl">este ciclo</span>
           </div>
         </div>
@@ -435,6 +435,7 @@
     <app-routine-edit-modal
       [visible]="showRoutineModal()"
       [streak]="streak()"
+      [jokers]="jokers()"
       [initialRoutine]="fullRoutine()"
       [loading]="modalLoading()"
       [isSetupPending]="isSetupPending()"

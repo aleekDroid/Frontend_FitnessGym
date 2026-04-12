@@ -80,8 +80,6 @@ export class UsersService {
       
     if (role) {
       params = params.set('role', role);
-    } else {
-      params = params.set('role', 'member');
     }
       
     if (search.trim()) {

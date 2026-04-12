@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -28,13 +28,13 @@ export class UsersComponent implements OnInit {
   // Pagination & Search
   searchQuery = signal('');
   filterStatus = signal<'active' | 'inactive' | ''>('');
-  filterRole = signal<'admin' | 'member' | ''>('member');
+  filterRole = signal<'admin' | 'member' | ''>('');
   filterSubscription = signal<'true' | 'false' | 'all'>('all');
   currentPage = signal(1);
   limit = signal(10);
   totalItems = signal(0);
   totalPages = signal(0);
-  private searchSubject = new Subject<string>();
+  private readonly searchSubject = new Subject<string>();
 
   // Modal
   // Modals
@@ -52,6 +52,7 @@ export class UsersComponent implements OnInit {
 
   // Mobile Filters Toggle
   showFilters = signal(false);
+  isDesktop = signal(false);
 
   private readonly notificationService = inject(NotificationService);
 
@@ -71,6 +72,9 @@ export class UsersComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Detect desktop resolution
+    this.checkIsDesktop();
+
     // Setup debounced search targeting backend
     this.searchSubject.pipe(
       debounceTime(300),
@@ -85,6 +89,11 @@ export class UsersComponent implements OnInit {
     this.subscriptionsService.getAll().subscribe(res => {
       this.subscriptionTypes.set(res.data.filter(t => t.status === 'active'));
     });
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    this.checkIsDesktop();
   }
 
   loadData(): void {
@@ -188,7 +197,7 @@ export class UsersComponent implements OnInit {
           this.loadData();
           
           // Show the generated password
-          if (res && res.password) {
+          if (res?.password) {
             this.generatedPassword.set(res.password);
             this.showPasswordModal.set(true);
           }
@@ -278,6 +287,12 @@ export class UsersComponent implements OnInit {
 
   toggleFilters(): void {
     this.showFilters.update(v => !v);
+  }
+
+  private checkIsDesktop(): void {
+    if (globalThis.window !== undefined) {
+      this.isDesktop.set(globalThis.window.innerWidth > 768);
+    }
   }
 
   closeFilters(): void {

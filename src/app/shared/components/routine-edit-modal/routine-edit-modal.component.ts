@@ -29,6 +29,7 @@ export class RoutineEditModalComponent implements OnChanges {
   // ─── Inputs ───
   @Input() visible = false;
   @Input() streak = 0;
+  @Input() jokers = 0;
   @Input() initialRoutine: RoutineDay[] = [];
   @Input() loading = false;        // true mientras el padre hace el GET
   @Input() isSetupPending = false; // true = primera configuración, no hay racha que proteger
@@ -66,6 +67,17 @@ export class RoutineEditModalComponent implements OnChanges {
     this.restDayChanged() && !this.isSetupPending && this.streak > 0
   );
 
+  /**
+   * Determina el modo de riesgo de la racha.
+   * 'NONE'  = Sin riesgo.
+   * 'JOKER' = Se usará un comodín.
+   * 'RESET' = Se reiniciará a 0.
+   */
+  streakRiskMode = computed(() => {
+    if (!this.shouldWarnStreakReset()) return 'NONE';
+    return this.jokers > 0 ? 'JOKER' : 'RESET';
+  });
+
   /** Nombre abreviado de cada pestaña */
   dayAbbrs = DAY_ABBR;
 
@@ -76,18 +88,32 @@ export class RoutineEditModalComponent implements OnChanges {
 
   ngOnChanges(): void {
     // Cada vez que se abre el modal (visible pasa a true) o llegan nuevos datos,
-    // reinicializar la copia editable con deep clone del original
-    if (this.visible && this.initialRoutine.length) {
-      this.editableDays.set(
-        this.initialRoutine.map((d) => ({
-          ...d,
-          exercises: (d.exercises ?? []).map((e) => ({ ...e })),
-        }))
-      );
+    // reinicializar la copia editable.
+    if (this.visible) {
+      if (this.initialRoutine && this.initialRoutine.length > 0) {
+        this.editableDays.set(
+          this.initialRoutine.map((d) => ({
+            ...d,
+            exercises: (d.exercises ?? []).map((e) => ({ ...e })),
+          }))
+        );
+      } else {
+        // Si no hay rutina previa (usuario nuevo), inicializar una vacía de 6 días
+        this.editableDays.set(this.initializeDefaultDays());
+      }
       this.activeDay.set(0);
       this.showConfirm.set(false);
       this.saving.set(false);
     }
+  }
+
+  private initializeDefaultDays(): RoutineDay[] {
+    return ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'].map((day) => ({
+      day,
+      description: '',
+      isRestDay: false,
+      exercises: [],
+    }));
   }
 
   // ─── Acciones de día ───
@@ -100,7 +126,7 @@ export class RoutineEditModalComponent implements OnChanges {
     this.editableDays.update((days) =>
       days.map((d, i) =>
         i === index
-          ? { ...d, isRestDay: !d.isRestDay, exercises: !d.isRestDay ? [] : d.exercises }
+          ? { ...d, isRestDay: !d.isRestDay, exercises: d.isRestDay ? d.exercises : [] }
           : d
       )
     );
@@ -216,7 +242,7 @@ export class RoutineEditModalComponent implements OnChanges {
 
   stepExerciseValue(dayIndex: number, exIndex: number, field: 'sets' | 'reps', step: number): void {
     const day = this.editableDays()[dayIndex];
-    if (!day || !day.exercises) return;
+    if (!day?.exercises) return;
     const ex = day.exercises[exIndex];
     if (!ex) return;
 

@@ -96,7 +96,7 @@ export class MemberDashboardComponent implements OnInit {
   streak = computed(() => this.routine()?.streak ?? 0);
   isStreakActive = computed(() => this.routine()?.isStreakActive ?? false);
   attendedToday = computed(() => this.routine()?.attendedToday ?? false);
-  jokers = computed(() => this.routine()?.comodines_usados ?? 0);
+  jokers = computed(() => this.routine()?.jokersCount ?? 0);
   lastAttendance = computed(() => this.routine()?.lastAttendance ?? null);
 
   days = computed<RoutineDay[]>(() => this.routine()?.days ?? []);

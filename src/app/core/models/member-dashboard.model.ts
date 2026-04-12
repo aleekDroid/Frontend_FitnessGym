@@ -19,7 +19,7 @@ export interface FullRoutine {
 
 export interface Routine {
   streak: number;
-  comodines_usados: number;
+  jokersCount: number;
   isStreakActive: boolean;
   attendedToday: boolean;
   lastAttendance: string | null;
@@ -66,6 +66,7 @@ export interface PaymentRecord {
 export interface MemberDashboardResponse {
   user: MemberUser;
   activeSubscription: ActiveSubscription | null;
+  attendancesInCycle: number;
   recentAttendances: AttendanceRecord[];
   paymentHistory: PaymentRecord[];
 }
