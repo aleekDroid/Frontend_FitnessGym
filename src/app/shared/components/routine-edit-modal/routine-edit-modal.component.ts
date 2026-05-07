@@ -52,7 +52,7 @@ export class RoutineEditModalComponent implements OnChanges {
   restDayChanged = computed(() => {
     const original = this.initialRoutine;
     const edited = this.editableDays();
-    if (!original.length || !edited.length) return false;
+    if (!original?.length || !edited.length) return false;
     return edited.some((d, i) => d.isRestDay !== (original[i]?.isRestDay ?? false));
   });
 

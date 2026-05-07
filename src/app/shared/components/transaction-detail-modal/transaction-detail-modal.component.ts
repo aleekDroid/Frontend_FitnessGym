@@ -21,8 +21,8 @@ export class TransactionDetailModalComponent implements OnInit {
   error = signal<string | null>(null);
 
   constructor(
-    private subscriptionsService: SubscriptionsService,
-    private router: Router
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly router: Router
   ) {}
 
   ngOnInit(): void {
@@ -50,7 +50,7 @@ export class TransactionDetailModalComponent implements OnInit {
 
   viewUserProfile(userId: number): void {
     this.closeModal();
-    this.router.navigate(['/admin/users', userId]);
+    this.router.navigate(['/admin/users', userId], { queryParams: { from: 'users' } });
   }
 
   formatDate(dateStr?: string): string {

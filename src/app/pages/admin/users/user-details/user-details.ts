@@ -123,7 +123,12 @@ export class UserDetails implements OnInit {
   }
 
   goBack(): void {
-    this.router.navigate(['/admin/users']);
+    const from = this.route.snapshot.queryParamMap.get('from');
+    if (from === 'home') {
+      this.router.navigate(['/admin/home']);
+    } else {
+      this.router.navigate(['/admin/users']);
+    }
   }
 
   // ─── EDIT MODAL ───

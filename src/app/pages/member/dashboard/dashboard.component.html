@@ -18,14 +18,12 @@
         <div class="banner-right">
           <span
             class="member-badge"
-            [class.inactive]="
-              subscription()?.status === 'expired' || !subscription()
-            "
-            [class.expiring]="subscription()?.status === 'expiring'"
+            [class.inactive]="subscriptionStatus() === 'expired'"
+            [class.expiring]="subscriptionStatus() === 'expiring'"
           >
-            @if (!subscription() || subscription()?.status === "expired") {
+            @if (subscriptionStatus() === "expired") {
               Membresía Vencida
-            } @else if (subscription()?.status === "expiring") {
+            } @else if (subscriptionStatus() === "expiring") {
               Por vencer
             } @else {
               Miembro activo
@@ -89,16 +87,14 @@
         <span class="status-label">Estado</span>
         <span
           class="status-value"
-          [class.active]="subscription()?.status === 'active'"
-          [class.expiring]="subscription()?.status === 'expiring'"
-          [class.expired]="
-            !subscription() || subscription()?.status === 'expired'
-          "
+          [class.active]="subscriptionStatus() === 'active'"
+          [class.expiring]="subscriptionStatus() === 'expiring'"
+          [class.expired]="subscriptionStatus() === 'expired'"
         >
           {{
-            subscription()?.status === "active"
+            subscriptionStatus() === "active"
               ? "● Activa"
-              : subscription()?.status === "expiring"
+              : subscriptionStatus() === "expiring"
                 ? "● Por vencer"
                 : "● Inactiva"
           }}

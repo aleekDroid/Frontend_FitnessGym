@@ -23,9 +23,15 @@
   gap: 32px;
 }
 
-.logo {
+.logo-btn {
   cursor: pointer;
   flex-shrink: 0;
+  background: none;
+  border: none;
+  padding: 0;
+  display: flex;
+  align-items: center;
+
   .logo-img {
     height: 48px;
     width: auto;
@@ -452,25 +458,84 @@
 }
 .contact-info .btn { margin-top: 24px; }
 
-.contact-map-placeholder {
+.contact-map {
   background: rgba(255,255,255,0.03);
   border: 1px solid rgba(255,255,255,0.08);
   border-radius: 14px;
-  height: 280px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.map-inner {
-  text-align: center;
-  color: rgba(238,238,238,0.3);
-  svg { margin: 0 auto 12px; }
-  p { font-weight: 600; }
+  height: 320px;
+  width: 100%;
+  z-index: 10;
+  overflow: hidden;
+
+  // Personalización de Leaflet (Modo Oscuro & Tema Gym)
+  ::ng-deep {
+    .leaflet-tile {
+      filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+    }
+    .leaflet-container {
+      background: #1a0f0f;
+      font-family: var(--font-body);
+    }
+    .leaflet-control-attribution {
+      background: rgba(0,0,0,0.5) !important;
+      color: rgba(255,255,255,0.3) !important;
+      font-size: 8px;
+    }
+    .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+      background: #251a1a;
+      color: var(--light);
+      border: 1px solid rgba(216,64,64,0.3);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    .leaflet-popup-content {
+      margin: 12px 16px;
+      line-height: 1.4;
+    }
+
+    // Estilo del Marker 🔥
+    .custom-gym-marker {
+      position: relative;
+      width: 30px;
+      height: 30px;
+
+      .marker-pin {
+        width: 30px;
+        height: 30px;
+        border-radius: 50% 50% 50% 0;
+        background: var(--accent);
+        position: absolute;
+        transform: rotate(-45deg);
+        box-shadow: 0 0 15px rgba(216,64,64,0.5);
+        left: 0;
+        top: 0;
+        
+        &::after {
+          content: '';
+          width: 24px;
+          height: 24px;
+          margin: 3px 0 0 3px;
+          background: #1a0f0f;
+          position: absolute;
+          border-radius: 50%;
+        }
+      }
+      
+      .marker-emoji {
+        position: absolute;
+        z-index: 2;
+        font-size: 16px;
+        top: 3px;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+  }
 }
 
 @media (max-width: 768px) {
   .contact-inner { grid-template-columns: 1fr; }
-  .contact-map-placeholder { height: 200px; }
+  .contact-map { height: 250px; }
 }
 
 /* ── FOOTER ── */

@@ -140,6 +140,23 @@ export class MemberDashboardComponent implements OnInit {
     return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
   });
 
+  /** Determina el estado visual para la UI (Activa, Por vencer, Inactiva) */
+  subscriptionStatus = computed(() => {
+    const sub = this.subscription();
+    if (!sub) return 'expired';
+
+    // Si el backend dice que ya expiró, respetamos eso
+    if (sub.status === 'expired') return 'expired';
+
+    // Si está activa pero quedan 5 días o menos, la marcamos como por vencer
+    const left = this.daysLeft();
+    if (left !== null && left > 0 && left <= 5) {
+      return 'expiring';
+    }
+
+    return sub.status ?? 'expired';
+  });
+
   membershipProgress = computed(() => {
     const sub = this.subscription();
     if (!sub) return 0;

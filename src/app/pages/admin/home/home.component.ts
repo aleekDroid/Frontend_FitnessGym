@@ -144,8 +144,9 @@ export class HomeComponent implements OnInit, OnDestroy {
     return 'text-success';
   }
 
-  viewUser(userId: string): void {
-    this.router.navigate(['/admin/users', userId]);
+  viewUser(userId: string | number): void {
+    this.showResult.set(false);
+    this.router.navigate(['/admin/users', userId], { queryParams: { from: 'home' } });
   }
 
   // ── SCANNER LOGIC ──

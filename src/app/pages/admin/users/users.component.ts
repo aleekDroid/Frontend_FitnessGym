@@ -162,7 +162,7 @@ export class UsersComponent implements OnInit {
   }
 
   openDetails(user: UserWithMembership): void {
-    this.router.navigate(['/admin/users', user.id]);
+    this.router.navigate(['/admin/users', user.id], { queryParams: { from: 'users' } });
   }
 
   closeModal(): void {
