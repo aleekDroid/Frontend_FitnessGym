@@ -7,9 +7,12 @@ import {
   signal,
   PLATFORM_ID,
   Inject,
+  ElementRef,
+  Renderer2,
 } from "@angular/core";
-import { isPlatformBrowser, CommonModule } from "@angular/common";
+import { isPlatformBrowser, CommonModule, DOCUMENT } from "@angular/common";
 import { Router } from "@angular/router";
+import { Meta } from "@angular/platform-browser";
 import { SubscriptionsService } from "../../core/services/subscriptions.service";
 import { SubscriptionType } from "../../core/models/subscription.model";
 import * as L from "leaflet";
@@ -85,18 +88,79 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private readonly router: Router,
     private readonly subscriptionsService: SubscriptionsService,
+    private readonly el: ElementRef,
     @Inject(PLATFORM_ID) private readonly platformId: any,
+    private readonly meta: Meta,
+    @Inject(DOCUMENT) private readonly document: Document,
+    private readonly renderer: Renderer2,
   ) {}
 
   ngOnInit(): void {
+    this.meta.updateTag({
+      name: "description",
+      content:
+        "Únete a Fitness Gym, tu mejor gimnasio en Lomas de San Pedrito, Querétaro. Conoce nuestros planes de entrenamiento, horarios y entrena con el mejor equipo.",
+    });
+    this.meta.updateTag({
+      property: "og:url",
+      content: "https://www.fitnessgymqro.com/",
+    });
+    this.meta.updateTag({
+      name: "twitter:url",
+      content: "https://www.fitnessgymqro.com/",
+    });
+    this.addJsonLd();
     this.startCarousel();
     this.loadPrices();
+  }
+
+  private addJsonLd(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      const script = this.renderer.createElement("script");
+      script.type = "application/ld+json";
+      script.text = JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "ExerciseGym",
+        name: "Fitness Gym",
+        url: "https://www.fitnessgymqro.com/",
+        image: "https://www.fitnessgymqro.com/assets/FitnessGym.PNG",
+        address: {
+          "@type": "PostalAddress",
+          streetAddress: "De La Patria 515, Lomas de San Pedrito",
+          addressLocality: "Querétaro",
+          addressRegion: "QRO",
+          addressCountry: "MX",
+        },
+      });
+      this.renderer.appendChild(this.document.head, script);
+    }
   }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       this.initMap();
+      this.setupScrollObserver();
     }
+  }
+
+  private setupScrollObserver(): void {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("active");
+          }
+        });
+      },
+      {
+        root: null,
+        threshold: 0.15,
+        rootMargin: "0px 0px -50px 0px",
+      },
+    );
+
+    const hiddenElements = this.el.nativeElement.querySelectorAll(".reveal");
+    hiddenElements.forEach((el: any) => observer.observe(el));
   }
 
   private initMap(): void {
@@ -207,7 +271,19 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   scrollTo(id: string): void {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+    const element = document.getElementById(id);
+    if (element) {
+      // Offset matches the fixed navbar height (68px)
+      const headerOffset = 68;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition =
+        elementPosition + window.pageYOffset - headerOffset;
+
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: "smooth",
+      });
+    }
     this.menuOpen.set(false);
   }
 }

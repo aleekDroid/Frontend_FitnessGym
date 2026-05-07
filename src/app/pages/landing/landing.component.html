@@ -5,9 +5,9 @@
 ══════════════════════════════════════════ -->
 <header class="header" [class.scrolled]="true">
   <div class="header-inner">
-    <button 
-      class="logo-btn" 
-      (click)="scrollTo('top')" 
+    <button
+      class="logo-btn"
+      (click)="scrollTo('top')"
       aria-label="Ir al inicio"
     >
       <img src="assets/FitnessGym.PNG" alt="Fitness Gym" class="logo-img" />
@@ -15,22 +15,39 @@
 
     <!-- Desktop nav -->
     <nav class="nav-links" aria-label="Navegación principal">
-      <button class="nav-link" (click)="scrollTo('horarios')">Horarios</button>
-      <button class="nav-link" (click)="scrollTo('precios')">Precios</button>
-      <button class="nav-link" (click)="scrollTo('contacto')">Contacto</button>
+      <a href="#planes" class="nav-link" (click)="$event.preventDefault(); scrollTo('planes')">Planes</a>
+      <a href="#beneficios" class="nav-link" (click)="$event.preventDefault(); scrollTo('beneficios')">
+        Beneficios
+      </a>
+      <a href="#contacto" class="nav-link" (click)="$event.preventDefault(); scrollTo('contacto')">Contacto</a>
     </nav>
 
     <div class="header-actions">
-      <button class="btn btn-primary btn-login" (click)="goToLogin()" aria-label="Iniciar sesión">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <a
+        href="/login"
+        class="btn btn-primary btn-login"
+        (click)="$event.preventDefault(); goToLogin()"
+        aria-label="Iniciar sesión"
+      >
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
+          <polyline points="10 17 15 12 10 7" />
+          <line x1="15" y1="12" x2="3" y2="12" />
+        </svg>
         Iniciar sesión
-      </button>
-    </div>el
-
+      </a>
+    </div>
     <!-- Hamburger (mobile) -->
-    <button 
-      class="hamburger" 
-      (click)="toggleMenu()" 
+    <button
+      class="hamburger"
+      (click)="toggleMenu()"
       [class.open]="menuOpen()"
       aria-label="Abrir menú"
     >
@@ -41,14 +58,23 @@
   <!-- Mobile menu -->
   @if (menuOpen()) {
     <nav class="mobile-nav" aria-label="Menú móvil">
-      <button class="mobile-nav-link" (click)="scrollTo('horarios')">Horarios</button>
-      <button class="mobile-nav-link" (click)="scrollTo('precios')">Precios</button>
-      <button class="mobile-nav-link" (click)="scrollTo('contacto')">Contacto</button>
-      <button class="btn btn-primary btn-full mt-8" (click)="goToLogin()">Iniciar sesión</button>
+      <a href="#planes" class="mobile-nav-link" (click)="$event.preventDefault(); scrollTo('planes')">
+        Planes
+      </a>
+      <a href="#beneficios" class="mobile-nav-link" (click)="$event.preventDefault(); scrollTo('beneficios')">
+        Beneficios
+      </a>
+      <a href="#contacto" class="mobile-nav-link" (click)="$event.preventDefault(); scrollTo('contacto')">
+        Contacto
+      </a>
+      <a href="/login" class="btn btn-primary btn-full mt-8" (click)="$event.preventDefault(); goToLogin()">
+        Iniciar sesión
+      </a>
     </nav>
   }
 </header>
 
+<main>
 <!-- ══════════════════════════════════════════
      HERO CAROUSEL
 ══════════════════════════════════════════ -->
@@ -57,7 +83,10 @@
     @for (slide of slides; track slide.id; let i = $index) {
       <div class="carousel-slide" [class.active]="currentSlide() === i">
         <!-- Background image; fallback to gradient if image not found -->
-        <div class="slide-bg" [style.backgroundImage]="'url(' + slide.image + ')'"></div>
+        <div
+          class="slide-bg"
+          [style.backgroundImage]="'url(' + slide.image + ')'"
+        ></div>
         <div class="slide-overlay"></div>
 
         <div class="slide-content" [class.visible]="currentSlide() === i">
@@ -67,7 +96,12 @@
           <h1 class="slide-title">{{ slide.title }}</h1>
           <p class="slide-subtitle">{{ slide.subtitle }}</p>
           @if (slide.cta) {
-            <button class="btn btn-primary slide-cta" (click)="scrollTo('precios')">{{ slide.cta }}</button>
+            <button
+              class="btn btn-primary slide-cta"
+              (click)="scrollTo('planes')"
+            >
+              {{ slide.cta }}
+            </button>
           }
         </div>
       </div>
@@ -75,16 +109,38 @@
 
     <!-- Arrows -->
     <button class="carousel-arrow carousel-arrow--prev" (click)="prevSlide()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <polyline points="15 18 9 12 15 6" />
+      </svg>
     </button>
     <button class="carousel-arrow carousel-arrow--next" (click)="nextSlide()">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      <svg
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+      >
+        <polyline points="9 18 15 12 9 6" />
+      </svg>
     </button>
 
     <!-- Dots -->
     <div class="carousel-dots">
       @for (slide of slides; track slide.id; let i = $index) {
-        <button class="dot" [class.active]="currentSlide() === i" (click)="goToSlide(i)"></button>
+        <button
+          class="dot"
+          [class.active]="currentSlide() === i"
+          (click)="goToSlide(i)"
+        ></button>
       }
     </div>
   </div>
@@ -93,12 +149,31 @@
 <!-- ══════════════════════════════════════════
      HORARIOS & PRECIOS
 ══════════════════════════════════════════ -->
-<section id="horarios" class="info-section">
+<section id="planes" class="info-section">
+  <!-- Decorative: rotating rings -->
+  <div class="deco deco--rings" aria-hidden="true">
+    <svg viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="250" cy="250" r="80" fill="none" stroke="rgba(216,64,64,0.15)" stroke-width="1.5" stroke-dasharray="8 14"/>
+      <circle cx="250" cy="250" r="155" fill="none" stroke="rgba(216,64,64,0.1)" stroke-width="1" stroke-dasharray="4 18"/>
+      <circle cx="250" cy="250" r="235" fill="none" stroke="rgba(216,64,64,0.06)" stroke-width="1"/>
+      <circle cx="250" cy="250" r="8" fill="rgba(216,64,64,0.25)"/>
+    </svg>
+  </div>
   <div class="info-grid">
     <!-- Horarios -->
-    <div class="info-card">
+    <div class="info-card reveal">
       <div class="info-card-header">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <polyline points="12 6 12 12 16 14" />
+        </svg>
         <h2>Horarios</h2>
       </div>
       <div class="schedule-list">
@@ -110,15 +185,36 @@
         }
       </div>
       <div class="info-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <svg
+          width="16"
+          height="16"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <circle cx="12" cy="12" r="10" />
+          <line x1="12" y1="8" x2="12" y2="12" />
+          <line x1="12" y1="16" x2="12.01" y2="16" />
+        </svg>
         Días festivos con horario especial
       </div>
     </div>
 
     <!-- Precios -->
-    <div class="info-card" id="precios">
+    <div class="info-card reveal reveal-delay-1" id="precios">
       <div class="info-card-header">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        <svg
+          width="28"
+          height="28"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <line x1="12" y1="1" x2="12" y2="23" />
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+        </svg>
         <h2>Precios</h2>
       </div>
       <div class="prices-list" [class.loading]="loadingPrices()">
@@ -132,13 +228,17 @@
               <div class="price-info">
                 <span class="price-name">{{ type.name }}</span>
                 @if (type.person_per_suscription > 1) {
-                  <span class="price-persons">{{ type.person_per_suscription }} personas</span>
+                  <span class="price-persons"
+                    >{{ type.person_per_suscription }} personas</span
+                  >
                 }
               </div>
               <span class="price-amount">${{ type.price | number }}</span>
             </div>
           } @empty {
-            <p class="empty-prices">No hay planes disponibles en este momento.</p>
+            <p class="empty-prices">
+              No hay planes disponibles en este momento.
+            </p>
           }
         }
       </div>
@@ -146,12 +246,40 @@
       <!-- Paginación Landing -->
       @if (totalPages() > 1) {
         <div class="prices-pagination">
-          <button class="p-btn" [disabled]="currentPage() === 1 || loadingPrices()" (click)="changePage(-1)" aria-label="Anterior">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+          <button
+            class="p-btn"
+            [disabled]="currentPage() === 1 || loadingPrices()"
+            (click)="changePage(-1)"
+            aria-label="Anterior"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="15 18 9 12 15 6" />
+            </svg>
           </button>
           <span class="p-info">{{ currentPage() }} / {{ totalPages() }}</span>
-          <button class="p-btn" [disabled]="currentPage() === totalPages() || loadingPrices()" (click)="changePage(1)" aria-label="Siguiente">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+          <button
+            class="p-btn"
+            [disabled]="currentPage() === totalPages() || loadingPrices()"
+            (click)="changePage(1)"
+            aria-label="Siguiente"
+          >
+            <svg
+              width="18"
+              height="18"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+            >
+              <polyline points="9 18 15 12 9 6" />
+            </svg>
           </button>
         </div>
       }
@@ -162,27 +290,99 @@
 <!-- ══════════════════════════════════════════
      FEATURES / WHY US
 ══════════════════════════════════════════ -->
-<section class="features-section">
+<section id="beneficios" class="features-section">
+  <!-- Decorative: floating diamonds -->
+  <div class="deco deco--geo" aria-hidden="true">
+    <div class="geo-shape geo-shape--1"></div>
+    <div class="geo-shape geo-shape--2"></div>
+    <div class="geo-shape geo-shape--3"></div>
+  </div>
   <div class="features-inner">
-    <h2 class="features-title">¿Por qué <span class="text-accent">Fitness Gym?</span></h2>
+    <h2 class="features-title reveal">
+      ¿Por qué <span class="text-accent">Fitness Gym?</span>
+    </h2>
     <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">💪</div>
+      <div class="feature-card reveal reveal-delay-1">
+        <div class="feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <rect x="6" y="7" width="3" height="10" rx="1" />
+            <rect x="15" y="7" width="3" height="10" rx="1" />
+            <line x1="9" y1="12" x2="15" y2="12" />
+            <rect x="3" y="9" width="3" height="6" rx="1" />
+            <rect x="18" y="9" width="3" height="6" rx="1" />
+          </svg>
+        </div>
         <h3>Equipo Profesional</h3>
-        <p>Maquinaria de alta gama actualizada constantemente para tu progreso.</p>
+        <p>
+          Maquinaria de alta gama actualizada constantemente para tu progreso.
+        </p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🏆</div>
+
+      <div class="feature-card reveal reveal-delay-2">
+        <div class="feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <circle cx="12" cy="8" r="6" />
+            <path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11" />
+          </svg>
+        </div>
         <h3>Entrenadores Certificados</h3>
         <p>Staff con certificación internacional listo para guiarte.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">📱</div>
+
+      <div class="feature-card reveal reveal-delay-3">
+        <div class="feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path
+              d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"
+            />
+            <rect x="8" y="2" width="8" height="4" rx="1" />
+            <line x1="12" y1="11" x2="16" y2="11" />
+            <line x1="12" y1="15" x2="16" y2="15" />
+            <polyline points="8 11 9 12 11 10" />
+            <polyline points="8 15 9 16 11 14" />
+          </svg>
+        </div>
         <h3>Rutinas Personalizadas</h3>
         <p>Recibe tu plan de entrenamiento directamente por WhatsApp.</p>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔥</div>
+
+      <div class="feature-card reveal reveal-delay-4">
+        <div class="feature-icon">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+            <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+          </svg>
+        </div>
         <h3>Comunidad Activa</h3>
         <p>Forma parte de un grupo motivado que se supera cada día.</p>
       </div>
@@ -194,24 +394,48 @@
      CONTACT / LOCATION
 ══════════════════════════════════════════ -->
 <section id="contacto" class="contact-section">
+  <!-- Decorative: dot grid -->
+  <div class="deco deco--dots" aria-hidden="true"></div>
   <div class="contact-inner">
-    <div class="contact-info">
+    <div class="contact-info reveal">
       <h2>Encuéntranos</h2>
       <div class="contact-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+          <circle cx="12" cy="10" r="3" />
+        </svg>
         <span>De La Patria 515, Lomas de San Pedrito</span>
       </div>
       <div class="contact-item">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.6 5C1.6 3.92 2.48 3 3.56 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        <svg
+          width="20"
+          height="20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13.6 19.79 19.79 0 0 1 1.6 5C1.6 3.92 2.48 3 3.56 3h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l.81-.81a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
+          />
+        </svg>
         <span>WhatsApp: próximamente</span>
       </div>
-      <button class="btn btn-primary" (click)="goToLogin()">
+      <a href="/login" class="btn btn-primary" (click)="$event.preventDefault(); goToLogin()">
         Soy miembro — Iniciar sesión
-      </button>
+      </a>
     </div>
-    <div id="map" class="contact-map shadow"></div>
+    <div id="map" class="contact-map reveal reveal-delay-1 shadow"></div>
   </div>
 </section>
+</main>
 
 <!-- ══════════════════════════════════════════
      FOOTER
@@ -221,7 +445,9 @@
     <div class="footer-logo">
       <img src="assets/FitnessGym.PNG" alt="Fitness Gym" />
     </div>
-    <p class="footer-copy">© {{ 2025 }} Fitness Gym · Todos los derechos reservados</p>
+    <p class="footer-copy">
+      © {{ 2026 }} Fitness Gym · Todos los derechos reservados
+    </p>
     <p class="footer-tagline">Escucha a tu cuerpo, no a tus excusas.</p>
   </div>
 </footer>

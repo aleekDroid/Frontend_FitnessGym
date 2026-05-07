@@ -5,11 +5,13 @@ import { authGuard, adminGuard, publicGuard, memberGuard } from './core/guards/a
 export const routes: Routes = [
   {
     path: '',
+    title: 'Fitness Gym | Entrena y alcanza tus metas',
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent),
   },
   {
     path: 'login',
+    title: 'Iniciar Sesión | Fitness Gym',
     canActivate: [publicGuard],
     loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent),
   },
