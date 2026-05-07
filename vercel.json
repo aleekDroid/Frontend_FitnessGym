@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "dist/fitness-gym-frontend/browser",
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -7,6 +8,10 @@
     {
       "source": "/socket.io/:path*",
       "destination": "https://api.fitnessgymqro.com/socket.io/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }
