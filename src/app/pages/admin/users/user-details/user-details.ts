@@ -47,7 +47,7 @@ export class UserDetails implements OnInit {
   // Password Reset Signals
   showResetConfirm = signal(false);
   showPasswordModal = signal(false);
-  generatedPassword = signal('');
+  qrBase64 = signal('');
   resettingPassword = signal(false);
 
   constructor(
@@ -61,7 +61,7 @@ export class UserDetails implements OnInit {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern('^[0-9]*$')]]
+      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern(String.raw`^\+?[0-9]*$`)]]
     });
   }
 
@@ -303,9 +303,9 @@ export class UserDetails implements OnInit {
       next: (res) => {
         this.resettingPassword.set(false);
         this.showResetConfirm.set(false);
-        this.generatedPassword.set(res.password);
+        this.qrBase64.set(res.qrBase64);
         this.showPasswordModal.set(true);
-        this.notificationService.show('Contraseña reseteada exitosamente.', 'success');
+        this.notificationService.show('QR de restablecimiento generado.', 'success');
       },
       error: (err) => {
         console.error('Error resetting password:', err);
@@ -317,7 +317,7 @@ export class UserDetails implements OnInit {
 
   closePasswordModal(): void {
     this.showPasswordModal.set(false);
-    this.generatedPassword.set('');
+    this.qrBase64.set('');
   }
 
   copyToClipboard(text: string): void {
