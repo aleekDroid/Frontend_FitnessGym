@@ -119,8 +119,10 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
 
   private handleStatusChange(newStatus: 'idle' | 'success' | 'error'): void {
     if (newStatus === 'success') {
+      this.successAudio.currentTime = 0;
       this.successAudio.play().catch(e => console.log('Audio play failed', e));
     } else if (newStatus === 'error') {
+      this.errorAudio.currentTime = 0;
       this.errorAudio.play().catch(e => console.log('Audio play failed', e));
     } else if (newStatus === 'idle') {
       // Cuando el parent termina de procesar (status vuelve a idle),
