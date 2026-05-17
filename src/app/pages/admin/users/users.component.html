@@ -28,6 +28,7 @@
         (click)="toggleFilters()"
         [class.active]="showFilters()"
         title="Mostrar/ocultar filtros"
+        aria-label="Alternar filtros"
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="4" y1="6" x2="20" y2="6"></line>
@@ -176,6 +177,7 @@
                   class="action-btn action-btn--info"
                   (click)="openDetails(user)"
                   title="Ver Detalles"
+                  aria-label="Ver detalles del usuario"
                 >
                   <svg
                     width="15"
@@ -199,6 +201,7 @@
                   "
                   (click)="confirmToggleStatus(user)"
                   [title]="user.status === 'active' ? 'Desactivar' : 'Activar'"
+                  [attr.aria-label]="user.status === 'active' ? 'Desactivar usuario' : 'Activar usuario'"
                 >
                   @if (user.status === "active") {
                     <svg
@@ -250,6 +253,7 @@
           class="btn btn-outline"
           [disabled]="currentPage() === 1"
           (click)="goToPage(currentPage() - 1)"
+          aria-label="Página anterior"
         >
           <svg
             width="16"
@@ -278,6 +282,7 @@
           class="btn btn-outline"
           [disabled]="currentPage() >= totalPages() || totalPages() === 0"
           (click)="goToPage(currentPage() + 1)"
+          aria-label="Siguiente página"
         >
           <svg
             width="16"
@@ -297,13 +302,13 @@
 
 <!-- ══ MODAL: Create / Edit user ══ -->
 @if (showModal()) {
-  <div class="modal-overlay" (click)="closeModal()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" (click)="closeModal()" (keydown.escape)="closeModal()" tabindex="0" role="button" aria-label="Cerrar modal">
+    <div class="modal-box" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" role="none">
       <div class="modal-header">
         <h2 class="modal-title">
           {{ editUser() ? "Editar usuario" : "Registrar nuevo usuario" }}
         </h2>
-        <button class="modal-close" (click)="closeModal()">✕</button>
+        <button class="modal-close" (click)="closeModal()" aria-label="Cerrar">✕</button>
       </div>
 
       <form [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate>
@@ -403,13 +408,13 @@
   </app-assign-subscription-modal>
 }
 
-<!-- ══ MODAL: Password Success ══ -->
+<!-- ══ MODAL: QR de Acceso (Registro nuevo usuario) ══ -->
 @if (showPasswordModal()) {
-  <div class="modal-overlay" (click)="closePasswordModal()">
-    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
+  <div class="modal-overlay" (click)="closePasswordModal()" (keydown.escape)="closePasswordModal()" tabindex="0" role="button" aria-label="Cerrar modal">
+    <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()" (keydown)="$event.stopPropagation()" role="none">
       <div class="modal-header">
         <h2 class="modal-title">¡Usuario Creado!</h2>
-        <button class="modal-close" (click)="closePasswordModal()">✕</button>
+        <button class="modal-close" (click)="closePasswordModal()" aria-label="Cerrar">✕</button>
       </div>
 
       <div class="modal-body text-center">
@@ -421,17 +426,16 @@
         </div>
         
         <p class="modal-description">
-          El usuario se ha registrado exitosamente. Por favor, entrega la siguiente <strong>contraseña temporal</strong> al usuario:
+          El usuario se ha registrado exitosamente. Muéstrale este <strong>código QR</strong>
+          para que establezca su contraseña sin necesidad de una temporal.
         </p>
 
-        <div class="password-card">
-          <code class="temp-password">{{ generatedPassword() }}</code>
-          <button class="btn-copy" (click)="copyToClipboard(generatedPassword())" title="Copiar contraseña">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-            </svg>
-          </button>
+        <div class="qr-container">
+          <img
+            [src]="'data:image/png;base64,' + qrBase64()"
+            alt="QR de acceso para nueva contraseña"
+            class="qr-image"
+          />
         </div>
         
         <p class="password-hint">
@@ -440,15 +444,23 @@
             <line x1="12" y1="16" x2="12" y2="12"></line>
             <line x1="12" y1="8" x2="12.01" y2="8"></line>
           </svg>
-          El usuario deberá cambiarla en su primer inicio de sesión.
+          Este QR expira en <strong>30 minutos</strong> y solo puede usarse una vez.
         </p>
       </div>
 
       <div class="modal-footer footer-center">
+        <a
+          [href]="'data:image/png;base64,' + qrBase64()"
+          download="qr-acceso-usuario.png"
+          class="btn btn-secondary"
+        >
+          Descargar QR
+        </a>
         <button type="button" class="btn btn-primary" (click)="closePasswordModal()">
-          Entendido
+          Cerrar
         </button>
       </div>
     </div>
   </div>
 }
+

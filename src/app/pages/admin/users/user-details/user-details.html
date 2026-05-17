@@ -505,12 +505,12 @@
 </app-status-confirm-modal>
 }
 
-<!-- ══ MODAL: Password Success ══ -->
+<!-- ══ MODAL: QR Reset Password ══ -->
 @if (showPasswordModal()) {
 <div class="modal-overlay" (click)="closePasswordModal()">
   <div class="modal-box modal-box--sm" (click)="$event.stopPropagation()">
     <div class="modal-header">
-      <h2 class="modal-title">¡Contraseña Reseteada!</h2>
+      <h2 class="modal-title">¡QR de Restablecimiento Listo!</h2>
       <button class="modal-close" (click)="closePasswordModal()">✕</button>
     </div>
 
@@ -525,37 +525,24 @@
           stroke="currentColor"
           stroke-width="2"
         >
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+          <path d="M14 14h2v2h-2zM16 16h2v2h-2zM18 14h2v2h-2zM14 18h2v2h-2zM18 18h2v2h-2z"></path>
         </svg>
       </div>
 
       <p class="modal-description">
-        La contraseña se ha restablecido exitosamente. Por favor, entrega la
-        siguiente <strong>contraseña temporal</strong> al usuario:
+        Muéstrale este <strong>código QR</strong> al usuario para que escanee y
+        establezca su nueva contraseña. No necesita su contraseña anterior.
       </p>
 
-      <div class="password-card">
-        <code class="temp-password">{{ generatedPassword() }}</code>
-        <button
-          class="btn-copy"
-          (click)="copyToClipboard(generatedPassword())"
-          title="Copiar contraseña"
-        >
-          <svg
-            width="20"
-            height="20"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-            <path
-              d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-            ></path>
-          </svg>
-        </button>
+      <div class="qr-container">
+        <img
+          [src]="'data:image/png;base64,' + qrBase64()"
+          alt="QR de restablecimiento de contraseña"
+          class="qr-image"
+        />
       </div>
 
       <p class="password-hint">
@@ -571,19 +558,27 @@
           <line x1="12" y1="16" x2="12" y2="12"></line>
           <line x1="12" y1="8" x2="12.01" y2="8"></line>
         </svg>
-        El usuario deberá cambiarla en su próximo inicio de sesión.
+        Este QR expira en <strong>30 minutos</strong> y solo puede usarse una vez.
       </p>
     </div>
 
     <div class="modal-footer footer-center">
+      <a
+        [href]="'data:image/png;base64,' + qrBase64()"
+        download="qr-reset-password.png"
+        class="btn btn-secondary"
+      >
+        Descargar QR
+      </a>
       <button
         type="button"
         class="btn btn-primary"
         (click)="closePasswordModal()"
       >
-        Entendido
+        Cerrar
       </button>
     </div>
   </div>
 </div>
 }
+

@@ -43,9 +43,9 @@ export class UsersComponent implements OnInit {
   statusTarget = signal<UserWithMembership | null>(null);
   showStatusConfirm = signal(false);
 
-  // New: Password display after registration
+  // New: QR display after registration/reset
   showPasswordModal = signal(false);
-  generatedPassword = signal('');
+  qrBase64 = signal('');
 
   // Modal Assign Subscription State
   showAssignModal = signal(false);
@@ -67,7 +67,7 @@ export class UsersComponent implements OnInit {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern('^[0-9]*$')]]
+      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern(String.raw`^\+?[0-9]*$`)]]
     });
   }
 
@@ -196,9 +196,9 @@ export class UsersComponent implements OnInit {
           this.closeModal();
           this.loadData();
           
-          // Show the generated password
-          if (res?.password) {
-            this.generatedPassword.set(res.password);
+          // Mostrar QR si el backend lo devuelve (nuevo flujo)
+          if (res?.qrBase64) {
+            this.qrBase64.set(res.qrBase64);
             this.showPasswordModal.set(true);
           }
         },
@@ -299,10 +299,10 @@ export class UsersComponent implements OnInit {
     this.showFilters.set(false);
   }
 
-  // Password Success Modal Actions
+  // Password/QR Modal Actions
   closePasswordModal(): void {
     this.showPasswordModal.set(false);
-    this.generatedPassword.set('');
+    this.qrBase64.set('');
   }
 
   copyToClipboard(text: string): void {

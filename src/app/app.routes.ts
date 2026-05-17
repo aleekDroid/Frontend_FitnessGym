@@ -43,5 +43,11 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },
+  {
+    path: 'reset-password',
+    title: 'Restablecer Contraseña | Fitness Gym',
+    loadComponent: () => import('./pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+  },
   { path: '**', redirectTo: '' }
 ];
+

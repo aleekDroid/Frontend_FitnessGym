@@ -1,11 +1,15 @@
 // src/app/core/services/users.service.ts
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams, HttpHeaders } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UserWithMembership, UpdateUserDto, PaginatedUsersResponse } from '../models/user.model';
-import { AuthService } from './auth.service';
-import { environment } from '../../../environments/environment';
+import { Injectable } from "@angular/core";
+import { HttpClient, HttpParams, HttpHeaders } from "@angular/common/http";
+import { Observable, of } from "rxjs";
+import { map } from "rxjs/operators";
+import {
+  UserWithMembership,
+  UpdateUserDto,
+  PaginatedUsersResponse,
+} from "../models/user.model";
+import { AuthService } from "./auth.service";
+import { environment } from "../../../environments/environment";
 
 export interface HistoryMeta {
   totalItems: number;
@@ -54,58 +58,64 @@ export interface UserDetailsResponse {
   historyMeta: HistoryMeta;
 }
 
-@Injectable({ providedIn: 'root' })
+@Injectable({ providedIn: "root" })
 export class UsersService {
-
   // Removed mock data
 
-  constructor(private http: HttpClient, private authService: AuthService) {}
+  constructor(
+    private readonly http: HttpClient,
+    private readonly authService: AuthService,
+  ) {}
 
   private getHeaders(): HttpHeaders {
-    return new HttpHeaders({ Authorization: `Bearer ${this.authService.getToken()}` });
+    return new HttpHeaders({
+      Authorization: `Bearer ${this.authService.getToken()}`,
+    });
   }
-  
-// ── GET all users (Paginated) ──
+
+  // ── GET all users (Paginated) ──
   getUsers(
-    page: number = 1, 
-    limit: number = 10, 
-    search: string = '',
-    status?: 'active' | 'inactive',
-    role?: 'admin' | 'member',
-    hasActiveSubscription?: 'true' | 'false' | 'all'
+    page: number = 1,
+    limit: number = 10,
+    search: string = "",
+    status?: "active" | "inactive",
+    role?: "admin" | "member",
+    hasActiveSubscription?: "true" | "false" | "all",
   ): Observable<PaginatedUsersResponse> {
     let params = new HttpParams()
-      .set('page', page.toString())
-      .set('limit', limit.toString());
-      
+      .set("page", page.toString())
+      .set("limit", limit.toString());
+
     if (role) {
-      params = params.set('role', role);
+      params = params.set("role", role);
     }
-      
+
     if (search.trim()) {
-      params = params.set('search', search.trim());
+      params = params.set("search", search.trim());
     }
 
     if (status) {
-      params = params.set('status', status);
+      params = params.set("status", status);
     }
 
-    if (hasActiveSubscription && hasActiveSubscription !== 'all') {
-      params = params.set('hasActiveSubscription', hasActiveSubscription);
+    if (hasActiveSubscription && hasActiveSubscription !== "all") {
+      params = params.set("hasActiveSubscription", hasActiveSubscription);
     }
 
-    return this.http.get<PaginatedUsersResponse>(`${environment.apiUrl}/user`, { params }).pipe(
-      map(response => {
-        // Map backend activeSubscription to frontend format
-        const items = response.data.map((user: any) => ({
-          ...user,
-          membership_end: user.activeSubscription?.end_date,
-          membership_status: user.activeSubscription?.status || 'none',
-          attended_today: false 
-        }));
-        return { data: items, meta: response.meta };
-      })
-    );
+    return this.http
+      .get<PaginatedUsersResponse>(`${environment.apiUrl}/user`, { params })
+      .pipe(
+        map((response) => {
+          // Map backend activeSubscription to frontend format
+          const items = response.data.map((user: any) => ({
+            ...user,
+            membership_end: user.activeSubscription?.end_date,
+            membership_status: user.activeSubscription?.status || "none",
+            attended_today: false,
+          }));
+          return { data: items, meta: response.meta };
+        }),
+      );
   }
 
   // ── GET today's attendances ──
@@ -115,46 +125,96 @@ export class UsersService {
   }
 
   // ── GET single user (with payment history) ──
-  getById(id: number, historyPage: number = 1, historyLimit: number = 10): Observable<UserDetailsResponse> {
+  getById(
+    id: number,
+    historyPage: number = 1,
+    historyLimit: number = 10,
+  ): Observable<UserDetailsResponse> {
     let params = new HttpParams()
-      .set('historyPage', historyPage.toString())
-      .set('historyLimit', historyLimit.toString());
+      .set("historyPage", historyPage.toString())
+      .set("historyLimit", historyLimit.toString());
 
-    return this.http.get<UserDetailsResponse>(`${environment.apiUrl}/user/${id}`, { headers: this.getHeaders(), params });
+    return this.http.get<UserDetailsResponse>(
+      `${environment.apiUrl}/user/${id}`,
+      { headers: this.getHeaders(), params },
+    );
   }
 
-// ── POST create user ──
-  create(dto: any): Observable<any> {
+  // ── POST create user ──
+  create(dto: any): Observable<{ message: string; qrBase64?: string }> {
     const payload = {
       number: dto.number,
       name: dto.name,
-      lastName: dto.last_name 
+      lastName: dto.last_name,
     };
 
-    return this.http.post<any>(`${environment.apiUrl}/user/create`, payload);
+    return this.http.post<{ message: string; qrBase64?: string }>(
+      `${environment.apiUrl}/user/create`,
+      payload,
+    );
   }
 
   // ── PUT update user profile (Full Details API) ──
-  updateProfile(data: { id: number, name: string, lastName: string, number: string }): Observable<any> {
-    return this.http.put(`${environment.apiUrl}/user/profile`, data, { headers: this.getHeaders() });
+  updateProfile(data: {
+    id: number;
+    name: string;
+    lastName: string;
+    number: string;
+  }): Observable<any> {
+    return this.http.put(`${environment.apiUrl}/user/profile`, data, {
+      headers: this.getHeaders(),
+    });
   }
 
   // ── PATCH update user ──
   update(id: number, dto: UpdateUserDto): Observable<UserWithMembership> {
-    return this.http.patch<UserWithMembership>(`${environment.apiUrl}/user/${id}`, dto, { headers: this.getHeaders() });
+    return this.http.patch<UserWithMembership>(
+      `${environment.apiUrl}/user/${id}`,
+      dto,
+      { headers: this.getHeaders() },
+    );
   }
 
   // ── PATCH toggle user status (logical delete) ──
-  toggleUserStatus(id: number, status: 'active' | 'inactive'): Observable<any> {
-    return this.http.patch<any>(`${environment.apiUrl}/user/status`, { id, status }, { headers: this.getHeaders() });
+  toggleUserStatus(id: number, status: "active" | "inactive"): Observable<any> {
+    return this.http.patch<any>(
+      `${environment.apiUrl}/user/status`,
+      { id, status },
+      { headers: this.getHeaders() },
+    );
   }
 
   // ── POST reset password (Admin) ──
-  resetPasswordAdmin(userId: number): Observable<{ message: string, password: string }> {
-    return this.http.post<{ message: string, password: string }>(
+  resetPasswordAdmin(
+    userId: number,
+  ): Observable<{ message: string; qrBase64: string }> {
+    return this.http.post<{ message: string; qrBase64: string }>(
       `${environment.apiUrl}/user/reset-password-admin`,
       { userId },
-      { headers: this.getHeaders() }
+      { headers: this.getHeaders() },
+    );
+  }
+
+  // ── POST verify reset token (Pública, sin auth) ──
+  verifyResetToken(
+    token: string,
+    phoneNumber: string,
+  ): Observable<{ valid: boolean; userName: string }> {
+    return this.http.post<{ valid: boolean; userName: string }>(
+      `${environment.apiUrl}/user/verify-reset-token`,
+      { token, phoneNumber },
+    );
+  }
+
+  // ── POST confirm reset password (Pública, sin auth) ──
+  confirmResetPassword(
+    token: string,
+    phoneNumber: string,
+    password: string,
+  ): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(
+      `${environment.apiUrl}/user/confirm-reset-password`,
+      { token, phoneNumber, password },
     );
   }
 }
