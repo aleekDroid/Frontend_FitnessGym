@@ -81,8 +81,25 @@ export class ProductsService {
     return this.http.patch(`${environment.apiUrl}/products/${id}/stock`, { id, quantity, type, reason }, { headers: this.getHeaders() });
   }
 
-  getProductHistory(id: number): Observable<{ movements: any[], sales: any[] }> {
-    return this.http.get<{ movements: any[], sales: any[] }>(`${environment.apiUrl}/products/${id}/history`, { headers: this.getHeaders() });
+  getProductHistory(
+    id: number,
+    page: number = 1,
+    limit: number = 10,
+    search: string = '',
+    startDate: string = '',
+    endDate: string = '',
+    type: string = ''
+  ): Observable<any> {
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('limit', limit.toString());
+
+    if (search.trim()) params = params.set('search', search.trim());
+    if (startDate) params = params.set('startDate', startDate);
+    if (endDate) params = params.set('endDate', endDate);
+    if (type) params = params.set('type', type);
+
+    return this.http.get<any>(`${environment.apiUrl}/products/${id}/history`, { headers: this.getHeaders(), params });
   }
 
   registerSale(dto: RegisterSaleDto): Observable<any> {

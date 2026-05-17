@@ -77,6 +77,24 @@
             <span class="md-row__label">Total de la venta</span>
             <span class="md-row__total">${{ m.raw.subtotal | number:'1.2-2' }}</span>
           </div>
+
+          @if (m.otherProducts && m.otherProducts.length > 0) {
+            <div class="md-divider"></div>
+            <div class="md-other-products">
+              <span class="md-row__label">Otros productos en la misma transacción:</span>
+              <div class="md-op-list">
+                @for (op of m.otherProducts; track op.id) {
+                  <a [routerLink]="['/admin/inventory', op.id]" class="md-op-item" (click)="closeModal()">
+                    <span class="md-op-name">{{ op.quantity }}x {{ op.name }}</span>
+                    <div class="md-op-right">
+                      <span class="md-op-subtotal">${{ op.subtotal | number:'1.2-2' }}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                    </div>
+                  </a>
+                }
+              </div>
+            </div>
+          }
         }
       </div>
     </div>

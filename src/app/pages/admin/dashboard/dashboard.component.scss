@@ -295,8 +295,19 @@
     align-items: stretch;
     
     .date-input-group { grid-column: span 1; }
+    .date-input { min-width: unset; width: 100%; }
     .btn { grid-column: span 1; font-size: 0.85rem; padding: 0 10px; }
     .btn-outline { grid-column: span 2; }
+  }
+
+  @media (max-width: 480px) {
+    .date-filter {
+      grid-template-columns: 1fr;
+      
+      .date-input-group { grid-column: span 1; }
+      .btn { grid-column: span 1; }
+      .btn-outline { grid-column: span 1; }
+    }
   }
 
   .bar-chart { padding: 0 8px; }

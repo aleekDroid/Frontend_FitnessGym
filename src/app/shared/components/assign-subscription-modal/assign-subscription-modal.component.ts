@@ -30,18 +30,18 @@ export class AssignSubscriptionModalComponent implements OnInit {
   selectedAssignUsers = signal<UserWithMembership[]>([]);
   assignPlanLimit = signal<number>(1);
   assignSearching = signal(false);
-  private assignSearchSubject = new Subject<string>();
+  private readonly assignSearchSubject = new Subject<string>();
 
   // ALERTS (Users with active subscriptions)
   usersWithActiveSub = computed(() => {
     return this.selectedAssignUsers()
       .filter(u => {
         if (!u.membership_end) return false;
-        const diff = new Date(u.membership_end).getTime() - new Date().getTime();
+        const diff = new Date(u.membership_end).getTime() - Date.now();
         return diff > 0 && (u.membership_status === 'active' || u.membership_status === 'expiring');
       })
       .map(u => {
-        const diffIntime = new Date(u.membership_end!).getTime() - new Date().getTime();
+        const diffIntime = new Date(u.membership_end!).getTime() - Date.now();
         const days = Math.ceil(diffIntime / (1000 * 3600 * 24));
         return { name: `${u.name} ${u.last_name}`, days };
       });
@@ -90,11 +90,11 @@ export class AssignSubscriptionModalComponent implements OnInit {
       }
       this.assignSearching.set(true);
       // We search users globally, limit to 10 based on req
-      this.usersService.getUsers(1, 10, query, 'active', 'member', 'true').subscribe({
+      this.usersService.getUsers(1, 10, query, 'active', 'member', 'all').subscribe({
         next: (res) => {
           // Exclude already selected users
-          const currentSelectedIds = this.selectedAssignUsers().map(u => u.id);
-          const filteredResults = res.data.filter(u => !currentSelectedIds.includes(u.id));
+          const currentSelectedIds = new Set(this.selectedAssignUsers().map(u => u.id));
+          const filteredResults = res.data.filter(u => !currentSelectedIds.has(u.id));
           this.assignSearchResults.set(filteredResults);
           this.assignSearching.set(false);
         },

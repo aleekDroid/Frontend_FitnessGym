@@ -6,12 +6,13 @@ import { AttendanceService } from '../../../core/services/attendance.service';
 import { PusherService } from '../../../core/services/pusher.service';
 import { AttendanceResultModalComponent } from '../../../shared/components/attendance-result-modal/attendance-result-modal.component';
 import { QrScannerModalComponent } from '../../../shared/components/qr-scanner-modal/qr-scanner-modal.component';
+import { ManualAttendanceModalComponent } from '../../../shared/components/manual-attendance-modal/manual-attendance-modal.component';
 import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, FormsModule, AttendanceResultModalComponent, QrScannerModalComponent],
+  imports: [CommonModule, FormsModule, AttendanceResultModalComponent, QrScannerModalComponent, ManualAttendanceModalComponent],
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.scss'],
 })
@@ -31,6 +32,7 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   // ── MODAL & SCANNER STATES ──
   showScanner = signal<boolean>(false);
+  showManualScanner = signal<boolean>(false);
   unsupervisedMode = signal<boolean>(false);
   currentScanStatus = signal<'idle' | 'success' | 'error'>('idle');
   processingScan = signal<boolean>(false);
@@ -153,6 +155,16 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   openScanner(): void {
     this.showScanner.set(true);
+  }
+
+  openManualScanner(): void {
+    this.showManualScanner.set(true);
+  }
+
+  onManualAttendanceSuccess(res: any): void {
+    this.showManualScanner.set(false);
+    this.scanResult.set(res);
+    this.showResult.set(true);
   }
 
   onScanSuccess(qrCodeId: string): void {
