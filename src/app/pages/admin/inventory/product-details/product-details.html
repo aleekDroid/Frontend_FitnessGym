@@ -185,9 +185,9 @@
             </select>
 
             <div class="date-group-inline">
-              <input type="date" class="limit-select date-input" aria-label="Fecha inicio" [max]="historyEndDate() || null" [ngModel]="historyStartDate()" (ngModelChange)="historyStartDate.set($event); onHistoryFilterChange()">
+              <input type="date" class="limit-select date-input" aria-label="Fecha inicio" [max]="historyEndDate() || null" [ngModel]="historyStartDate()" (ngModelChange)="onHistoryStartDateChange($event)">
               <span class="date-sep">-</span>
-              <input type="date" class="limit-select date-input" aria-label="Fecha fin" [min]="historyStartDate() || null" [ngModel]="historyEndDate()" (ngModelChange)="historyEndDate.set($event); onHistoryFilterChange()">
+              <input type="date" class="limit-select date-input" aria-label="Fecha fin" [min]="historyStartDate() || null" [ngModel]="historyEndDate()" (ngModelChange)="onHistoryEndDateChange($event)">
             </div>
           </div>
         </div>

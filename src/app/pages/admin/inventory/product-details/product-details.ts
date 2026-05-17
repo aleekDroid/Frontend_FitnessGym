@@ -144,6 +144,22 @@ export class ProductDetails implements OnInit {
     this.searchSubject.next(val);
   }
 
+  onHistoryStartDateChange(val: string): void {
+    this.historyStartDate.set(val);
+    if (val && this.historyEndDate() && val > this.historyEndDate()) {
+      this.historyEndDate.set(val);
+    }
+    this.onHistoryFilterChange();
+  }
+
+  onHistoryEndDateChange(val: string): void {
+    this.historyEndDate.set(val);
+    if (val && this.historyStartDate() && val < this.historyStartDate()) {
+      this.historyStartDate.set(val);
+    }
+    this.onHistoryFilterChange();
+  }
+
   onHistoryFilterChange(): void {
     this.historyPage.set(1);
     this.loadHistory();

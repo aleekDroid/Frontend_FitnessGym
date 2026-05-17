@@ -40,6 +40,20 @@ export class DashboardComponent implements OnInit {
     });
   }
 
+  onDateFromChange(val: string): void {
+    this.dateFrom.set(val);
+    if (val && this.dateTo() && val > this.dateTo()) {
+      this.dateTo.set(val);
+    }
+  }
+
+  onDateToChange(val: string): void {
+    this.dateTo.set(val);
+    if (val && this.dateFrom() && val < this.dateFrom()) {
+      this.dateFrom.set(val);
+    }
+  }
+
   applyFilter(): void { this.loadStats(); }
 
   resetFilter(): void {

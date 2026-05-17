@@ -29,6 +29,9 @@
   max-width: 180px;
   box-sizing: border-box;
   color-scheme: dark;
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
 }
 
 .date-filter .btn-sm {
@@ -297,19 +300,15 @@
     width: 100%;
     align-items: stretch;
     
-    .date-input-group { grid-column: span 1; width: 100%; }
+    .date-input-group { grid-column: span 2; width: 100%; }
     .date-input { min-width: 0 !important; max-width: none !important; width: 100% !important; box-sizing: border-box; }
     .btn { grid-column: span 1; font-size: 0.85rem; padding: 0 10px; }
     .btn-outline { grid-column: span 2; }
   }
 
-  @media (max-width: 480px) {
+  @media (max-width: 400px) {
     .date-filter {
-      grid-template-columns: 1fr;
-      
-      .date-input-group { grid-column: span 1; }
-      .btn { grid-column: span 1; }
-      .btn-outline { grid-column: span 1; }
+      .btn { grid-column: span 2; }
     }
   }
 
