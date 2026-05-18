@@ -162,8 +162,10 @@ export class MemberDashboardComponent implements OnInit {
     if (!sub) return 0;
     const total =
       new Date(sub.end_date).getTime() - new Date(sub.start_date).getTime();
-    const elapsed = Date.now() - new Date(sub.start_date).getTime();
-    return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
+    if (total <= 0) return 0;
+    
+    const remaining = new Date(sub.end_date).getTime() - Date.now();
+    return Math.min(100, Math.max(0, Math.round((remaining / total) * 100)));
   });
 
   progressClass = computed(() => {

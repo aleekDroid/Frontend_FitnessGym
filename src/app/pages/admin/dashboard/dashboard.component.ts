@@ -87,6 +87,9 @@ export class DashboardComponent implements OnInit {
   }
 
   private toInputDate(d: Date): string {
-    return d.toISOString().split('T')[0];
+    // Restamos el timezone offset para que al convertir a ISO string 
+    // nos dé la fecha local correcta (ej: en México) y no salte de día.
+    const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return localDate.toISOString().split('T')[0];
   }
 }

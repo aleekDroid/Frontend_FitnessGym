@@ -26,7 +26,7 @@ export class HomeComponent implements OnInit, OnDestroy {
   // Filtros
   searchQuery = signal<string>('');
   filterStatus = signal<string>('');
-  filterDate = signal<string>(new Date().toISOString().split('T')[0]);
+  filterDate = signal<string>(new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0]);
   limit = signal<number>(10);
   currentPage = signal<number>(1);
 
