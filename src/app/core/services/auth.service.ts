@@ -2,8 +2,8 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, throwError } from 'rxjs';
-import { tap, catchError } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
+import { catchError, filter, map, take, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
 export interface AuthUser {
@@ -26,8 +26,11 @@ export class AuthService {
   private readonly TOKEN_KEY = 'fg_token';
 
   private readonly currentToken = signal<string | null>(localStorage.getItem(this.TOKEN_KEY));
-  
   currentUser = signal<AuthUser | null>(this.loadUserFromStorage());
+
+  // Control de concurrencia para refresh token
+  private isRefreshing = false;
+  private readonly refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
   constructor(private readonly http: HttpClient, private readonly router: Router) {}
 
@@ -51,6 +54,48 @@ export class AuthService {
       tap(res => {
         this.saveSession(res);
       })
+    );
+  }
+
+  /**
+   * Garantiza que hay una sesión válida antes de continuar.
+   * - Si el access token está vigente → resuelve true de inmediato.
+   * - Si está expirado → intenta refresh silencioso con la cookie httpOnly.
+   * - Protege contra race conditions: solo se hace UNA petición a la vez;
+   *   las demás llamadas concurrentes esperan el resultado en el BehaviorSubject.
+   */
+  ensureValidSession(): Observable<boolean> {
+    const token = this.getToken();
+
+    // Token aún válido, no hacer nada
+    if (token && !this.isTokenExpired(token)) {
+      return of(true);
+    }
+
+    // Ya hay un refresh en curso, esperar a que termine
+    if (this.isRefreshing) {
+      return this.refreshTokenSubject.pipe(
+        filter(t => t !== null),
+        take(1),
+        map(() => true),
+      );
+    }
+
+    // Iniciar el refresh
+    this.isRefreshing = true;
+    this.refreshTokenSubject.next(null);
+
+    return this.refreshToken().pipe(
+      tap(res => {
+        this.isRefreshing = false;
+        this.refreshTokenSubject.next(res.accessToken);
+      }),
+      map(() => true),
+      catchError(() => {
+        this.isRefreshing = false;
+        this.refreshTokenSubject.next(null);
+        return of(false);
+      }),
     );
   }
 
@@ -89,8 +134,8 @@ export class AuthService {
       // date in seconds
       const now = Math.floor(Date.now() / 1000);
       return now >= payload.exp;
-    } catch (e) {
-      // If decoding fails (invalid token format), consider token invalid/expired
+    } catch (_e) {
+      // Token con formato inválido → se trata como expirado
       return true;
     }
   }

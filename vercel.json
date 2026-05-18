@@ -1,5 +1,4 @@
 {
-  "outputDirectory": "dist/fitness-gym-frontend/browser",
   "rewrites": [
     {
       "source": "/(.*)",
