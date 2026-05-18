@@ -255,6 +255,12 @@
   color: #bae6fd;
 }
 
+.role-superadmin {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+}
+
 /* Common Badges */
 .badge {
   padding: 4px 10px;

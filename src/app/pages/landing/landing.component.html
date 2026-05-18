@@ -232,6 +232,11 @@
                     >{{ type.person_per_suscription }} personas</span
                   >
                 }
+                @if (type.enrollment_fee > 0) {
+                  <span class="price-enrollment"
+                    >+ ${{ type.enrollment_fee | number }} inscripción (único)</span
+                  >
+                }
               </div>
               <span class="price-amount">${{ type.price | number }}</span>
             </div>

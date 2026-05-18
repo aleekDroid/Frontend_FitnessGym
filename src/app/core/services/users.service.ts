@@ -79,7 +79,7 @@ export class UsersService {
     limit: number = 10,
     search: string = "",
     status?: "active" | "inactive",
-    role?: "admin" | "member",
+    role?: "admin" | "member" | "superadmin",
     hasActiveSubscription?: "true" | "false" | "all",
   ): Observable<PaginatedUsersResponse> {
     let params = new HttpParams()
@@ -106,13 +106,27 @@ export class UsersService {
       .get<PaginatedUsersResponse>(`${environment.apiUrl}/user`, { params })
       .pipe(
         map((response) => {
-          // Map backend activeSubscription to frontend format
-          const items = response.data.map((user: any) => ({
-            ...user,
-            membership_end: user.activeSubscription?.end_date,
-            membership_status: user.activeSubscription?.status || "none",
-            attended_today: false,
-          }));
+          const items = response.data.map((user: any) => {
+            const activeSub = user.activeSubscription;
+            let membership_status: 'active' | 'expiring' | 'expired' | 'none';
+
+            if (activeSub) {
+              // Detect 'expiring': active sub with 3 or fewer days remaining
+              const msLeft = new Date(activeSub.end_date).getTime() - Date.now();
+              const daysLeft = msLeft / (1000 * 60 * 60 * 24);
+              membership_status = daysLeft <= 3 ? 'expiring' : 'active';
+            } else {
+              membership_status = user.has_subscription_history ? 'expired' : 'none';
+            }
+
+            return {
+              ...user,
+              // has_subscription_history already comes from backend via spread above
+              membership_end: activeSub?.end_date,
+              membership_status,
+              attended_today: false,
+            };
+          });
           return { data: items, meta: response.meta };
         }),
       );
@@ -142,15 +156,19 @@ export class UsersService {
 
   // ── POST create user ──
   create(dto: any): Observable<{ message: string; qrBase64?: string }> {
-    const payload = {
+    const payload: any = {
       number: dto.number,
       name: dto.name,
       lastName: dto.last_name,
     };
+    if (dto.role) {
+      payload.role = dto.role;
+    }
 
     return this.http.post<{ message: string; qrBase64?: string }>(
       `${environment.apiUrl}/user/create`,
       payload,
+      { headers: this.getHeaders() }
     );
   }
 

@@ -11,7 +11,7 @@ export interface AuthUser {
   name: string;
   last_name: string;
   number: string;
-  role: 'admin' | 'member';
+  role: 'admin' | 'member' | 'superadmin';
 }
 
 export interface LoginResponse {
@@ -96,7 +96,12 @@ export class AuthService {
   }
 
   isAdmin(): boolean {
-    return this.currentUser()?.role === 'admin';
+    const role = this.currentUser()?.role;
+    return role === 'admin' || role === 'superadmin';
+  }
+
+  isSuperAdmin(): boolean {
+    return this.currentUser()?.role === 'superadmin';
   }
 
   private saveSession(res: LoginResponse): void {

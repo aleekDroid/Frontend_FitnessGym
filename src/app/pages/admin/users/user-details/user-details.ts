@@ -11,6 +11,7 @@ import { AssignSubscriptionModalComponent } from '../../../../shared/components/
 import { StatusConfirmModalComponent } from '../../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { TransactionDetailModalComponent } from '../../../../shared/components/transaction-detail-modal/transaction-detail-modal.component';
 import { UserFormModalComponent } from '../../../../shared/components/user-form-modal/user-form-modal.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-details',
@@ -65,7 +66,8 @@ export class UserDetails implements OnInit {
     private readonly router: Router,
     private readonly usersService: UsersService,
     private readonly attendanceService: AttendanceService,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    public readonly authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -131,6 +133,15 @@ export class UserDetails implements OnInit {
       this.currentPage.set(page);
       this.loadData();
     }
+  }
+
+  canEdit(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    if (target.role === 'superadmin' && !this.authService.isSuperAdmin()) {
+      return false;
+    }
+    return true;
   }
 
   goBack(): void {
@@ -222,15 +233,25 @@ export class UserDetails implements OnInit {
 
   // ── ASSIGN SUBSCRIPTION ──
 
-  /** Returns the current user shaped as UserWithMembership for the modal's prefilledUser input */
   get prefilledUserForModal(): UserWithMembership | null {
     const u = this.user();
     if (!u) return null;
-    const activeSub = this.history().find(h => h.status === 'active' || h.status === 'expiring');
+    
+    // Find active subscription that is NOT a visita and NOT expired dynamically
+    const activeSub = this.history().find(h => {
+      const isExpired = h.status === 'active' && new Date(h.end_date).getTime() < Date.now();
+      return (h.status === 'active' || h.status === 'expiring') && 
+             !isExpired &&
+             !h.suscriptions_types?.name?.toLowerCase().includes('visita');
+    });
+
+    const hasHistory = this.history().some(h => !h.suscriptions_types?.name?.toLowerCase().includes('visita'));
+    
     return {
       ...u,
       membership_end: activeSub?.end_date,
-      membership_status: activeSub?.status
+      membership_status: activeSub?.status || (hasHistory ? 'expired' : 'none'),
+      has_subscription_history: hasHistory
     } as UserWithMembership;
   }
 

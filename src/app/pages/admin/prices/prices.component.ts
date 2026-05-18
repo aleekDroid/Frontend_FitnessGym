@@ -3,7 +3,7 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
-import { SubscriptionType, CreateSubscriptionTypeDto } from '../../../core/models/subscription.model';
+import { SubscriptionType } from '../../../core/models/subscription.model';
 import { Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { ToastComponent } from '../../../shared/components/toast/toast.component';
@@ -45,6 +45,7 @@ export class PricesComponent implements OnInit {
     this.priceForm = this.fb.group({
       name:                  ['', Validators.required],
       price:                 [0, [Validators.required, Validators.min(1)]],
+      enrollment_fee:        [0, [Validators.required, Validators.min(0)]],
       duration:              [30, [Validators.required, Validators.min(1)]],
       person_per_suscription:[1, [Validators.required, Validators.min(1)]],
       description:           ['', Validators.required],
@@ -108,13 +109,13 @@ export class PricesComponent implements OnInit {
 
   openCreate(): void {
     this.editType.set(null);
-    this.priceForm.reset({ duration: 30, person_per_suscription: 1, price: 0 });
+    this.priceForm.reset({ duration: 30, person_per_suscription: 1, price: 0, enrollment_fee: 0 });
     this.showModal.set(true);
   }
 
   openEdit(t: SubscriptionType): void {
     this.editType.set(t);
-    this.priceForm.patchValue({ name: t.name, price: t.price, duration: t.duration, person_per_suscription: t.person_per_suscription, description: t.description });
+    this.priceForm.patchValue({ name: t.name, price: t.price, enrollment_fee: t.enrollment_fee || 0, duration: t.duration, person_per_suscription: t.person_per_suscription, description: t.description });
     
     // Lock fields for "visita" slug
     if (t.slug === 'visita') {

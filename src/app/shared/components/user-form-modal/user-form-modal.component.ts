@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UsersService } from '../../../core/services/users.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { UserWithMembership } from '../../../core/models/user.model';
 
 @Component({
@@ -23,12 +24,14 @@ export class UserFormModalComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly usersService: UsersService,
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+    public readonly authService: AuthService
   ) {
     this.userForm = this.fb.group({
       name: ['', [Validators.required]],
       last_name: ['', [Validators.required]],
-      number: ['', [Validators.required, Validators.pattern(String.raw`^\+?[0-9\s-]{10,18}$`)]]
+      number: ['', [Validators.required, Validators.pattern(String.raw`^\+?[0-9\s-]{10,18}$`)]],
+      role: ['member']
     });
   }
 
@@ -37,7 +40,8 @@ export class UserFormModalComponent implements OnInit {
       this.userForm.patchValue({
         name: this.userToEdit.name,
         last_name: this.userToEdit.last_name || (this.userToEdit as any).lastName,
-        number: this.userToEdit.number
+        number: this.userToEdit.number,
+        role: this.userToEdit.role || 'member'
       });
     }
   }
@@ -55,12 +59,16 @@ export class UserFormModalComponent implements OnInit {
 
     if (this.userToEdit) {
       // Edición
-      const payload = {
+      const payload: any = {
         id: this.userToEdit.id,
         name: val.name,
         lastName: val.last_name,
         number: val.number
       };
+      
+      if (this.authService.isSuperAdmin() && val.role) {
+        payload.role = val.role;
+      }
 
       this.usersService.updateProfile(payload).subscribe({
         next: () => {

@@ -23,6 +23,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
   assignForm: FormGroup;
   subscriptionTypes = signal<SubscriptionType[]>([]);
   saving = signal(false);
+  selectedPlan = signal<SubscriptionType | null>(null);
 
   // Autocomplete
   assignSearchQuery = signal('');
@@ -45,6 +46,38 @@ export class AssignSubscriptionModalComponent implements OnInit {
         const days = Math.ceil(diffIntime / (1000 * 3600 * 24));
         return { name: `${u.name} ${u.last_name}`, days };
       });
+  });
+
+  // Dynamic quote breakdown mapping price and one-time enrollment fee for completely new members.
+  // Exemption rule: a user is exempt from the enrollment fee if they have any prior real membership
+  // (i.e. any subscription with slug != 'visita'). This is computed by the backend and surfaced
+  // as `has_subscription_history`, making it the single authoritative source of truth for both
+  // the users-list flow and the modal's own search-results flow.
+  quoteBreakdown = computed(() => {
+    const plan = this.selectedPlan();
+    if (!plan) return null;
+
+    const basePrice = plan.price || 0;
+    const isVisita = plan.slug === 'visita' || plan.name?.toLowerCase().includes('visita');
+    const enrollmentFee = isVisita ? 0 : (plan.enrollment_fee || 0);
+
+    // A user pays the enrollment fee only when they have zero prior real membership history.
+    // `has_subscription_history` = true means the backend found at least one subscription
+    // linked to a suscriptions_type whose slug is NOT 'visita'.
+    const newUsers = this.selectedAssignUsers().filter(u => !u.has_subscription_history);
+
+    const totalEnrollmentFee = newUsers.length * enrollmentFee;
+    const subtotal = basePrice;
+    const total = subtotal + totalEnrollmentFee;
+
+    return {
+      basePrice,
+      enrollmentFee,
+      newUsers,
+      totalEnrollmentFee,
+      subtotal,
+      total
+    };
   });
 
   constructor(
@@ -75,6 +108,27 @@ export class AssignSubscriptionModalComponent implements OnInit {
     // Load plans
     this.subscriptionsService.getAll(1, 10, '','active').subscribe(res => {
       this.subscriptionTypes.set(res.data.filter(t => t.status === 'active'));
+    });
+
+    // Reactively update plan details based on control selection changes
+    this.assignForm.get('subscription_id')?.valueChanges.subscribe(id => {
+      if (id) {
+        this.subscriptionsService.getSubscriptionTypeById(Number(id)).subscribe({
+          next: (plan) => {
+            this.selectedPlan.set(plan);
+            this.assignPlanLimit.set(plan.person_per_suscription || 1);
+            
+            // Trim users if plan allows less people than currently selected
+            if (this.selectedAssignUsers().length > this.assignPlanLimit()) {
+              this.selectedAssignUsers.update(list => list.slice(0, this.assignPlanLimit()));
+            }
+          },
+          error: (err) => console.error('Failed to load plan details', err)
+        });
+      } else {
+        this.selectedPlan.set(null);
+        this.assignPlanLimit.set(1);
+      }
     });
 
     // Setup debounced search for Autocomplete in Assignment Modal
@@ -111,24 +165,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
   }
 
   onAssignPlanChange(event: Event): void {
-    const idStr = (event.target as HTMLSelectElement).value;
-    if (!idStr) {
-      this.assignPlanLimit.set(1);
-      return;
-    }
-    
-    // Fetch details to know limit
-    this.subscriptionsService.getSubscriptionTypeById(Number(idStr)).subscribe({
-      next: (plan) => {
-        this.assignPlanLimit.set(plan.person_per_suscription || 1);
-        
-        // Trim users if plan allows less people than currently selected
-        if (this.selectedAssignUsers().length > this.assignPlanLimit()) {
-          this.selectedAssignUsers.update(list => list.slice(0, this.assignPlanLimit()));
-        }
-      },
-      error: (err) => console.error('Failed to load plan details', err)
-    });
+    // Handled reactively via valueChanges subscription
   }
 
   onAssignSearchInput(val: string): void {

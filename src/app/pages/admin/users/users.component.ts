@@ -12,6 +12,7 @@ import { SubscriptionType } from '../../../core/models/subscription.model';
 import { AssignSubscriptionModalComponent } from '../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
 import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { UserFormModalComponent } from '../../../shared/components/user-form-modal/user-form-modal.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-users',
@@ -36,7 +37,7 @@ export class UsersComponent implements OnInit {
   // Pagination & Search
   searchQuery = signal('');
   filterStatus = signal<'active' | 'inactive' | ''>('');
-  filterRole = signal<'admin' | 'member' | ''>('');
+  filterRole = signal<'superadmin' | 'admin' | 'member' | ''>('');
   filterSubscription = signal<'true' | 'false' | 'all'>('all');
   currentPage = signal(1);
   limit = signal(10);
@@ -67,7 +68,8 @@ export class UsersComponent implements OnInit {
   constructor(
     private readonly usersService: UsersService,
     private readonly subscriptionsService: SubscriptionsService,
-    private readonly router: Router
+    private readonly router: Router,
+    public readonly authService: AuthService
   ) {}
 
   ngOnInit(): void {
@@ -142,6 +144,13 @@ export class UsersComponent implements OnInit {
       this.currentPage.set(page);
       this.loadData();
     }
+  }
+
+  canEdit(target: UserWithMembership): boolean {
+    if (target.role === 'superadmin') {
+      return false; // Nobody can toggle superadmin status, hide button
+    }
+    return true;
   }
 
   openCreate(): void {

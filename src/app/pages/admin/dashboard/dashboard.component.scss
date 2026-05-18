@@ -32,6 +32,12 @@
   -webkit-appearance: none;
   appearance: none;
   display: block;
+  line-height: 42px;
+}
+.date-input::-webkit-date-and-time-value {
+  margin: 0;
+  height: auto;
+  min-height: 1em;
 }
 
 .date-filter .btn-sm {

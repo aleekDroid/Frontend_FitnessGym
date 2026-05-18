@@ -59,6 +59,22 @@
             }
           }
         </div>
+
+        @if (authService.isSuperAdmin()) {
+          <div class="form-group form-group--full">
+            <label for="user_role">Rol del usuario</label>
+            <select
+              id="user_role"
+              formControlName="role"
+              class="form-control"
+              [class.is-invalid]="f['role'].touched && f['role'].errors"
+            >
+              <option value="member">Miembro</option>
+              <option value="admin">Recepcionista (Admin)</option>
+              <option value="superadmin">Dueño (Super Admin)</option>
+            </select>
+          </div>
+        }
       </div>
 
       <div class="modal-footer">
