@@ -5,6 +5,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UsersService } from '../../../core/services/users.service';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
 
@@ -83,7 +85,9 @@ export class AssignSubscriptionModalComponent implements OnInit {
   constructor(
     private readonly fb: FormBuilder,
     private readonly usersService: UsersService,
-    private readonly subscriptionsService: SubscriptionsService
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly notificationService: NotificationService,
+    public readonly authService: AuthService
   ) {
     this.assignForm = this.fb.group({
       subscription_id: ['', [Validators.required]],
@@ -146,9 +150,12 @@ export class AssignSubscriptionModalComponent implements OnInit {
       // We search users globally, limit to 10 based on req
       this.usersService.getUsers(1, 10, query, 'active', 'member', 'all').subscribe({
         next: (res) => {
-          // Exclude already selected users
+          // Exclude already selected users and the current user
           const currentSelectedIds = new Set(this.selectedAssignUsers().map(u => u.id));
-          const filteredResults = res.data.filter(u => !currentSelectedIds.has(u.id));
+          const currentUserId = this.authService.currentUser()?.id;
+          const filteredResults = res.data.filter(u =>
+            !currentSelectedIds.has(u.id) && u.id !== currentUserId
+          );
           this.assignSearchResults.set(filteredResults);
           this.assignSearching.set(false);
         },
@@ -173,6 +180,10 @@ export class AssignSubscriptionModalComponent implements OnInit {
   }
 
   selectUserForAssign(user: UserWithMembership): void {
+    const me = this.authService.currentUser();
+    if (me && me.id === user.id) {
+      return; // Cannot assign subscription to yourself
+    }
     if (this.selectedAssignUsers().length >= this.assignPlanLimit()) {
       return; // Reached limit
     }
@@ -198,7 +209,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
     
     const selectedUsers = this.selectedAssignUsers();
     if (selectedUsers.length === 0) {
-      alert('Debes seleccionar al menos un usuario.');
+      this.notificationService.show('Debes seleccionar al menos un usuario.', 'error');
       return;
     }
 
@@ -215,25 +226,15 @@ export class AssignSubscriptionModalComponent implements OnInit {
         this.saving.set(false);
         
         if (res.visitaGratis) {
-          import('sweetalert2').then((Swal) => {
-            Swal.default.fire({
-              title: '¡Visita Gratuita!',
-              text: 'Esta visita es por cuenta de la casa. ¡Felicidades al usuario!',
-              icon: 'success',
-              confirmButtonText: 'Genial',
-              confirmButtonColor: '#d84040',
-              backdrop: `rgba(216, 64, 64, 0.2)`
-            }).then(() => {
-              this.successEvent.emit();
-            });
-          });
+          this.notificationService.show('¡Visita Gratuita! Esta visita es por cuenta de la casa.', 'success');
         } else {
-          this.successEvent.emit(); // Emits signal to reload parent data and show toast
+          this.notificationService.show('Suscripción asignada exitosamente.', 'success');
         }
+        this.successEvent.emit();
       },
       error: (err) => {
         console.error('Error assigning subscription:', err);
-        alert('Ocurrió un error al procesar la venta. Inténtalo de nuevo.');
+        this.notificationService.show(err.error?.message || 'Ocurrió un error al procesar la venta.', 'error');
         this.saving.set(false);
       }
     });

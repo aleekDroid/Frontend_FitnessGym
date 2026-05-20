@@ -49,6 +49,9 @@
             placeholder="Ej. 4421234567"
             [class.is-invalid]="f['number'].touched && f['number'].errors"
           />
+          @if (isTargetSuperAdmin()) {
+            <span class="field-info">No editable para cuentas de Dueño</span>
+          }
           @if (f['number'].touched) {
             @if (f['number'].errors?.['required']) {
               <span class="field-error">El teléfono es obligatorio.</span>
@@ -60,7 +63,7 @@
           }
         </div>
 
-        @if (authService.isSuperAdmin()) {
+        @if (authService.isSuperAdmin() || userToEdit) {
           <div class="form-group form-group--full">
             <label for="user_role">Rol del usuario</label>
             <select
@@ -68,6 +71,7 @@
               formControlName="role"
               class="form-control"
               [class.is-invalid]="f['role'].touched && f['role'].errors"
+              [disabled]="isRoleFieldDisabled()"
             >
               <option value="member">Miembro</option>
               <option value="admin">Recepcionista (Admin)</option>

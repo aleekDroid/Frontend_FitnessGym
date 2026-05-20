@@ -105,7 +105,7 @@ export class UserDetails implements OnInit {
       },
       error: (err) => {
         console.error('Error fetching user details:', err);
-        alert('No se pudo cargar la información del usuario.');
+        this.notificationService.show('No se pudo cargar la información del usuario.', 'error');
         this.loading.set(false);
         this.loadingTable.set(false);
         this.goBack();
@@ -135,13 +135,28 @@ export class UserDetails implements OnInit {
     }
   }
 
-  canEdit(): boolean {
+  canEditProfile(): boolean {
     const target = this.user();
     if (!target) return false;
-    if (target.role === 'superadmin' && !this.authService.isSuperAdmin()) {
-      return false;
-    }
-    return true;
+    return this.authService.canEditProfile(target.id, target.role);
+  }
+
+  canToggleStatus(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canToggleStatus(target.id, target.role);
+  }
+
+  canResetPassword(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canResetPassword(target.id, target.role);
+  }
+
+  canAssignSubscription(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canAssignSubscription(target.role);
   }
 
   goBack(): void {

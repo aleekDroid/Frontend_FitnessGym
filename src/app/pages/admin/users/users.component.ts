@@ -146,11 +146,12 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  canEdit(target: UserWithMembership): boolean {
-    if (target.role === 'superadmin') {
-      return false; // Nobody can toggle superadmin status, hide button
-    }
-    return true;
+  canToggleStatus(target: UserWithMembership): boolean {
+    return this.authService.canToggleStatus(target.id, target.role);
+  }
+
+  canAssignSubscription(): boolean {
+    return this.authService.canAssignSubscriptionGlobal();
   }
 
   openCreate(): void {

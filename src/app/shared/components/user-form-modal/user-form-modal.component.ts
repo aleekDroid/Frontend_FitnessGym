@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { UsersService } from '../../../core/services/users.service';
@@ -20,6 +20,19 @@ export class UserFormModalComponent implements OnInit {
 
   userForm: FormGroup;
   saving = signal(false);
+
+  isSelfEdit = computed(() => {
+    const me = this.authService.currentUser();
+    return this.userToEdit !== null && me !== null && this.userToEdit.id === me.id;
+  });
+
+  isTargetSuperAdmin = computed(() => {
+    return this.userToEdit?.role === 'superadmin';
+  });
+
+  isRoleFieldDisabled = computed(() => {
+    return !this.authService.isSuperAdmin() || this.isSelfEdit() || this.isTargetSuperAdmin();
+  });
 
   constructor(
     private readonly fb: FormBuilder,
@@ -43,6 +56,14 @@ export class UserFormModalComponent implements OnInit {
         number: this.userToEdit.number,
         role: this.userToEdit.role || 'member'
       });
+
+      if (this.isTargetSuperAdmin() || this.isSelfEdit()) {
+        this.userForm.get('number')?.disable();
+      }
+
+      if (this.isRoleFieldDisabled()) {
+        this.userForm.get('role')?.disable();
+      }
     }
   }
 
@@ -66,7 +87,7 @@ export class UserFormModalComponent implements OnInit {
         number: val.number
       };
       
-      if (this.authService.isSuperAdmin() && val.role) {
+      if (this.authService.isSuperAdmin() && val.role && !this.isSelfEdit() && !this.isTargetSuperAdmin()) {
         payload.role = val.role;
       }
 

@@ -149,6 +149,54 @@ export class AuthService {
     return this.currentUser()?.role === 'superadmin';
   }
 
+  get currentUserId(): number | null {
+    return this.currentUser()?.id ?? null;
+  }
+
+  isSelf(targetUserId: number): boolean {
+    return this.currentUser()?.id === targetUserId;
+  }
+
+  canEditProfile(targetUserId: number, targetRole: string): boolean {
+    const me = this.currentUser();
+    if (!me) return false;
+    if (this.isSelf(targetUserId)) return true;
+    if (me.role === 'admin' && (targetRole === 'admin' || targetRole === 'superadmin')) return false;
+    return true;
+  }
+
+  canToggleStatus(targetUserId: number, targetRole: string): boolean {
+    const me = this.currentUser();
+    if (!me) return false;
+    if (this.isSelf(targetUserId)) return false;
+    if (targetRole === 'superadmin') return false;
+    if (me.role === 'admin' && targetRole === 'admin') return false;
+    return true;
+  }
+
+  canResetPassword(targetUserId: number, targetRole: string): boolean {
+    const me = this.currentUser();
+    if (!me) return false;
+    if (this.isSelf(targetUserId)) return false;
+    if (me.role === 'admin' && (targetRole === 'admin' || targetRole === 'superadmin')) return false;
+    return true;
+  }
+
+  canAssignSubscription(targetRole: string): boolean {
+    if (targetRole !== 'member') return false;
+    return this.isAdmin();
+  }
+
+  canAssignSubscriptionGlobal(): boolean {
+    return this.isAdmin();
+  }
+
+  canChangeRole(targetRole: string): boolean {
+    if (!this.isSuperAdmin()) return false;
+    if (targetRole === 'superadmin') return false;
+    return true;
+  }
+
   private saveSession(res: LoginResponse): void {
     this.currentToken.set(res.accessToken); 
     localStorage.setItem(this.TOKEN_KEY, res.accessToken);

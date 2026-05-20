@@ -75,26 +75,28 @@
     }
 
     <div class="toolbar-actions">
-      <button
-        class="btn btn-secondary"
-        (click)="openAssignModal()"
-      >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
+      @if (canAssignSubscription()) {
+        <button
+          class="btn btn-secondary"
+          (click)="openAssignModal()"
         >
-          <path
-            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-          ></path>
-          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
-          <line x1="12" y1="22.08" x2="12" y2="12"></line>
-        </svg>
-        Asignar Plan
-      </button>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <path
+              d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
+            ></path>
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+          </svg>
+          Asignar Plan
+        </button>
+      }
 
       <button class="btn btn-primary" (click)="openCreate()">
         <svg
@@ -193,46 +195,44 @@
                     <line x1="12" y1="8" x2="12.01" y2="8"></line>
                   </svg>
                 </button>
-                @if (canEdit(user)) {
-                  @if (user.role !== 'superadmin') {
-                    <button
-                      class="action-btn"
-                      [ngClass]="
-                        user.status === 'active'
-                          ? 'action-btn--delete'
-                          : 'action-btn--activate'
-                      "
-                      (click)="confirmToggleStatus(user)"
-                      [title]="user.status === 'active' ? 'Desactivar' : 'Activar'"
-                      [attr.aria-label]="user.status === 'active' ? 'Desactivar usuario' : 'Activar usuario'"
-                    >
-                      @if (user.status === "active") {
-                        <svg
-                          width="15"
-                          height="15"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                        </svg>
-                      } @else {
-                        <svg
-                          width="15"
-                          height="15"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                        >
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
-                      }
-                    </button>
-                  }
+                @if (canToggleStatus(user)) {
+                  <button
+                    class="action-btn"
+                    [ngClass]="
+                      user.status === 'active'
+                        ? 'action-btn--delete'
+                        : 'action-btn--activate'
+                    "
+                    (click)="confirmToggleStatus(user)"
+                    [title]="user.status === 'active' ? 'Desactivar' : 'Activar'"
+                    [attr.aria-label]="user.status === 'active' ? 'Desactivar usuario' : 'Activar usuario'"
+                  >
+                    @if (user.status === "active") {
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                      </svg>
+                    } @else {
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                    }
+                  </button>
                 }
               </td>
             </tr>
