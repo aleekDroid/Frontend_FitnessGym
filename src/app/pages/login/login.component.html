@@ -22,7 +22,7 @@
   <div class="login-card">
     <!-- Logo -->
     <div class="logo-wrapper">
-      <img src="assets/FitnessGym.PNG" alt="Fitness Gym" class="login-logo" />
+      <img src="assets/FitnessGym.webp" alt="Fitness Gym" class="login-logo" />
     </div>
 
     <h1 class="login-title">Bienvenido</h1>
@@ -70,7 +70,8 @@
             type="text"
             formControlName="number"
             class="form-control with-icon"
-            placeholder="Ej. 4421234567"
+            placeholder="Ej. 5512345678 o +52..."
+            maxlength="15"
             [class.is-invalid]="f['number'].touched && f['number'].errors"
           />
         </div>
@@ -109,6 +110,7 @@
             formControlName="password"
             class="form-control with-icon with-icon-right"
             placeholder="Contraseña"
+            maxlength="128"
             [class.is-invalid]="f['password'].touched && f['password'].errors"
           />
           <button type="button" class="toggle-pass" (click)="togglePassword()">

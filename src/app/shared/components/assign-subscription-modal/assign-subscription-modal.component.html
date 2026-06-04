@@ -1,136 +1,172 @@
 <div class="modal-overlay" (click)="closeModal()" (keydown.enter)="closeModal()" tabindex="0">
-  <div class="modal-box" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0">
-    <div class="modal-header">
+  <div class="modal-box" (click)="$event.stopPropagation()" (keydown.enter)="$event.stopPropagation()" tabindex="0" style="display: flex; flex-direction: column; max-height: calc(100vh - 40px); overflow: hidden;">
+    <div class="modal-header" style="flex-shrink: 0; margin-bottom: 20px;">
       <h2 class="modal-title">Asignar Suscripción</h2>
       <button class="modal-close" (click)="closeModal()">✕</button>
     </div>
 
-    <form [formGroup]="assignForm" (ngSubmit)="submitAssign()">
-      <!-- PLAN SELECTION -->
-      <div class="form-group">
-        <label>Plan / Membresía</label>
-        <select formControlName="subscription_id" class="form-control"
-          [class.is-invalid]="af['subscription_id'].touched && af['subscription_id'].errors"
-          (change)="onAssignPlanChange($event)">
-          <option value="" disabled selected>Selecciona un plan...</option>
-          @for (plan of subscriptionTypes(); track plan.id) {
-          <option [value]="plan.id">
-            {{ plan.name }} - ${{ plan.price }}
-          </option>
+    <form [formGroup]="assignForm" (ngSubmit)="submitAssign()" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+      
+      <!-- Scrollable Container for inputs and billing -->
+      <div class="modal-body-scroll" style="flex: 1; overflow-y: auto; padding-right: 6px; padding-bottom: 10px;">
+        <!-- PLAN SELECTION -->
+        <div class="form-group">
+          <label>Plan / Membresía</label>
+          <select formControlName="subscription_id" class="form-control"
+            [class.is-invalid]="af['subscription_id'].touched && af['subscription_id'].errors"
+            (change)="onAssignPlanChange($event)">
+            <option value="" disabled selected>Selecciona un plan...</option>
+            @for (plan of subscriptionTypes(); track plan.id) {
+            <option [value]="plan.id">
+              {{ plan.name }} - ${{ plan.price }}
+            </option>
+            }
+          </select>
+          @if (af["subscription_id"].touched && af["subscription_id"].errors?.["required"]) {
+          <div class="field-error">Debes seleccionar un plan.</div>
           }
-        </select>
-        @if (af["subscription_id"].touched && af["subscription_id"].errors?.["required"]) {
-        <div class="field-error">Debes seleccionar un plan.</div>
-        }
-        @if (af["subscription_id"].value) {
-        <p style="font-size: 0.8rem; color: #4ade80; margin-top: 6px">
-          Este plan cubre hasta
-          <strong>{{ assignPlanLimit() }}</strong> usuario(s).
-        </p>
-        }
-      </div>
+          @if (af["subscription_id"].value) {
+          <p style="font-size: 0.8rem; color: #4ade80; margin-top: 6px">
+            Este plan cubre hasta
+            <strong>{{ assignPlanLimit() }}</strong> usuario(s).
+          </p>
+          }
+        </div>
 
-      <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
+        <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
 
-      <!-- USER SEARCH AUTOCOMPLETE -->
-      <div class="form-group" style="position: relative">
-        <label>Buscar Usuarios a Inscribir (<span
-            [style.color]="selectedAssignUsers().length === assignPlanLimit() ? '#ef9a9a' : 'inherit'"
-          >{{ selectedAssignUsers().length }} / {{ assignPlanLimit() }}</span>)</label>
-        <input id="assignUserSearchComponent" type="text" class="form-control"
-          placeholder="Buscar por nombre, apellido o teléfono..." [value]="assignSearchQuery()"
-          (input)="onAssignSearchInput($any($event.target).value)" autocomplete="off"
-          [disabled]="selectedAssignUsers().length >= assignPlanLimit() || !af['subscription_id'].value" />
+        <!-- USER SEARCH AUTOCOMPLETE -->
+        <div class="form-group" style="position: relative">
+          <label>Buscar Usuarios a Inscribir (<span
+              [style.color]="selectedAssignUsers().length === assignPlanLimit() ? '#ef9a9a' : 'inherit'"
+            >{{ selectedAssignUsers().length }} / {{ assignPlanLimit() }}</span>)</label>
+          <input id="assignUserSearchComponent" type="text" class="form-control"
+            placeholder="Buscar por nombre, apellido o teléfono..." [value]="assignSearchQuery()"
+            (input)="onAssignSearchInput($any($event.target).value)" autocomplete="off"
+            [disabled]="selectedAssignUsers().length >= assignPlanLimit() || !af['subscription_id'].value" />
 
-        <!-- Dropdown Results -->
-        @if (assignSearchQuery() && assignSearchResults().length > 0) {
-        <ul class="autocomplete-dropdown">
-          @for (resUser of assignSearchResults(); track resUser.id) {
-          <li (click)="selectUserForAssign(resUser)" (keydown.enter)="selectUserForAssign(resUser)" tabindex="0">
-            <div class="autocomplete-item">
-              <span class="user-avatar-xxs">{{ resUser.name.charAt(0) }}{{ resUser.last_name.charAt(0) }}</span>
-              <div>
-                <strong>{{ resUser.name }} {{ resUser.last_name }}</strong>
-                <small style="display: block"> {{ resUser.number }}</small>
+          <!-- Dropdown Results -->
+          @if (assignSearchQuery() && assignSearchResults().length > 0) {
+          <ul class="autocomplete-dropdown">
+            @for (resUser of assignSearchResults(); track resUser.id) {
+            <li (click)="selectUserForAssign(resUser)" (keydown.enter)="selectUserForAssign(resUser)" tabindex="0">
+              <div class="autocomplete-item">
+                <span class="user-avatar-xxs">{{ resUser.name.charAt(0) }}{{ resUser.last_name.charAt(0) }}</span>
+                <div>
+                  <strong>{{ resUser.name }} {{ resUser.last_name }}</strong>
+                  <small style="display: block"> {{ resUser.number }}</small>
+                </div>
               </div>
+            </li>
+            }
+          </ul>
+          } @else if (assignSearchQuery() && assignSearchResults().length === 0 && assignSearching()) {
+          <ul class="autocomplete-dropdown">
+            <li class="empty-result">Buscando...</li>
+          </ul>
+          } @else if (assignSearchQuery() && assignSearchResults().length === 0 && !assignSearching()) {
+          <ul class="autocomplete-dropdown">
+            <li class="empty-result">No se encontraron usuarios libres</li>
+          </ul>
+          }
+        </div>
+
+        <!-- SELECTED USERS CHIPS -->
+        @if (selectedAssignUsers().length > 0) {
+        <div class="selected-users-chips">
+          @for (sUser of selectedAssignUsers(); track sUser.id) {
+          <div class="chip">
+            {{ sUser.name }} {{ sUser.last_name }}
+            <button type="button" class="chip-remove" (click)="removeAssignUser(sUser)">✕</button>
+          </div>
+          }
+        </div>
+
+        <!-- SUB ACTIVE WARNING -->
+        @if (usersWithActiveSub().length > 0) {
+        <div class="active-sub-warning">
+          <div class="warning-header">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+              <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            <span>Suscripción activa detectada</span>
+          </div>
+          <ul class="warning-list">
+            @for (uw of usersWithActiveSub(); track uw.name) {
+            <li>
+              <strong>{{ uw.name }}</strong> — {{ uw.days }} días restantes serán reemplazados.
+            </li>
+            }
+          </ul>
+        </div>
+        } }
+
+        <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
+
+        <!-- BILLING BREAKDOWN (QUOTE) -->
+        @if (quoteBreakdown()) {
+        <div class="billing-breakdown-card" style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 14px; margin: 15px 0;">
+          <h4 style="margin: 0 0 10px 0; font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; color: #d84040;">Resumen del Cobro</h4>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85rem;">
+            <span style="opacity: 0.7;">Precio de Membresía:</span>
+            <strong>${{ quoteBreakdown()!.basePrice | number }}</strong>
+          </div>
+
+          <!-- List of new users paying registration -->
+          @if (quoteBreakdown()!.newUsers.length > 0) {
+          <div class="registration-fees-section" style="margin-top: 10px; padding-top: 8px; border-top: 1px dashed rgba(255, 255, 255, 0.08);">
+            <div style="font-size: 0.75rem; color: #ef9a9a; font-weight: 500; margin-bottom: 6px;">Inscripciones Aplicadas (Nuevos Usuarios):</div>
+            @for (newUser of quoteBreakdown()!.newUsers; track newUser.id) {
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px; font-size: 0.8rem; padding-left: 6px;">
+              <span style="opacity: 0.6;">• {{ newUser.name }} {{ newUser.last_name }}</span>
+              <strong>+${{ quoteBreakdown()!.enrollmentFee | number }}</strong>
             </div>
-          </li>
+            }
+          </div>
           }
-        </ul>
-        } @else if (assignSearchQuery() && assignSearchResults().length === 0 && assignSearching()) {
-        <ul class="autocomplete-dropdown">
-          <li class="empty-result">Buscando...</li>
-        </ul>
-        } @else if (assignSearchQuery() && assignSearchResults().length === 0 && !assignSearching()) {
-        <ul class="autocomplete-dropdown">
-          <li class="empty-result">No se encontraron usuarios libres</li>
-        </ul>
-        }
-      </div>
 
-      <!-- SELECTED USERS CHIPS -->
-      @if (selectedAssignUsers().length > 0) {
-      <div class="selected-users-chips">
-        @for (sUser of selectedAssignUsers(); track sUser.id) {
-        <div class="chip">
-          {{ sUser.name }} {{ sUser.last_name }}
-          <button type="button" class="chip-remove" (click)="removeAssignUser(sUser)">✕</button>
+          <div style="display: flex; justify-content: space-between; margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, 0.15); font-size: 1rem;">
+            <span style="font-weight: 500;">Total a Cobrar:</span>
+            <strong style="color: #d84040; font-size: 1.15rem;">${{ quoteBreakdown()!.total | number }}</strong>
+          </div>
         </div>
         }
-      </div>
+      </div> <!-- End of modal-body-scroll -->
 
-      <!-- SUB ACTIVE WARNING -->
-      @if (usersWithActiveSub().length > 0) {
-      <div class="active-sub-warning">
-        <div class="warning-header">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-            <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
-          </svg>
-          <span>Suscripción activa detectada</span>
+      <!-- Locked at bottom -->
+      <div class="modal-footer-locked" style="flex-shrink: 0; margin-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; background: #251a1a;">
+        <!-- PAYMENT METHOD -->
+        <div class="form-group" style="margin-bottom: 15px;">
+          <label>Método de pago recibido</label>
+          <div class="payment-options">
+            <label class="payment-option" [class.selected]="af['payment_method'].value === 'efectivo'">
+              <input type="radio" formControlName="payment_method" value="efectivo" />
+              Efectivo
+            </label>
+            <label class="payment-option" [class.selected]="af['payment_method'].value === 'tarjeta'">
+              <input type="radio" formControlName="payment_method" value="tarjeta" />
+              Tarjeta
+            </label>
+            <label class="payment-option" [class.selected]="af['payment_method'].value === 'transferencia'">
+              <input type="radio" formControlName="payment_method" value="transferencia" />
+              Transfer.
+            </label>
+          </div>
         </div>
-        <ul class="warning-list">
-          @for (uw of usersWithActiveSub(); track uw.name) {
-          <li>
-            <strong>{{ uw.name }}</strong> — {{ uw.days }} días restantes serán reemplazados.
-          </li>
-          }
-        </ul>
-      </div>
-      } }
 
-
-      <hr style=" border: 0; border-top: 1px dashed rgba(255, 255, 255, 0.1); margin: 20px 0; " />
-
-      <!-- PAYMENT METHOD -->
-      <div class="form-group">
-        <label>Método de pago recibido</label>
-        <div class="payment-options">
-          <label class="payment-option" [class.selected]="af['payment_method'].value === 'efectivo'">
-            <input type="radio" formControlName="payment_method" value="efectivo" />
-            Efectivo
-          </label>
-          <label class="payment-option" [class.selected]="af['payment_method'].value === 'tarjeta'">
-            <input type="radio" formControlName="payment_method" value="tarjeta" />
-            Tarjeta
-          </label>
-          <label class="payment-option" [class.selected]="af['payment_method'].value === 'transferencia'">
-            <input type="radio" formControlName="payment_method" value="transferencia" />
-            Transfer.
-          </label>
+        <!-- SUBMIT -->
+        <div class="modal-actions" style="margin-top: 0;">
+          <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="saving() || selectedAssignUsers().length === 0">
+            @if (saving()) {
+            <span class="spinner-sm"></span> Procesando...
+            } @else {
+            Finalizar Venta
+            }
+          </button>
         </div>
-      </div>
-
-      <!-- SUBMIT -->
-      <div class="modal-actions">
-        <button type="button" class="btn btn-cancel" (click)="closeModal()">Cancelar</button>
-        <button type="submit" class="btn btn-primary" [disabled]="saving() || selectedAssignUsers().length === 0">
-          @if (saving()) {
-          <span class="spinner-sm"></span> Procesando...
-          } @else {
-          Finalizar Venta
-          }
-        </button>
       </div>
     </form>
   </div>

@@ -40,6 +40,7 @@ export class SubscriptionsService {
     const payload = {
       name: dto.name,
       price: Number(dto.price),
+      enrollment_fee: Number(dto.enrollment_fee || 0),
       duration: Number(dto.duration),
       person_per_suscription: Number(dto.person_per_suscription),
       description: dto.description || '',

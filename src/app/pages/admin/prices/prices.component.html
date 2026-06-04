@@ -93,7 +93,12 @@
             }
           </div>
 
-          <div class="price-card-price">${{ type.price | number }}</div>
+          <div class="price-card-price">
+            ${{ type.price | number }}
+            @if (type.enrollment_fee > 0) {
+              <span class="enrollment-fee-text" style="font-size: 0.8rem; font-weight: 500; opacity: 0.85; margin-left: 4px; display: inline-block;">+ ${{ type.enrollment_fee | number }} inscr.</span>
+            }
+          </div>
 
           <div class="price-card-meta">
             <span class="meta-chip">
@@ -278,6 +283,26 @@
               <span class="field-error">Requerido</span>
             }
           </div>
+          <div class="form-group">
+            <label>Inscripción ($)</label>
+            <div class="number-control" [class.is-invalid]="f['enrollment_fee'].touched && f['enrollment_fee'].errors">
+              <button type="button" class="btn-step" (click)="stepValue('enrollment_fee', -1)">−</button>
+              <input
+                type="number"
+                formControlName="enrollment_fee"
+                class="form-control text-center no-spinners"
+                placeholder="0"
+                min="0"
+              />
+              <button type="button" class="btn-step" (click)="stepValue('enrollment_fee', 1)">+</button>
+            </div>
+            @if (f["enrollment_fee"].touched && f["enrollment_fee"].errors?.["required"]) {
+              <span class="field-error">Requerido</span>
+            }
+          </div>
+        </div>
+
+        <div class="form-row">
           <div class="form-group">
             <label>Duración (días)</label>
             <div class="number-control" [class.is-invalid]="f['duration'].touched && f['duration'].errors" [class.number-control--disabled]="f['duration'].disabled">

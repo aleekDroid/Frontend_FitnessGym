@@ -2,7 +2,7 @@
 import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormsModule, FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { UsersService, UserDetailsResponse, SubscriptionHistoryItem } from '../../../../core/services/users.service';
 import { AttendanceService, AttendanceHistoryItem } from '../../../../core/services/attendance.service';
 import { NotificationService } from '../../../../core/services/notification.service';
@@ -10,11 +10,21 @@ import { UserWithMembership } from '../../../../core/models/user.model';
 import { AssignSubscriptionModalComponent } from '../../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
 import { StatusConfirmModalComponent } from '../../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { TransactionDetailModalComponent } from '../../../../shared/components/transaction-detail-modal/transaction-detail-modal.component';
+import { UserFormModalComponent } from '../../../../shared/components/user-form-modal/user-form-modal.component';
+import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-user-details',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, AssignSubscriptionModalComponent, StatusConfirmModalComponent, TransactionDetailModalComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    AssignSubscriptionModalComponent,
+    StatusConfirmModalComponent,
+    TransactionDetailModalComponent,
+    UserFormModalComponent
+  ],
   templateUrl: './user-details.html',
   styleUrls: ['./user-details.css']
 })
@@ -36,7 +46,7 @@ export class UserDetails implements OnInit {
   // Modals & Forms
   showEditModal = signal(false);
   saving = signal(false);
-  userForm: FormGroup;
+  loadingTable = signal(false);
 
   showStatusConfirm = signal(false);
   showAssignModal = signal(false);
@@ -47,8 +57,9 @@ export class UserDetails implements OnInit {
   // Password Reset Signals
   showResetConfirm = signal(false);
   showPasswordModal = signal(false);
-  generatedPassword = signal('');
+  qrBase64 = signal('');
   resettingPassword = signal(false);
+  downloadingQr = signal(false);
 
   constructor(
     private readonly route: ActivatedRoute,
@@ -56,14 +67,8 @@ export class UserDetails implements OnInit {
     private readonly usersService: UsersService,
     private readonly attendanceService: AttendanceService,
     private readonly notificationService: NotificationService,
-    private readonly fb: FormBuilder
-  ) {
-    this.userForm = this.fb.group({
-      name: ['', [Validators.required]],
-      last_name: ['', [Validators.required]],
-      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern('^[0-9]*$')]]
-    });
-  }
+    public readonly authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     // Escuchamos cambios en los parámetros de la ruta para permitir navegar entre usuarios
@@ -81,7 +86,13 @@ export class UserDetails implements OnInit {
   loadData(): void {
     if (!this.userId) return;
     
-    this.loading.set(true);
+    const isFirstLoad = !this.user();
+    if (isFirstLoad) {
+      this.loading.set(true);
+    } else {
+      this.loadingTable.set(true);
+    }
+    
     this.usersService.getById(this.userId, this.currentPage(), this.limit()).subscribe({
       next: (res) => {
         this.user.set(res.user);
@@ -90,11 +101,13 @@ export class UserDetails implements OnInit {
         this.totalItems.set(res.historyMeta.totalItems);
         this.currentPage.set(res.historyMeta.currentPage);
         this.loading.set(false);
+        this.loadingTable.set(false);
       },
       error: (err) => {
         console.error('Error fetching user details:', err);
-        alert('No se pudo cargar la información del usuario.');
+        this.notificationService.show('No se pudo cargar la información del usuario.', 'error');
         this.loading.set(false);
+        this.loadingTable.set(false);
         this.goBack();
       }
     });
@@ -122,6 +135,30 @@ export class UserDetails implements OnInit {
     }
   }
 
+  canEditProfile(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canEditProfile(target.id, target.role);
+  }
+
+  canToggleStatus(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canToggleStatus(target.id, target.role);
+  }
+
+  canResetPassword(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canResetPassword(target.id, target.role);
+  }
+
+  canAssignSubscription(): boolean {
+    const target = this.user();
+    if (!target) return false;
+    return this.authService.canAssignSubscription(target.role);
+  }
+
   goBack(): void {
     const from = this.route.snapshot.queryParamMap.get('from');
     if (from === 'home') {
@@ -132,16 +169,13 @@ export class UserDetails implements OnInit {
   }
 
   // ─── EDIT MODAL ───
-  get f() { return this.userForm.controls; }
+  get userToEdit(): UserWithMembership | null {
+    const u = this.user();
+    if (!u) return null;
+    return u as any;
+  }
 
   openEditModal(): void {
-    const u = this.user();
-    if (!u) return;
-    this.userForm.patchValue({
-      name: u.name,
-      last_name: u.last_name,
-      number: u.number
-    });
     this.showEditModal.set(true);
   }
 
@@ -149,42 +183,9 @@ export class UserDetails implements OnInit {
     this.showEditModal.set(false);
   }
 
-  onSubmitEdit(): void {
-    if (this.userForm.invalid) {
-      this.userForm.markAllAsTouched();
-      return;
-    }
-    if (!this.userId) return;
-
-    this.saving.set(true);
-    const val = this.userForm.value;
-    const payload = {
-      id: this.userId,
-      name: val.name,
-      lastName: val.last_name,
-      number: val.number
-    };
-    
-    this.usersService.updateProfile(payload).subscribe({
-      next: () => {
-        this.saving.set(false);
-        this.closeEditModal();
-        this.notificationService.show('Perfil actualizado correctamente.', 'success');
-        this.loadData();
-      },
-      error: (err) => {
-        console.error('Error updating profile:', err);
-        this.saving.set(false);
-        if (err.status === 400 && err.error?.message?.includes('already in use')) {
-             this.userForm.controls['number'].setErrors({ phoneInUse: true });
-             this.userForm.controls['number'].markAsTouched();
-        } else if (err.status === 400 && err.error?.message?.includes('not found')) {
-             alert('El usuario no existe.');
-        } else {
-             alert('Hubo un error al actualizar los datos.');
-        }
-      }
-    });
+  onSaveSuccess(res: any): void {
+    this.closeEditModal();
+    this.loadData();
   }
 
   togglingStatus = signal(false);
@@ -247,15 +248,25 @@ export class UserDetails implements OnInit {
 
   // ── ASSIGN SUBSCRIPTION ──
 
-  /** Returns the current user shaped as UserWithMembership for the modal's prefilledUser input */
   get prefilledUserForModal(): UserWithMembership | null {
     const u = this.user();
     if (!u) return null;
-    const activeSub = this.history().find(h => h.status === 'active' || h.status === 'expiring');
+    
+    // Find active subscription that is NOT a visita and NOT expired dynamically
+    const activeSub = this.history().find(h => {
+      const isExpired = h.status === 'active' && new Date(h.end_date).getTime() < Date.now();
+      return (h.status === 'active' || h.status === 'expiring') && 
+             !isExpired &&
+             !h.suscriptions_types?.name?.toLowerCase().includes('visita');
+    });
+
+    const hasHistory = this.history().some(h => !h.suscriptions_types?.name?.toLowerCase().includes('visita'));
+    
     return {
       ...u,
       membership_end: activeSub?.end_date,
-      membership_status: activeSub?.status
+      membership_status: activeSub?.status || (hasHistory ? 'expired' : 'none'),
+      has_subscription_history: hasHistory
     } as UserWithMembership;
   }
 
@@ -303,9 +314,9 @@ export class UserDetails implements OnInit {
       next: (res) => {
         this.resettingPassword.set(false);
         this.showResetConfirm.set(false);
-        this.generatedPassword.set(res.password);
+        this.qrBase64.set(res.qrBase64);
         this.showPasswordModal.set(true);
-        this.notificationService.show('Contraseña reseteada exitosamente.', 'success');
+        this.notificationService.show('QR de restablecimiento generado.', 'success');
       },
       error: (err) => {
         console.error('Error resetting password:', err);
@@ -317,16 +328,23 @@ export class UserDetails implements OnInit {
 
   closePasswordModal(): void {
     this.showPasswordModal.set(false);
-    this.generatedPassword.set('');
+    this.qrBase64.set('');
   }
 
-  copyToClipboard(text: string): void {
-    navigator.clipboard.writeText(text).then(() => {
-      this.notificationService.show('Contraseña copiada al portapapeles', 'success');
-    }).catch(err => {
-      console.error('Error al copiar:', err);
-      this.notificationService.show('No se pudo copiar la contraseña', 'error');
-    });
+  downloadQr(): void {
+    const base64 = this.qrBase64();
+    if (!base64 || this.downloadingQr()) return;
+
+    this.downloadingQr.set(true);
+    
+    const link = document.createElement('a');
+    link.href = 'data:image/png;base64,' + base64;
+    link.download = 'qr-reset-password.png';
+    link.click();
+
+    setTimeout(() => {
+      this.downloadingQr.set(false);
+    }, 1000);
   }
 }
 

@@ -54,6 +54,18 @@ export class AttendanceService {
     );
   }
 
+  registerAttendanceAdmin(idUser: number): Observable<AttendanceResponse> {
+    const headers = new HttpHeaders({
+      Authorization: `Bearer ${this.authService.getToken()}`
+    });
+    
+    return this.http.post<AttendanceResponse>(
+      `${environment.apiUrl}/attendances/admin`,
+      { idUser },
+      { headers }
+    );
+  }
+
   getLastAttendances(idUser: number): Observable<AttendanceHistoryItem[]> {
     const headers = new HttpHeaders({
       Authorization: `Bearer ${this.authService.getToken()}`

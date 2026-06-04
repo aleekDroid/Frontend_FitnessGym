@@ -4,6 +4,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DashboardService, DashboardSummary } from '../../../core/services/dashboard.service';
 import { PdfReportService } from '../../../core/services/pdf-report.service';
+import { ExcelReportService } from '../../../core/services/excel-report.service'; 
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-dashboard',
@@ -15,13 +17,16 @@ import { PdfReportService } from '../../../core/services/pdf-report.service';
 export class DashboardComponent implements OnInit {
   stats = signal<DashboardSummary | null>(null);
   loading = signal(true);
-  exportingPdf = signal(false);
+  
+  exportingReport = signal(false); 
+  
   dateFrom = signal('');
   dateTo   = signal('');
 
   constructor(
     private readonly dashboardService: DashboardService,
     private readonly pdfReportService: PdfReportService,
+    private readonly excelReportService: ExcelReportService 
   ) {}
 
   ngOnInit(): void {
@@ -38,6 +43,20 @@ export class DashboardComponent implements OnInit {
       this.stats.set(s);
       this.loading.set(false);
     });
+  }
+
+  onDateFromChange(val: string): void {
+    this.dateFrom.set(val);
+    if (val && this.dateTo() && val > this.dateTo()) {
+      this.dateTo.set(val);
+    }
+  }
+
+  onDateToChange(val: string): void {
+    this.dateTo.set(val);
+    if (val && this.dateFrom() && val < this.dateFrom()) {
+      this.dateFrom.set(val);
+    }
   }
 
   applyFilter(): void { this.loadStats(); }
@@ -60,19 +79,83 @@ export class DashboardComponent implements OnInit {
     return Math.max(pct, 2);
   }
 
-  exportPDF(): void {
+  async promptExport(): Promise<void> {
     const s = this.stats();
     if (!s) return;
 
-    this.exportingPdf.set(true);
-    this.dashboardService.getReportDetails(this.dateFrom(), this.dateTo()).subscribe(data => {
-      this.pdfReportService
-        .generateReport(s, data, this.dateFrom(), this.dateTo())
-        .finally(() => this.exportingPdf.set(false));
+    const result = await Swal.fire({
+      title: 'Exportar Reporte',
+      text: '¿En qué formato deseas descargar el reporte?',
+      icon: 'question',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'PDF',
+      confirmButtonColor: '#d32f2f', 
+      denyButtonText: 'Excel',
+      denyButtonColor: '#2e7d32',
+      cancelButtonText: 'Cancelar',
+      cancelButtonColor: '#444',
+      background: '#1a1a1a',
+      color: '#eee',
+    });
+
+    if (result.isConfirmed) {
+      this.executeExport('pdf');
+    } else if (result.isDenied) {
+      this.executeExport('excel');
+    }
+  }
+
+  private executeExport(format: 'pdf' | 'excel'): void {
+    const s = this.stats();
+    if (!s) return;
+
+    this.exportingReport.set(true);
+    
+    Swal.fire({
+      title: 'Generando Reporte...',
+      html: 'Por favor espera un momento.',
+      allowOutsideClick: false,
+      background: '#1a1a1a',
+      color: '#eee',
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
+    this.dashboardService.getReportDetails(this.dateFrom(), this.dateTo()).subscribe({
+      next: (data) => {
+        if (format === 'pdf') {
+          this.pdfReportService.generateReport(s, data, this.dateFrom(), this.dateTo())
+            .finally(() => {
+              this.exportingReport.set(false);
+              Swal.close();
+            });
+        } else {
+          this.excelReportService.generateExcelReport(s, data, this.dateFrom(), this.dateTo());
+          this.exportingReport.set(false);
+          Swal.close();
+        }
+      },
+      error: (err) => {
+        console.error('Error al exportar', err);
+        this.exportingReport.set(false);
+        Swal.fire({
+          title: 'Error',
+          text: 'No se pudo generar el reporte',
+          icon: 'error',
+          background: '#1a1a1a',
+          color: '#eee',
+          confirmButtonColor: '#d32f2f'
+        });
+      }
     });
   }
 
   private toInputDate(d: Date): string {
-    return d.toISOString().split('T')[0];
+    // Restamos el timezone offset para que al convertir a ISO string 
+    // nos dé la fecha local correcta (ej: en México) y no salte de día.
+    const localDate = new Date(d.getTime() - d.getTimezoneOffset() * 60000);
+    return localDate.toISOString().split('T')[0];
   }
 }

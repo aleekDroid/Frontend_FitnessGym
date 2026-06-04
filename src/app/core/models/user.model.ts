@@ -5,7 +5,7 @@ export interface User {
   number: string;           // WhatsApp number
   name: string;
   last_name: string;
-  role: 'member' | 'admin';
+  role: 'member' | 'admin' | 'superadmin';
   status: 'active' | 'inactive' | 'suspended';
   routine?: any;
   created_at?: string;
@@ -27,6 +27,8 @@ export interface UserWithMembership extends User {
   membership_end?: string;
   membership_status?: 'active' | 'expiring' | 'expired' | 'none';
   attended_today?: boolean;
+  activeSubscription?: any;
+  has_subscription_history?: boolean;
 }
 
 export interface CreateUserDto {

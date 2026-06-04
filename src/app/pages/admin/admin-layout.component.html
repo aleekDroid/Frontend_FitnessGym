@@ -7,7 +7,7 @@
 
       <!-- Logo -->
       <a routerLink="/admin/home" class="admin-logo">
-        <img src="assets/FitnessGym.PNG" alt="Fitness Gym" />
+        <img src="assets/FitnessGym.webp" alt="Fitness Gym" />
       </a>
 
       <!-- Desktop nav -->
@@ -52,7 +52,9 @@
           </div>
           <div class="user-info">
             <span class="user-name">{{ user?.name }} {{ user?.last_name }}</span>
-            <span class="user-role">Administrador</span>
+            <span class="user-role" [class.role-dueño]="user?.role === 'superadmin'">
+              {{ user?.role === 'superadmin' ? 'Dueño' : 'Recepcionista' }}
+            </span>
           </div>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" [style.transform]="userMenuOpen() ? 'rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
         </button>

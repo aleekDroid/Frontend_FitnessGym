@@ -30,6 +30,16 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   private canvasEl: HTMLCanvasElement | null = null;
   private scanInterval: any = null;
 
+  // ── ANTI-DUPLICATE GUARD ──
+  // Semáforo síncrono: se activa en el mismo tick en que se detecta el QR,
+  // antes de cualquier petición HTTP o ciclo de change detection de Angular.
+  private isProcessing = false;
+  // En modo autoservicio: evita re-escanear el mismo código físico cuando
+  // el status vuelve a 'idle' mientras el QR sigue apuntando a la cámara.
+  private lastScannedCode = '';
+  private cooldownTimer: any = null;
+  private readonly UNSUPERVISED_COOLDOWN_MS = 4000; // 1s extra sobre los 3s del status
+
   // Confirmación por mayoría para barcode
   private lastBarcode = '';
   private barcodeConfirmCount = 0;
@@ -43,8 +53,8 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   isZoomSupported = false;
   isZoomOn = false;
 
-  private successAudio = new Audio('audio/success.mp3');
-  private errorAudio = new Audio('audio/error.mp3');
+  private readonly successAudio = new Audio('audio/success.mp3');
+  private readonly errorAudio = new Audio('audio/error.mp3');
 
   get hintText(): string {
     if (this.unsupervised) return 'Modo Automático Activo';
@@ -95,8 +105,8 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
       if (track) {
         const capabilities = track.getCapabilities() as any;
         const zoomValue = this.isZoomOn
-          ? Math.min(2.0, capabilities.zoom?.max ?? 2.0)
-          : (capabilities.zoom?.min ?? 1.0);
+          ? Math.min(2, capabilities.zoom?.max ?? 2)
+          : (capabilities.zoom?.min ?? 1);
         await (track as any).applyConstraints({
           advanced: [{ zoom: zoomValue }]
         });
@@ -109,9 +119,18 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
 
   private handleStatusChange(newStatus: 'idle' | 'success' | 'error'): void {
     if (newStatus === 'success') {
+      this.successAudio.currentTime = 0;
       this.successAudio.play().catch(e => console.log('Audio play failed', e));
     } else if (newStatus === 'error') {
+      this.errorAudio.currentTime = 0;
       this.errorAudio.play().catch(e => console.log('Audio play failed', e));
+    } else if (newStatus === 'idle') {
+      // Cuando el parent termina de procesar (status vuelve a idle),
+      // liberamos el semáforo. En modo autoservicio el cooldown ya expiró
+      // (o expirará), por lo que no es necesario liberar aquí manualmente.
+      if (!this.unsupervised) {
+        this.isProcessing = false;
+      }
     }
   }
 
@@ -177,7 +196,10 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   private scanFrameWithJsQr(): void {
     if (!this.videoEl || !this.canvasEl) return;
     if (this.videoEl.readyState !== this.videoEl.HAVE_ENOUGH_DATA) return;
-    if (this.status !== 'idle') return;
+
+    // Semáforo síncrono: bloquea inmediatamente, sin depender del @Input status
+    // ni del ciclo de change detection de Angular.
+    if (this.isProcessing) return;
 
     const video = this.videoEl;
     const canvas = this.canvasEl;
@@ -194,8 +216,29 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
     });
 
     if (code?.data) {
+      // En modo autoservicio: ignorar si es el mismo código dentro del cooldown
+      if (this.unsupervised && code.data === this.lastScannedCode) return;
+
+      // Activar semáforo síncronamente — antes de cualquier async/emit
+      this.isProcessing = true;
+      this.lastScannedCode = code.data;
+
       this.scanSuccess.emit(code.data);
-      if (!this.unsupervised) this.stopScanner();
+
+      if (this.unsupervised) {
+        // Modo autoservicio: liberar el semáforo y permitir un nuevo escaneo
+        // solo después del cooldown (status 3s + 1s de margen)
+        if (this.cooldownTimer) clearTimeout(this.cooldownTimer);
+        this.cooldownTimer = setTimeout(() => {
+          this.isProcessing = false;
+          this.lastScannedCode = '';
+          this.cooldownTimer = null;
+        }, this.UNSUPERVISED_COOLDOWN_MS);
+      } else {
+        // Modo supervisado: cerrar el scanner y resetear cuando el parent
+        // confirme el resultado (handleStatusChange -> idle)
+        this.stopScanner();
+      }
     }
   }
 
@@ -235,7 +278,7 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
       this.barcodeRunning = true;
 
       // BarcodeDetector nativo (Chrome Android/Desktop) — GPU-acelerado
-      if (typeof BarcodeDetector !== 'undefined') {
+      if ('BarcodeDetector' in globalThis) {
         const detector = new BarcodeDetector({ formats: ['ean_13', 'ean_8'] });
 
         this.scanInterval = setInterval(async () => {
@@ -248,14 +291,19 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
             if (barcodes.length > 0 && barcodes[0].rawValue) {
               this.confirmBarcode(barcodes[0].rawValue);
             }
-          } catch (_) { /* frame skip */ }
+          } catch (e) {
+            // Ignorar AbortError esperado cuando se suspende o salta un frame
+            if (e instanceof Error && e.name !== 'AbortError') {
+              console.warn('Native barcode detection failed:', e);
+            }
+          }
         }, 100);
 
       } else {
         // Fallback ZXing para Firefox/Safari — ImageData directo sin base64
         const {
           MultiFormatReader, BarcodeFormat, DecodeHintType,
-          HTMLCanvasElementLuminanceSource, BinaryBitmap, HybridBinarizer,
+          RGBLuminanceSource, BinaryBitmap, HybridBinarizer,
         } = await import('@zxing/library');
 
         const hints = new Map();
@@ -282,13 +330,35 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
           ctx.drawImage(this.videoEl, 0, 0);
 
           try {
-            const luminance = new HTMLCanvasElementLuminanceSource(this.canvasEl);
+            const imageData = ctx.getImageData(0, 0, this.canvasEl.width, this.canvasEl.height);
+            const imageBuffer = imageData.data;
+            const width = this.canvasEl.width;
+            const height = this.canvasEl.height;
+            const grayscaleBuffer = new Uint8ClampedArray(width * height);
+            
+            for (let i = 0, j = 0, len = imageBuffer.length; i < len; i += 4, j++) {
+              const alpha = imageBuffer[i + 3];
+              if (alpha === 0) {
+                grayscaleBuffer[j] = 0xFF;
+              } else {
+                const pixelR = imageBuffer[i];
+                const pixelG = imageBuffer[i + 1];
+                const pixelB = imageBuffer[i + 2];
+                // Fórmulas estándar de luminancia sRGB
+                grayscaleBuffer[j] = (306 * pixelR + 601 * pixelG + 117 * pixelB + 0x200) >> 10;
+              }
+            }
+
+            const luminance = new RGBLuminanceSource(grayscaleBuffer, width, height);
             const bitmap = new BinaryBitmap(new HybridBinarizer(luminance));
             const result = zxReader.decode(bitmap);
             const code = result.getText();
             if (code) this.confirmBarcode(code);
-          } catch (_) {
-            // NotFoundException — no barcode in frame, expected
+          } catch (e) {
+            // Ignorar NotFoundException esperado cuando no hay código en el frame
+            if (e instanceof Error && e.name !== 'NotFoundException') {
+              console.warn('ZXing decoding error:', e);
+            }
           }
         }, 100);
       }
@@ -300,6 +370,9 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   private confirmBarcode(code: string): void {
+    // Aplicar el mismo semáforo al flujo de barcode
+    if (this.isProcessing) return;
+
     if (code === this.lastBarcode) {
       this.barcodeConfirmCount++;
     } else {
@@ -308,6 +381,7 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     if (this.barcodeConfirmCount >= this.BARCODE_CONFIRM_THRESHOLD) {
+      this.isProcessing = true;
       this.barcodeConfirmCount = 0;
       this.lastBarcode = '';
       this.scanSuccess.emit(code);
@@ -318,6 +392,12 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
   private async stopScanner(): Promise<void> {
     try {
       if (this.isTorchOn) await this.toggleTorch();
+
+      // Cancelar cooldown pendiente si el scanner se cierra manualmente
+      if (this.cooldownTimer) {
+        clearTimeout(this.cooldownTimer);
+        this.cooldownTimer = null;
+      }
 
       // Detener loop de jsQR
       if (this.scanInterval) {
@@ -334,6 +414,10 @@ export class QrScannerModalComponent implements OnInit, OnDestroy, OnChanges {
       if (this.zxingReader) {
         this.zxingReader = null;
       }
+
+      // Resetear semáforo y cooldown al cerrar
+      this.isProcessing = false;
+      this.lastScannedCode = '';
 
       // Detener stream y limpiar DOM
       if (this.videoStream) {
