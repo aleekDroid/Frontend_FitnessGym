@@ -66,8 +66,8 @@ export class PdfReportService {
 
     // Logo
     try {
-      const logoB64 = await this.loadImageAsBase64('/assets/FitnessGym.PNG');
-      doc.addImage(logoB64, 'PNG', 8, 5, 44, 30);
+      const logoB64 = await this.loadImageAsBase64('/assets/FitnessGym.webp');
+      doc.addImage(logoB64, 'WEBP', 8, 5, 44, 30);
     } catch { /* no logo fallback */ }
 
     // Title text in header

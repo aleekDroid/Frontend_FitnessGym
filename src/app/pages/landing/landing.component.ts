@@ -50,14 +50,14 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
   slides: CarouselSlide[] = [
     {
       id: 1,
-      image: "assets/slides/slide-1.png",
+      image: "assets/slides/slide-1.webp",
       title: "FORJA TU MEJOR VERSIÓN",
       subtitle: "Equipos de última generación • Entrenadores certificados",
       cta: "Conoce nuestros planes",
     },
     {
       id: 2,
-      image: "assets/slides/slide-2.png",
+      image: "assets/slides/slide-2.webp",
       title: "ESTUDIANTES UTEQ",
       subtitle: "Membresía mensual con precio especial para ti",
       badge: "$350 / mes",
@@ -65,7 +65,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     {
       id: 3,
-      image: "assets/slides/slide-3.jpg",
+      image: "assets/slides/slide-3.webp",
       title: "PLAN PAREJA",
       subtitle: "Entrena junto a quien más quieres. Sin excusas.",
       badge: "2 personas, 1 precio",
@@ -73,7 +73,7 @@ export class LandingComponent implements OnInit, OnDestroy, AfterViewInit {
     },
     {
       id: 4,
-      image: "assets/slides/slide-4.jpg",
+      image: "assets/slides/slide-4.webp",
       title: "MEMBRESÍA ANUAL",
       subtitle: "El mejor precio del año, hoy. No lo dejes pasar.",
       cta: "Ver precios anuales",

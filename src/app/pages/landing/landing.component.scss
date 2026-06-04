@@ -526,6 +526,55 @@
   }
 }
 
+.payment-methods {
+  margin-top: 24px;
+  text-align: center;
+}
+
+.payment-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin-bottom: 16px;
+}
+
+.payment-label {
+  font-size: 0.8rem;
+  color: rgba(238, 238, 238, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 12px;
+}
+
+.payment-icons {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.payment-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  svg {
+    width: 24px;
+    height: 24px;
+    stroke: rgba(238, 238, 238, 0.5);
+    transition: stroke 0.2s;
+  }
+
+  span {
+    font-size: 0.75rem;
+    color: rgba(238, 238, 238, 0.4);
+    letter-spacing: 0.05em;
+  }
+
+  &:hover svg {
+    stroke: var(--accent);
+  }
+}
+
 @media (max-width: 900px) {
   .info-grid { grid-template-columns: 1fr; }
 }
