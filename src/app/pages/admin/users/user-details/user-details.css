@@ -255,6 +255,12 @@
   color: #bae6fd;
 }
 
+.role-superadmin {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: rgba(168, 85, 247, 0.3);
+  color: #c084fc;
+}
+
 /* Common Badges */
 .badge {
   padding: 4px 10px;
@@ -381,6 +387,13 @@
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.05);
   background: rgba(30, 30, 30, 0.4);
+  position: relative;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.table-container.table-loading {
+  opacity: 0.55;
+  pointer-events: none;
 }
 
 .data-table {
@@ -1001,4 +1014,30 @@
 @keyframes scaleIn {
   from { transform: scale(0); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
+}
+
+/* ── QR RESET MODAL STYLES ── */
+.qr-container {
+  display: flex;
+  justify-content: center;
+  margin: 16px 0 20px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.qr-image {
+  display: block;
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.modal-box--sm {
+  max-width: 420px !important;
 }

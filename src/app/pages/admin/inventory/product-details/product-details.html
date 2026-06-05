@@ -162,10 +162,37 @@
       <section class="movements-section">
         <div class="section-header">
           <h3>Movimientos Recientes</h3>
-          <span class="count-pill">{{ movements().length }} registros</span>
+          <span class="count-pill">{{ historyTotal() }} registros</span>
         </div>
 
-        <div class="movements-list card">
+        <div class="toolbar mb-4">
+          <div class="search-wrapper">
+            <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <input id="historySearch" class="search-input" type="text" placeholder="Buscar por concepto o ID..." [ngModel]="historySearch()" (ngModelChange)="onHistorySearch($event)">
+          </div>
+          
+          <div class="filters-group">
+            <select id="historyType" class="limit-select" [ngModel]="historyType()" (ngModelChange)="historyType.set($event); onHistoryFilterChange()">
+              <option value="">Todos los tipos</option>
+              <option value="sale">Venta</option>
+              <option value="restock">Reabastecimiento</option>
+              <option value="adjustment">Ajuste</option>
+              <option value="return">Devolución</option>
+              <option value="damage">Daño</option>
+            </select>
+
+            <div class="date-group-inline">
+              <input type="date" class="limit-select date-input" aria-label="Fecha inicio" [max]="historyEndDate() || null" [ngModel]="historyStartDate()" (ngModelChange)="onHistoryStartDateChange($event)">
+              <span class="date-sep">-</span>
+              <input type="date" class="limit-select date-input" aria-label="Fecha fin" [min]="historyStartDate() || null" [ngModel]="historyEndDate()" (ngModelChange)="onHistoryEndDateChange($event)">
+            </div>
+          </div>
+        </div>
+
+        <div class="movements-list card" [class.table-loading]="loadingHistory()">
           @for (m of movements(); track m.id) {
           <div class="movement-item">
             <div
@@ -266,6 +293,9 @@
             </div>
 
             <div class="m-actions">
+              @if (m.otherProducts && m.otherProducts.length > 0) {
+                <span class="badge-products">+{{ m.otherProducts.length }} prod.</span>
+              }
               <button
                 class="btn-icon btn-sm"
                 (click)="openMovementDetails(m)"
@@ -288,10 +318,69 @@
           </div>
           } @empty {
           <div class="empty-movements">
-            No hay movimientos registrados para este producto.
+            No hay movimientos que coincidan con los filtros.
           </div>
           }
         </div>
+
+        @if (historyTotal() > 0) {
+          <div class="pagination-footer">
+            <div class="pagination-info">
+              Mostrando página <strong>{{ historyPage() }}</strong> de
+              <strong>{{ historyTotalPages() || 1 }}</strong>
+              <span class="text-muted">({{ historyTotal() }} registros totales)</span>
+            </div>
+
+            <div class="pagination-controls">
+              <button
+                class="btn-icon-pag"
+                [disabled]="historyPage() === 1"
+                (click)="goToHistoryPage(historyPage() - 1)"
+                aria-label="Página anterior"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="15 18 9 12 15 6" />
+                </svg>
+              </button>
+
+              <select
+                class="limit-select"
+                [ngModel]="historyLimit()"
+                (change)="onHistoryLimitChange(+$any($event.target).value)"
+              >
+                <option [value]="5">5 / pág</option>
+                <option [value]="10">10 / pág</option>
+                <option [value]="25">25 / pág</option>
+                <option [value]="50">50 / pág</option>
+              </select>
+
+              <button
+                class="btn-icon-pag"
+                [disabled]="historyPage() >= historyTotalPages() || historyTotalPages() === 0"
+                (click)="goToHistoryPage(historyPage() + 1)"
+                aria-label="Página siguiente"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <polyline points="9 18 15 12 9 6" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        }
       </section>
     </main>
   </div>

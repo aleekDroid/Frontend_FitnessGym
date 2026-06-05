@@ -3,12 +3,15 @@ import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ProductsService } from '../../../../core/services/products.service';
 import { Product } from '../../../../core/models/product.model';
 import { StatusConfirmModalComponent } from '../../../../shared/components/status-confirm-modal/status-confirm-modal.component';
 import { ProductFormModalComponent } from '../../../../shared/components/product-form-modal/product-form-modal.component';
 import { StockAdjustmentModalComponent } from '../../../../shared/components/stock-adjustment-modal/stock-adjustment-modal.component';
 import { MovementDetailsModalComponent } from '../../../../shared/components/movement-details-modal/movement-details-modal.component';
+import { NotificationService } from '../../../../core/services/notification.service';
 
 @Component({
   selector: 'app-product-details',
@@ -34,6 +37,18 @@ export class ProductDetails implements OnInit {
   Math = Math;
   
   movements = signal<any[]>([]);
+  loadingHistory = signal(false);
+
+  historyPage = signal(1);
+  historyLimit = signal(10);
+  historyTotal = signal(0);
+  historyTotalPages = signal(0);
+  historySearch = signal('');
+  historyStartDate = signal('');
+  historyEndDate = signal('');
+  historyType = signal('');
+
+  private readonly searchSubject = new Subject<string>();
 
   showEditModal = signal(false);
   productForm: FormGroup;
@@ -42,16 +57,17 @@ export class ProductDetails implements OnInit {
   savingStock = signal(false);
 
   showMovementModal = signal(false);
-  selectedMovement = signal<any | null>(null);
+  selectedMovement = signal<any>(null);
 
   showStatusModal = signal(false);
   togglingStatus = signal(false);
 
   constructor(
-    private route: ActivatedRoute,
-    private router: Router,
-    private productsService: ProductsService,
-    private fb: FormBuilder
+    private readonly route: ActivatedRoute,
+    private readonly router: Router,
+    private readonly productsService: ProductsService,
+    private readonly fb: FormBuilder,
+    private readonly notificationService: NotificationService
   ) {
     this.productForm = this.fb.group({
       name: ['', Validators.required],
@@ -63,6 +79,15 @@ export class ProductDetails implements OnInit {
   }
 
   ngOnInit(): void {
+    this.searchSubject.pipe(
+      debounceTime(300),
+      distinctUntilChanged()
+    ).subscribe(query => {
+      this.historySearch.set(query);
+      this.historyPage.set(1);
+      this.loadHistory();
+    });
+
     this.route.paramMap.subscribe(params => {
       const id = params.get('id');
       if (id) {
@@ -90,45 +115,67 @@ export class ProductDetails implements OnInit {
 
   loadHistory(): void {
     if (!this.productId) return;
-    this.productsService.getProductHistory(this.productId).subscribe({
+    this.loadingHistory.set(true);
+    
+    this.productsService.getProductHistory(
+      this.productId,
+      this.historyPage(),
+      this.historyLimit(),
+      this.historySearch(),
+      this.historyStartDate(),
+      this.historyEndDate(),
+      this.historyType()
+    ).subscribe({
       next: (res) => {
-        const combined: any[] = [];
-        
-        // Add manual or administrative movements
-        if (res.movements) {
-          res.movements.forEach(m => {
-            combined.push({
-              id: `m-${m.id}`,
-              type: m.type,
-              quantity: m.quantity,
-              date: m.createdAt,
-              description: m.reason || 'Movimiento de inventario',
-              raw: m
-            });
-          });
-        }
-        
-        // Add actual sales
-        if (res.sales) {
-          res.sales.forEach(s => {
-            combined.push({
-              id: `s-${s.id}`,
-              type: 'sale',
-              quantity: -s.quantity, // Sales always reduce stock
-              date: s.createdAt,
-              description: `Venta #${s.id} (${this.translatePaymentMethod(s.paymentMethod)})`,
-              raw: s
-            });
-          });
-        }
-
-        
-        // Sort descending by date
-        combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        this.movements.set(combined);
+        this.movements.set(res.data);
+        this.historyTotal.set(res.meta.totalItems);
+        this.historyTotalPages.set(res.meta.totalPages);
+        this.historyPage.set(res.meta.currentPage);
+        this.loadingHistory.set(false);
       },
-      error: (err) => console.error('Error fetching history', err)
+      error: (err) => {
+        console.error('Error fetching history', err);
+        this.loadingHistory.set(false);
+      }
     });
+  }
+
+  onHistorySearch(val: string): void {
+    this.searchSubject.next(val);
+  }
+
+  onHistoryStartDateChange(val: string): void {
+    this.historyStartDate.set(val);
+    if (val && this.historyEndDate() && val > this.historyEndDate()) {
+      this.historyEndDate.set(val);
+    }
+    this.onHistoryFilterChange();
+  }
+
+  onHistoryEndDateChange(val: string): void {
+    this.historyEndDate.set(val);
+    if (val && this.historyStartDate() && val < this.historyStartDate()) {
+      this.historyStartDate.set(val);
+    }
+    this.onHistoryFilterChange();
+  }
+
+  onHistoryFilterChange(): void {
+    this.historyPage.set(1);
+    this.loadHistory();
+  }
+
+  onHistoryLimitChange(newLimit: number): void {
+    this.historyLimit.set(newLimit);
+    this.historyPage.set(1);
+    this.loadHistory();
+  }
+
+  goToHistoryPage(page: number): void {
+    if (page >= 1 && page <= this.historyTotalPages()) {
+      this.historyPage.set(page);
+      this.loadHistory();
+    }
   }
 
   goBack(): void {
@@ -148,15 +195,16 @@ export class ProductDetails implements OnInit {
     const payload = { id: this.product()!.id, ...updatePayload };
 
     this.productsService.update(payload).subscribe({
-      next: (updatedProduct) => {
-        this.product.set(updatedProduct);
+      next: () => {
         this.saving.set(false);
         this.closeEditModal();
-        // Toast is likely handled by a global interceptor or we should add one here
+        this.notificationService.show('Producto actualizado correctamente.', 'success');
+        this.loadProduct(); // Reload the updated product information from the API!
       },
       error: (err) => {
         console.error('Error updating product:', err);
         this.saving.set(false);
+        this.notificationService.show(err.error?.message || 'Error al actualizar el producto.', 'error');
       }
     });
   }

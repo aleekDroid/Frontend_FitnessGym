@@ -1,0 +1,54 @@
+<div class="modal-overlay" (click)="closeModal.emit()">
+  <div class="modal-box" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <h2 class="modal-title">Asistencia Manual</h2>
+        <p class="subtitle" style="color: rgba(238,238,238,0.5); font-size: 0.9rem; margin-top: 4px; margin-bottom: 0;">Busca un usuario para registrar su asistencia.</p>
+      </div>
+      <button class="modal-close" style="align-self: flex-start; margin-top: 5px;" (click)="closeModal.emit()">✕</button>
+    </div>
+
+    <div class="search-wrapper" style="margin-bottom: 24px;">
+      <svg class="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Buscar por nombre, apellido o teléfono..." 
+        (input)="onSearch($event)"
+      />
+      <div class="spinner-sm" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%);" *ngIf="isLoading()"></div>
+    </div>
+
+    <div class="results-container">
+      @if (searchResults().length === 0 && !isLoading() && searchQuery().trim()) {
+        <p class="no-results">No se encontraron usuarios.</p>
+      }
+
+      @for (user of searchResults(); track user.id) {
+        <div class="user-card">
+          <div class="user-info">
+            <h4>{{ user.name }} {{ user.lastName || user.last_name }}</h4>
+            <p>{{ user.number }}</p>
+            <span class="badge" [ngClass]="user.activeSubscription?.status === 'active' ? 'badge-success' : 'badge-danger'">
+              {{ user.activeSubscription?.status === 'active' ? 'Suscripción Activa' : 'Sin Suscripción' }}
+            </span>
+          </div>
+          <button 
+            class="btn btn-primary"
+            style="padding: 8px 16px; font-size: 0.9rem;"
+            [disabled]="isProcessing() || user.activeSubscription?.status !== 'active'"
+            (click)="registerAttendance(user)">
+            @if (isProcessing() && processingUserId() === user.id) {
+              <span class="btn-spinner"></span> Registrando...
+            } @else {
+              Registrar
+            }
+          </button>
+        </div>
+      }
+    </div>
+  </div>
+</div>

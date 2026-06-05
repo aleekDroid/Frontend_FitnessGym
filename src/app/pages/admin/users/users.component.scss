@@ -602,3 +602,27 @@
   from { transform: scale(0); opacity: 0; }
   to { transform: scale(1); opacity: 1; }
 }
+
+/* ── QR RESET MODAL STYLES ── */
+.qr-container {
+  display: flex;
+  justify-content: center;
+  margin: 12px auto 20px;
+  padding: 14px;
+  background: white;
+  border-radius: 12px;
+  width: fit-content;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.qr-image {
+  display: block;
+  width: 200px;
+  height: 200px;
+  object-fit: contain;
+  border-radius: 4px;
+}
+
+.modal-box--sm {
+  max-width: 420px !important;
+}
