@@ -370,6 +370,16 @@
     height: 64px;
     svg { width: 28px; height: 28px; }
   }
+
+  &.fab-secondary {
+    background: #333;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    &:hover {
+      background: #444;
+      transform: scale(1.1) rotate(-5deg);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+    }
+  }
 }
 
 /* Processing overlay */

@@ -32,6 +32,12 @@
             <label>Método de Pago</label>
             <span class="badge badge-payment">{{ getPaymentMethodLabel(d.payment_method) }}</span>
           </div>
+          @if (d.enrollment_fee && d.enrollment_fee > 0) {
+            <div class="summary-item">
+              <label>Cobro de Inscripción</label>
+              <span class="badge-enrollment">{{ formatMoney(d.enrollment_fee) }}</span>
+            </div>
+          }
           <div class="summary-item">
             <label>Total Pagado</label>
             <span class="total-amount">{{ formatMoney(d.total) }}</span>

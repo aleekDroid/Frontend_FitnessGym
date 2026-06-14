@@ -5,6 +5,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UsersService } from '../../../core/services/users.service';
 import { SubscriptionsService } from '../../../core/services/subscriptions.service';
+import { NotificationService } from '../../../core/services/notification.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
 
@@ -23,6 +25,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
   assignForm: FormGroup;
   subscriptionTypes = signal<SubscriptionType[]>([]);
   saving = signal(false);
+  selectedPlan = signal<SubscriptionType | null>(null);
 
   // Autocomplete
   assignSearchQuery = signal('');
@@ -30,27 +33,61 @@ export class AssignSubscriptionModalComponent implements OnInit {
   selectedAssignUsers = signal<UserWithMembership[]>([]);
   assignPlanLimit = signal<number>(1);
   assignSearching = signal(false);
-  private assignSearchSubject = new Subject<string>();
+  private readonly assignSearchSubject = new Subject<string>();
 
   // ALERTS (Users with active subscriptions)
   usersWithActiveSub = computed(() => {
     return this.selectedAssignUsers()
       .filter(u => {
         if (!u.membership_end) return false;
-        const diff = new Date(u.membership_end).getTime() - new Date().getTime();
+        const diff = new Date(u.membership_end).getTime() - Date.now();
         return diff > 0 && (u.membership_status === 'active' || u.membership_status === 'expiring');
       })
       .map(u => {
-        const diffIntime = new Date(u.membership_end!).getTime() - new Date().getTime();
+        const diffIntime = new Date(u.membership_end!).getTime() - Date.now();
         const days = Math.ceil(diffIntime / (1000 * 3600 * 24));
         return { name: `${u.name} ${u.last_name}`, days };
       });
   });
 
+  // Dynamic quote breakdown mapping price and one-time enrollment fee for completely new members.
+  // Exemption rule: a user is exempt from the enrollment fee if they have any prior real membership
+  // (i.e. any subscription with slug != 'visita'). This is computed by the backend and surfaced
+  // as `has_subscription_history`, making it the single authoritative source of truth for both
+  // the users-list flow and the modal's own search-results flow.
+  quoteBreakdown = computed(() => {
+    const plan = this.selectedPlan();
+    if (!plan) return null;
+
+    const basePrice = plan.price || 0;
+    const isVisita = plan.slug === 'visita' || plan.name?.toLowerCase().includes('visita');
+    const enrollmentFee = isVisita ? 0 : (plan.enrollment_fee || 0);
+
+    // A user pays the enrollment fee only when they have zero prior real membership history.
+    // `has_subscription_history` = true means the backend found at least one subscription
+    // linked to a suscriptions_type whose slug is NOT 'visita'.
+    const newUsers = this.selectedAssignUsers().filter(u => !u.has_subscription_history);
+
+    const totalEnrollmentFee = newUsers.length * enrollmentFee;
+    const subtotal = basePrice;
+    const total = subtotal + totalEnrollmentFee;
+
+    return {
+      basePrice,
+      enrollmentFee,
+      newUsers,
+      totalEnrollmentFee,
+      subtotal,
+      total
+    };
+  });
+
   constructor(
     private readonly fb: FormBuilder,
     private readonly usersService: UsersService,
-    private readonly subscriptionsService: SubscriptionsService
+    private readonly subscriptionsService: SubscriptionsService,
+    private readonly notificationService: NotificationService,
+    public readonly authService: AuthService
   ) {
     this.assignForm = this.fb.group({
       subscription_id: ['', [Validators.required]],
@@ -77,6 +114,27 @@ export class AssignSubscriptionModalComponent implements OnInit {
       this.subscriptionTypes.set(res.data.filter(t => t.status === 'active'));
     });
 
+    // Reactively update plan details based on control selection changes
+    this.assignForm.get('subscription_id')?.valueChanges.subscribe(id => {
+      if (id) {
+        this.subscriptionsService.getSubscriptionTypeById(Number(id)).subscribe({
+          next: (plan) => {
+            this.selectedPlan.set(plan);
+            this.assignPlanLimit.set(plan.person_per_suscription || 1);
+            
+            // Trim users if plan allows less people than currently selected
+            if (this.selectedAssignUsers().length > this.assignPlanLimit()) {
+              this.selectedAssignUsers.update(list => list.slice(0, this.assignPlanLimit()));
+            }
+          },
+          error: (err) => console.error('Failed to load plan details', err)
+        });
+      } else {
+        this.selectedPlan.set(null);
+        this.assignPlanLimit.set(1);
+      }
+    });
+
     // Setup debounced search for Autocomplete in Assignment Modal
     this.assignSearchSubject.pipe(
       debounceTime(300),
@@ -90,11 +148,14 @@ export class AssignSubscriptionModalComponent implements OnInit {
       }
       this.assignSearching.set(true);
       // We search users globally, limit to 10 based on req
-      this.usersService.getUsers(1, 10, query, 'active', 'member', 'true').subscribe({
+      this.usersService.getUsers(1, 10, query, 'active', 'member', 'all').subscribe({
         next: (res) => {
-          // Exclude already selected users
-          const currentSelectedIds = this.selectedAssignUsers().map(u => u.id);
-          const filteredResults = res.data.filter(u => !currentSelectedIds.includes(u.id));
+          // Exclude already selected users and the current user
+          const currentSelectedIds = new Set(this.selectedAssignUsers().map(u => u.id));
+          const currentUserId = this.authService.currentUser()?.id;
+          const filteredResults = res.data.filter(u =>
+            !currentSelectedIds.has(u.id) && u.id !== currentUserId
+          );
           this.assignSearchResults.set(filteredResults);
           this.assignSearching.set(false);
         },
@@ -111,24 +172,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
   }
 
   onAssignPlanChange(event: Event): void {
-    const idStr = (event.target as HTMLSelectElement).value;
-    if (!idStr) {
-      this.assignPlanLimit.set(1);
-      return;
-    }
-    
-    // Fetch details to know limit
-    this.subscriptionsService.getSubscriptionTypeById(Number(idStr)).subscribe({
-      next: (plan) => {
-        this.assignPlanLimit.set(plan.person_per_suscription || 1);
-        
-        // Trim users if plan allows less people than currently selected
-        if (this.selectedAssignUsers().length > this.assignPlanLimit()) {
-          this.selectedAssignUsers.update(list => list.slice(0, this.assignPlanLimit()));
-        }
-      },
-      error: (err) => console.error('Failed to load plan details', err)
-    });
+    // Handled reactively via valueChanges subscription
   }
 
   onAssignSearchInput(val: string): void {
@@ -136,6 +180,10 @@ export class AssignSubscriptionModalComponent implements OnInit {
   }
 
   selectUserForAssign(user: UserWithMembership): void {
+    const me = this.authService.currentUser();
+    if (me && me.id === user.id) {
+      return; // Cannot assign subscription to yourself
+    }
     if (this.selectedAssignUsers().length >= this.assignPlanLimit()) {
       return; // Reached limit
     }
@@ -161,7 +209,7 @@ export class AssignSubscriptionModalComponent implements OnInit {
     
     const selectedUsers = this.selectedAssignUsers();
     if (selectedUsers.length === 0) {
-      alert('Debes seleccionar al menos un usuario.');
+      this.notificationService.show('Debes seleccionar al menos un usuario.', 'error');
       return;
     }
 
@@ -178,25 +226,15 @@ export class AssignSubscriptionModalComponent implements OnInit {
         this.saving.set(false);
         
         if (res.visitaGratis) {
-          import('sweetalert2').then((Swal) => {
-            Swal.default.fire({
-              title: '¡Visita Gratuita!',
-              text: 'Esta visita es por cuenta de la casa. ¡Felicidades al usuario!',
-              icon: 'success',
-              confirmButtonText: 'Genial',
-              confirmButtonColor: '#d84040',
-              backdrop: `rgba(216, 64, 64, 0.2)`
-            }).then(() => {
-              this.successEvent.emit();
-            });
-          });
+          this.notificationService.show('¡Visita Gratuita! Esta visita es por cuenta de la casa.', 'success');
         } else {
-          this.successEvent.emit(); // Emits signal to reload parent data and show toast
+          this.notificationService.show('Suscripción asignada exitosamente.', 'success');
         }
+        this.successEvent.emit();
       },
       error: (err) => {
         console.error('Error assigning subscription:', err);
-        alert('Ocurrió un error al procesar la venta. Inténtalo de nuevo.');
+        this.notificationService.show(err.error?.message || 'Ocurrió un error al procesar la venta.', 'error');
         this.saving.set(false);
       }
     });

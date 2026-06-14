@@ -4,6 +4,7 @@ export interface SubscriptionType {
   id: number;
   name: string;
   price: number;
+  enrollment_fee: number;
   duration: number;       // días
   status: 'active' | 'inactive' | 'suspended';
   person_per_suscription: number;
@@ -28,6 +29,7 @@ export interface PaginatedResponse<T> {
 export interface CreateSubscriptionTypeDto {
   name: string;
   price: number;
+  enrollment_fee?: number;
   duration: number;
   person_per_suscription: number;
   description?: string;
@@ -65,6 +67,7 @@ export interface TransactionDetail {
   transaction_type: string;
   payment_method: string;
   total: number;
+  enrollment_fee: number;
   created_at: string;
   subscription_type: SubscriptionType;
   start_date: string;

@@ -286,8 +286,9 @@ form {
 
 .form-row {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.3fr;
+  grid-template-columns: 1fr 1fr;
   gap: 15px;
+  margin-bottom: 12px;
   
   label {
     white-space: nowrap;
@@ -298,7 +299,8 @@ form {
 @media (max-width: 560px) {
   .form-row {
     grid-template-columns: 1fr;
-    gap: 0px;
+    gap: 12px;
+    margin-bottom: 0;
     label { white-space: normal; }
   }
 }

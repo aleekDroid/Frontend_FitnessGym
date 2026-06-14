@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, signal, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { UsersService } from '../../../core/services/users.service';
@@ -11,11 +11,20 @@ import { UserWithMembership } from '../../../core/models/user.model';
 import { SubscriptionType } from '../../../core/models/subscription.model';
 import { AssignSubscriptionModalComponent } from '../../../shared/components/assign-subscription-modal/assign-subscription-modal.component';
 import { StatusConfirmModalComponent } from '../../../shared/components/status-confirm-modal/status-confirm-modal.component';
+import { UserFormModalComponent } from '../../../shared/components/user-form-modal/user-form-modal.component';
+import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
   selector: 'app-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule, AssignSubscriptionModalComponent, StatusConfirmModalComponent],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    FormsModule,
+    AssignSubscriptionModalComponent,
+    StatusConfirmModalComponent,
+    UserFormModalComponent
+  ],
   templateUrl: './users.component.html',
   styleUrls: ['./users.component.scss'],
 })
@@ -28,7 +37,7 @@ export class UsersComponent implements OnInit {
   // Pagination & Search
   searchQuery = signal('');
   filterStatus = signal<'active' | 'inactive' | ''>('');
-  filterRole = signal<'admin' | 'member' | ''>('');
+  filterRole = signal<'superadmin' | 'admin' | 'member' | ''>('');
   filterSubscription = signal<'true' | 'false' | 'all'>('all');
   currentPage = signal(1);
   limit = signal(10);
@@ -56,20 +65,12 @@ export class UsersComponent implements OnInit {
 
   private readonly notificationService = inject(NotificationService);
 
-  userForm: FormGroup;
-
   constructor(
     private readonly usersService: UsersService,
     private readonly subscriptionsService: SubscriptionsService,
-    private readonly fb: FormBuilder,
-    private readonly router: Router
-  ) {
-    this.userForm = this.fb.group({
-      name: ['', [Validators.required]],
-      last_name: ['', [Validators.required]],
-      number: ['', [Validators.required, Validators.minLength(10), Validators.pattern(String.raw`^\+?[0-9]*$`)]]
-    });
-  }
+    private readonly router: Router,
+    public readonly authService: AuthService
+  ) {}
 
   ngOnInit(): void {
     // Detect desktop resolution
@@ -145,19 +146,21 @@ export class UsersComponent implements OnInit {
     }
   }
 
+  canToggleStatus(target: UserWithMembership): boolean {
+    return this.authService.canToggleStatus(target.id, target.role);
+  }
+
+  canAssignSubscription(): boolean {
+    return this.authService.canAssignSubscriptionGlobal();
+  }
+
   openCreate(): void {
     this.editUser.set(null);
-    this.userForm.reset();
     this.showModal.set(true);
   }
 
   openEdit(user: UserWithMembership): void {
     this.editUser.set(user);
-    this.userForm.patchValue({
-      name: user.name,
-      last_name: user.last_name,
-      number: user.number
-    });
     this.showModal.set(true);
   }
 
@@ -167,47 +170,17 @@ export class UsersComponent implements OnInit {
 
   closeModal(): void {
     this.showModal.set(false);
-    this.userForm.reset();
+    this.editUser.set(null);
   }
 
-  onSubmit(): void {
-    if (this.userForm.invalid) { this.userForm.markAllAsTouched(); return; }
-    this.saving.set(true);
-    const val = this.userForm.value;
-
-    if (this.editUser()) {
-      this.usersService.update(this.editUser()!.id, { name: val.name, last_name: val.last_name, number: val.number }).subscribe({
-        next: () => {
-          this.notificationService.show('Datos del usuario actualizados correctamente', 'success');
-          this.saving.set(false);
-          this.closeModal();
-          this.loadData();
-        },
-        error: () => {
-          this.notificationService.show('No se pudo actualizar el usuario', 'error');
-          this.saving.set(false);
-        }
-      });
-    } else {
-      this.usersService.create(val).subscribe({
-        next: (res) => {
-          this.notificationService.show('Usuario registrado con éxito', 'success');
-          this.saving.set(false);
-          this.closeModal();
-          this.loadData();
-          
-          // Mostrar QR si el backend lo devuelve (nuevo flujo)
-          if (res?.qrBase64) {
-            this.qrBase64.set(res.qrBase64);
-            this.showPasswordModal.set(true);
-          }
-        },
-        error: (err) => {
-          this.notificationService.show('Hubo un error al registrar el usuario. Revisa los datos.', 'error');
-          console.error('Error al crear usuario:', err);
-          this.saving.set(false);
-        }
-      });
+  onSaveSuccess(res: any): void {
+    this.closeModal();
+    this.loadData();
+    
+    // Mostrar QR si el backend lo devuelve (nuevo flujo)
+    if (res?.qrBase64) {
+      this.qrBase64.set(res.qrBase64);
+      this.showPasswordModal.set(true);
     }
   }
 
@@ -252,7 +225,7 @@ export class UsersComponent implements OnInit {
     // This was used by the old modal, we might not need it if we use doStatusToggle
   }
 
-  get f() { return this.userForm.controls; }
+
 
   formatDate(dateStr?: string): string {
     if (!dateStr) return '—';

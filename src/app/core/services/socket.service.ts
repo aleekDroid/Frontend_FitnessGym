@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { io, Socket } from 'socket.io-client';
 import { AuthService } from './auth.service';
 import { firstValueFrom } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -34,7 +35,7 @@ export class SocketService {
       }
     }
 
-    const url = `/${namespace}`;
+    const url = `${environment.socketUrl}/${namespace}`;
 
     const socket = io(url, {
       auth: { token: token || '' },
